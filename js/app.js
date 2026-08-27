@@ -241,10 +241,21 @@ function renderIdentityBar() {
   }
 }
 
-function statusCounts(eventId) {
-  const players = state.signups[eventId] || {};
+// Gracze uprawnieni do zapisu na dane wydarzenie (trening bramkarski -> tylko
+// bramkarze; reszta wydarzeń -> wszyscy). Używane zarówno do listy zapisów,
+// jak i do liczników Tak/Nie/HGW na karcie — dzięki temu np. stary zapis
+// sprzed wprowadzenia zawężenia do bramkarzy nie zawyży licznika.
+function rosterPoolForEvent(ev) {
+  return ev.type === "trening-bramkarski" ? PLAYERS.filter((p) => GOALKEEPER_SLUGS.has(p.slug)) : PLAYERS;
+}
+
+export function statusCounts(ev) {
+  const players = state.signups[ev.id] || {};
+  const pool = rosterPoolForEvent(ev);
+  const eligibleSlugs = new Set(pool.map((p) => p.slug));
   const counts = { tak: 0, nie: 0, hgw: 0 };
-  Object.values(players).forEach((p) => {
+  Object.entries(players).forEach(([slug, p]) => {
+    if (!eligibleSlugs.has(slug)) return;
     if (counts[p.status] !== undefined) counts[p.status]++;
   });
   return counts;
@@ -268,7 +279,7 @@ function renderSchedule() {
     card.style.setProperty("--accent", meta.color);
     card.style.setProperty("--accent-soft", meta.colorSoft);
 
-    const counts = statusCounts(ev.id);
+    const counts = statusCounts(ev);
     const address = (state.eventMeta[ev.id] && state.eventMeta[ev.id].address) || ev.defaultLocation;
 
     card.innerHTML = `
@@ -375,8 +386,8 @@ function renderRoster() {
     return row;
   }
 
-  const rosterPool = ev.type === "trening-bramkarski" ? PLAYERS.filter((p) => GOALKEEPER_SLUGS.has(p.slug)) : PLAYERS;
-  const { visible, hidden } = getOrderedPlayerGroups(rosterPool);
+  const rosterPool = rosterPoolForEvent(ev);
+  const { visible, hidden } = getOrderedPlayerGroups(rosterPool, playersData);
 
   const list = document.createElement("div");
   list.className = "roster-list";
@@ -484,14 +495,30 @@ function sortScore(stats, slug) {
   return tak / total;
 }
 
-// Zwraca graczy posortowanych wg frekwencji (zamrożonej na bieżący 2-tyg.
-// okres), podzielonych na widocznych i zwiniętych pod "Pokaż więcej".
+// Kolejność odpowiedzi na danym wydarzeniu: Tak, potem Nie, potem HGW,
+// na końcu brak odpowiedzi.
+const STATUS_RANK = { tak: 0, nie: 1, hgw: 2 };
+function statusRank(eventPlayersData, slug) {
+  const status = eventPlayersData?.[slug]?.status;
+  return STATUS_RANK[status] ?? 3;
+}
+
+// Zwraca graczy posortowanych: najpierw wg odpowiedzi na TO wydarzenie (Tak
+// -> Nie -> HGW -> brak odpowiedzi, jeśli podano `eventPlayersData`), a w
+// obrębie tej samej odpowiedzi — wg frekwencji (zamrożonej na bieżący
+// 2-tyg. okres). Podzieleni na widocznych i zwiniętych pod "Pokaż więcej".
 // `pool` pozwala zawęzić listę (np. do samych bramkarzy na trening bramkarski).
-export function getOrderedPlayerGroups(pool = PLAYERS) {
+export function getOrderedPlayerGroups(pool = PLAYERS, eventPlayersData = null) {
   const cutoff = currentSortCutoffDateStr();
   const frozenStats = computeAttendanceStats(cutoff);
 
-  const sorted = [...pool].sort((a, b) => sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug));
+  const sorted = [...pool].sort((a, b) => {
+    if (eventPlayersData) {
+      const rankDiff = statusRank(eventPlayersData, a.slug) - statusRank(eventPlayersData, b.slug);
+      if (rankDiff !== 0) return rankDiff;
+    }
+    return sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug);
+  });
 
   return {
     visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug)),
