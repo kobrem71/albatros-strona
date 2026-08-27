@@ -1,7 +1,20 @@
-import { PLAYERS } from "./players.js";
+import { PLAYERS, slugify } from "./players.js";
 import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js";
 import { isFirebaseConfigured } from "./firebase-config.js";
 import { getStore } from "./store.js";
+
+// Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
+// (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
+// głównego widoku. Można ich rozwinąć jednym kliknięciem.
+const HIDDEN_NAMES = [
+  "Zawodnik Testowany1",
+  "Zawodnik Testowany2",
+  "Stanisław Taczyński",
+  "Krzysztof Taczyński",
+  "Damian Pachołek",
+  "Rafał Kanasiuk",
+];
+const HIDDEN_SLUGS = new Set(HIDDEN_NAMES.map(slugify));
 
 const WEEKDAY_NAMES = [
   "niedziela",
@@ -157,7 +170,7 @@ function avatarNode(player) {
 // ---------------------------------------------------------------------------
 // 3. Render
 // ---------------------------------------------------------------------------
-const state = {
+export const state = {
   events: buildUpcomingEvents(),
   activeEventId: null,
   signups: {},
@@ -313,12 +326,9 @@ function renderRoster() {
   header.appendChild(addrRow);
   container.appendChild(header);
 
-  const list = document.createElement("div");
-  list.className = "roster-list";
-
   const playersData = state.signups[ev.id] || {};
 
-  for (const player of PLAYERS) {
+  function buildRow(player) {
     const row = document.createElement("div");
     row.className = "roster-row";
     if (player.slug === state.identitySlug) row.classList.add("me");
@@ -349,10 +359,32 @@ function renderRoster() {
       btnGroup.appendChild(btn);
     }
     row.appendChild(btnGroup);
-    list.appendChild(row);
+    return row;
   }
 
+  const { visible, hidden } = getOrderedPlayerGroups();
+
+  const list = document.createElement("div");
+  list.className = "roster-list";
+  for (const player of visible) {
+    list.appendChild(buildRow(player));
+  }
   container.appendChild(list);
+
+  if (hidden.length > 0) {
+    const details = document.createElement("details");
+    details.className = "roster-more";
+    const summary = document.createElement("summary");
+    summary.textContent = `Pokaż więcej (${hidden.length})`;
+    details.appendChild(summary);
+    const hiddenList = document.createElement("div");
+    hiddenList.className = "roster-list";
+    for (const player of hidden) {
+      hiddenList.appendChild(buildRow(player));
+    }
+    details.appendChild(hiddenList);
+    container.appendChild(details);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -373,7 +405,13 @@ function categoryOfType(type) {
   return null;
 }
 
-function computeAttendanceStats() {
+// eventId ma zawsze format "typ-RRRR-MM-DD" (np. "mecz-2026-09-06"), więc datę
+// wydarzenia da się wyciągnąć wprost z eventId, bez dodatkowego zapytania.
+function dateStrFromEventId(eventId, type) {
+  return eventId.slice(type.length + 1); // odetnij "typ-"
+}
+
+function computeAttendanceStats(cutoffDateStr) {
   const stats = {};
   for (const p of PLAYERS) {
     stats[p.slug] = {
@@ -386,6 +424,7 @@ function computeAttendanceStats() {
     const type = eventTypeFromId(eventId);
     const category = categoryOfType(type);
     if (!category) continue;
+    if (cutoffDateStr && dateStrFromEventId(eventId, type) >= cutoffDateStr) continue;
     for (const [slug, resp] of Object.entries(players || {})) {
       if (!stats[slug]) continue;
       stats[slug][category].total++;
@@ -402,13 +441,50 @@ function formatPct(bucket) {
   return `${bucket.tak}/${bucket.total} (${pct}%)`;
 }
 
-function renderStats() {
-  const container = document.getElementById("stats-panel");
-  if (!container) return;
-  container.innerHTML = "";
+// ---------------------------------------------------------------------------
+// 3c. Kolejność graczy: wg frekwencji, ale przeliczana tylko co 2 tygodnie
+// ---------------------------------------------------------------------------
+// Bez backendu/crona nie da się "przeliczać co 2 tygodnie" dosłownie — zamiast
+// tego kolejność jest funkcją bieżącej daty: liczymy ranking na podstawie
+// zapisów sprzed początku aktualnego 14-dniowego okresu. Dzięki temu lista
+// jest stabilna przez całe 2 tygodnie i sama, automatycznie, przesuwa się na
+// kolejny okres — bez potrzeby czyjejkolwiek interwencji.
+const SORT_PERIOD_ANCHOR = new Date("2026-08-24T00:00:00"); // poniedziałek
+const SORT_PERIOD_DAYS = 14;
 
-  const stats = computeAttendanceStats();
+export function currentSortCutoffDateStr() {
+  const now = new Date();
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysSince = Math.floor((now - SORT_PERIOD_ANCHOR) / msPerDay);
+  const periodIndex = Math.floor(daysSince / SORT_PERIOD_DAYS);
+  const periodStart = new Date(SORT_PERIOD_ANCHOR.getTime() + periodIndex * SORT_PERIOD_DAYS * msPerDay);
+  return toDateStr(periodStart);
+}
 
+function sortScore(stats, slug) {
+  const t = stats[slug]?.trening || { tak: 0, total: 0 };
+  const m = stats[slug]?.mecz || { tak: 0, total: 0 };
+  const tak = t.tak + m.tak;
+  const total = t.total + m.total;
+  if (total === 0) return -1; // brak historii -> na koniec listy
+  return tak / total;
+}
+
+// Zwraca graczy posortowanych wg frekwencji (zamrożonej na bieżący 2-tyg.
+// okres), podzielonych na widocznych i zwiniętych pod "Pokaż więcej".
+export function getOrderedPlayerGroups() {
+  const cutoff = currentSortCutoffDateStr();
+  const frozenStats = computeAttendanceStats(cutoff);
+
+  const sorted = [...PLAYERS].sort((a, b) => sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug));
+
+  return {
+    visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug)),
+    hidden: sorted.filter((p) => HIDDEN_SLUGS.has(p.slug)),
+  };
+}
+
+function buildStatsTable(players, stats) {
   const table = document.createElement("table");
   table.className = "stats-table";
   table.innerHTML = `
@@ -422,7 +498,7 @@ function renderStats() {
   `;
   const tbody = document.createElement("tbody");
 
-  for (const player of PLAYERS) {
+  for (const player of players) {
     const tr = document.createElement("tr");
     const tdPlayer = document.createElement("td");
     tdPlayer.className = "stats-player-cell";
@@ -443,7 +519,28 @@ function renderStats() {
   }
 
   table.appendChild(tbody);
-  container.appendChild(table);
+  return table;
+}
+
+function renderStats() {
+  const container = document.getElementById("stats-panel");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const stats = computeAttendanceStats(); // pełna historia (bez zamrożenia) - do wyświetlenia liczb
+  const { visible, hidden } = getOrderedPlayerGroups();
+
+  container.appendChild(buildStatsTable(visible, stats));
+
+  if (hidden.length > 0) {
+    const details = document.createElement("details");
+    details.className = "roster-more";
+    const summary = document.createElement("summary");
+    summary.textContent = `Pokaż więcej (${hidden.length})`;
+    details.appendChild(summary);
+    details.appendChild(buildStatsTable(hidden, stats));
+    container.appendChild(details);
+  }
 }
 
 // ---------------------------------------------------------------------------
