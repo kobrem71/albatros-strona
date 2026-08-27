@@ -273,8 +273,7 @@ function renderSchedule() {
 
     card.innerHTML = `
       <span class="event-type-badge">${meta.label}</span>
-      <span class="event-date">${formatDateHuman(ev.dateObj)}</span>
-      <span class="event-time">${ev.time}</span>
+      <span class="event-date">${formatDateHuman(ev.dateObj)} · ${ev.time}</span>
       ${ev.label ? `<span class="event-label">${escapeHtml(ev.label)}</span>` : ""}
       <span class="event-address">${address ? "📍 " + escapeHtml(address) : "📍 adres nieustalony"}</span>
       <span class="event-counts">

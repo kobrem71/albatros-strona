@@ -198,7 +198,6 @@ main {
   text-transform: uppercase;
 }
 .event-date { font-weight: 700; color: var(--ink); font-size: 1rem; text-transform: capitalize; }
-.event-time { color: var(--muted); font-size: 0.9rem; }
 .event-label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
 .event-address { color: var(--muted); font-size: 0.85rem; }
 .event-counts {
