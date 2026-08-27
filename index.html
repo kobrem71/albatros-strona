@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Albatros — Zapisy na treningi</title>
+<title>Albatros Jaśkowice Legnickie — Zapisy na treningi</title>
 <link rel="icon" href="assets/img/logo.png" />
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
 <div class="bg-video-wrap" aria-hidden="true">
-  <video id="bg-video-a" class="bg-video" muted loop playsinline></video>
-  <video id="bg-video-b" class="bg-video" muted loop playsinline></video>
+  <div id="bg-grid" class="bg-grid"></div>
   <div class="bg-overlay"></div>
 </div>
 
@@ -21,9 +20,9 @@
 </div>
 
 <header class="site-header">
-  <img id="logo-img" alt="Logo Albatros" class="logo" />
+  <img id="logo-img" alt="Logo Albatros Jaśkowice Legnickie" class="logo" />
   <div class="header-text">
-    <h1>Albatros</h1>
+    <h1>Albatros Jaśkowice Legnickie</h1>
     <p>Zapisy na treningi i mecze</p>
   </div>
 </header>
@@ -40,6 +39,12 @@
 
   <section class="card">
     <div id="roster-panel" class="roster-panel"></div>
+  </section>
+
+  <section class="card">
+    <h2>Frekwencja</h2>
+    <p class="muted stats-hint">Procent zapisów „Tak” spośród wszystkich Twoich odpowiedzi, osobno dla treningów i meczów. Statystyki rosną z czasem — na starcie będą puste.</p>
+    <div id="stats-panel" class="stats-panel"></div>
   </section>
 </main>
 

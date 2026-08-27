@@ -26,7 +26,7 @@ body {
   flex-direction: column;
 }
 
-/* ---------- Tło wideo ---------- */
+/* ---------- Tło: mozaika okienek wideo ---------- */
 .bg-video-wrap {
   position: fixed;
   inset: 0;
@@ -34,16 +34,26 @@ body {
   overflow: hidden;
   background: linear-gradient(160deg, #0d2a49, #1b4d82 60%, #0d2a49);
 }
-.bg-video {
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 3px;
+  background: #0a1c33;
+}
+.bg-cell {
+  position: relative;
+  overflow: hidden;
+  background: #0a1c33;
+}
+.bg-cell video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 1.6s ease;
+  opacity: 0.4;
 }
-.bg-video.visible { opacity: 0.38; }
 .bg-overlay {
   position: absolute;
   inset: 0;
@@ -61,13 +71,10 @@ body {
   width: 100%;
 }
 .logo {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
-  background: white;
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: var(--shadow);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 }
 .header-text h1 {
   margin: 0;
@@ -181,6 +188,7 @@ main {
 }
 .event-date { font-weight: 700; color: var(--ink); font-size: 1rem; text-transform: capitalize; }
 .event-time { color: var(--muted); font-size: 0.9rem; }
+.event-label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
 .event-address { color: var(--muted); font-size: 0.85rem; }
 .event-counts { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
 .c-tak { color: #1f9d55; }
@@ -193,6 +201,11 @@ main {
   margin: 6px 0 8px;
   color: var(--ink);
   text-transform: capitalize;
+}
+.roster-event-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: var(--blue-dark);
 }
 .address-row {
   display: flex;
@@ -266,6 +279,38 @@ main {
 .status-btn.status-hgw.selected { background: #b8860b; color: white; border-color: #b8860b; }
 
 .muted { color: var(--muted); }
+.stats-hint { margin-top: -6px; font-size: 0.85rem; }
+
+/* ---------- Statystyki frekwencji ---------- */
+.stats-panel { overflow-x: auto; }
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.stats-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 8px 10px;
+  border-bottom: 2px solid #e5eaf0;
+  white-space: nowrap;
+}
+.stats-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+.stats-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stats-player-cell .avatar { width: 28px; height: 28px; }
+.stats-player-cell .avatar-fallback { font-size: 0.7rem; }
 
 .site-footer {
   text-align: center;

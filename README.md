@@ -79,20 +79,37 @@ wszystkich graczy, w czasie rzeczywistym.
 > że jest widoczny w kodzie strony (tak działa każda strona na Firebase).
 > Bezpieczeństwo zapewniają reguły w `firestore.rules`.
 
-## 3. Cotygodniowa edycja planu zajęć
+## 3. Edycja planu zajęć
 
 Otwórz `js/schedule.js`:
 
-- **Treningi (śr, pt 18:00) i mecze (niedz 11:00)** są w sekcji
+- **Treningi (śr, pt 18:00, adres domyślny `HOME_ADDRESS`)** są w sekcji
   `RECURRING_RULES` — powtarzają się same, co tydzień. Nic nie trzeba robić.
-- **Wydarzenia jednorazowe** (jak trening bramkarski w danym tygodniu)
-  dopisujesz do `EXTRA_EVENTS`, podając konkretną datę `RRRR-MM-DD`.
-- Po edycji: `git add . && git commit -m "Aktualizacja planu" && git push`
-  — GitHub Pages sam zaktualizuje stronę po ok. minucie.
+- **Mecze** są w `EXTRA_EVENTS` jako osobne wpisy z konkretną datą — bo w
+  lidze nie każda niedziela jest meczowa (są kolejki-pauzy) i różne są adresy
+  (dom/wyjazd). Obecnie wpisany jest terminarz do kolejki 13 (15.11.2026).
+  Gdy sezon pójdzie dalej, dopisz kolejne mecze w tym samym formacie:
+  ```js
+  {
+    type: "mecz",
+    date: "RRRR-MM-DD",
+    time: "11:00",
+    location: HOME_ADDRESS, // u siebie — albo adres przeciwnika na wyjeździe
+    label: "Albatros Jaśkowice – Nazwa Przeciwnika",
+  },
+  ```
+- **Inne jednorazowe wydarzenia** (jak trening bramkarski) dopisujesz do
+  `EXTRA_EVENTS` tak samo, z konkretną datą `RRRR-MM-DD`.
+- Po edycji: `git add . && git commit -m "Aktualizacja planu"` (osobno `git
+  commit`), potem `git push` — GitHub Pages sam zaktualizuje stronę po ok.
+  minucie.
 
 Adres treningu/meczu **nie musi** być w kodzie — każdy może go ustawić
 bezpośrednio na stronie, przyciskiem "Ustaw adres" przy danym wydarzeniu
-(zapisze się dla wszystkich, jeśli Firebase jest skonfigurowany).
+(zapisze się dla wszystkich, jeśli Firebase jest skonfigurowany). Przyda się
+to zwłaszcza tam, gdzie w kodzie wpisana jest tylko nazwa miejscowości
+(Kościelec, Kwiatkowice, Mierzowice) — nie udało mi się znaleźć dokładnych
+adresów tych boisk w sieci.
 
 ## 4. Dodawanie / usuwanie graczy
 

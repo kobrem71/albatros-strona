@@ -1,0 +1,60 @@
+LISTA NAZW PLIKÓW DLA ZDJĘĆ GRACZY
+===================================
+
+Nazwij każde zdjęcie dokładnie tak jak w kolumnie "nazwa pliku" (małe litery,
+bez polskich znaków, myślnik zamiast spacji) i wrzuć do folderu:
+assets/img/players/
+
+Rozszerzenie dowolne: .jpg, .jpeg, .png lub .webp — jeśli zdjęcia dla danego
+gracza nie będzie, strona sama pokaże awatar z inicjałami, nic nie trzeba
+dodatkowo robić.
+
+Gracz                        -> nazwa pliku
+-----------------------------------------------------------
+Maksym Dobryvoda             -> maksym-dobryvoda
+Vladyslav Didenko             -> vladyslav-didenko
+Dominik Duchnicki              -> dominik-duchnicki
+Remigiusz Dubaniewicz           -> remigiusz-dubaniewicz
+Bartosz Fudali                  -> bartosz-fudali
+Kamil Felsztyński                -> kamil-felsztynski
+Maciej Gdaniec                    -> maciej-gdaniec
+Bartosz Gresiuk                    -> bartosz-gresiuk
+Mateusz Gresiuk                     -> mateusz-gresiuk
+Maksym Hlibichuk                     -> maksym-hlibichuk
+Rafał Kanasiuk                        -> rafal-kanasiuk
+Oleksandr Kolvakh                      -> oleksandr-kolvakh
+Kacper Malinowski                       -> kacper-malinowski
+Krzysztof Obremski                       -> krzysztof-obremski
+Damian Pachołek                           -> damian-pacholek
+Michał Papaj                               -> michal-papaj
+Paweł Pęczkowski                            -> pawel-peczkowski
+Marcin Rozpędowski                           -> marcin-rozpedowski
+Filip Siwak                                   -> filip-siwak
+Mateusz Styrcz                                 -> mateusz-styrcz
+Marcin Świtoń                                   -> marcin-switon
+Gabriel Świerbutowicz                            -> gabriel-swierbutowicz
+Bartłomiej Taczyński                              -> bartlomiej-taczynski
+Krzysztof Taczyński                                -> krzysztof-taczynski
+Marek Taczyński                                     -> marek-taczynski
+Stanisław Taczyński                                  -> stanislaw-taczynski
+Mateusz Taraciński                                    -> mateusz-taracinski
+Janusz Tkacz                                           -> janusz-tkacz
+Patryk Wątroba                                          -> patryk-watroba
+Jonatan Wyporkiewicz                                     -> jonatan-wyporkiewicz
+Hubert Zdziech                                            -> hubert-zdziech
+Konrad Zębacki                                             -> konrad-zebacki
+Yevhen Borblik                                              -> yevhen-borblik
+Artur Borysenko                                              -> artur-borysenko
+Dawid Bubień                                                  -> dawid-bubien
+Filip Kubiak                                                   -> filip-kubiak
+Jakub Cofór                                                     -> jakub-cofor
+Alan Lichman                                                     -> alan-lichman
+Brajan Kwiatkowski                                                -> brajan-kwiatkowski
+Jakub Behrendt                                                     -> jakub-behrendt
+Zawodnik Testowany1                                                 -> zawodnik-testowany1
+Zawodnik Testowany2                                                  -> zawodnik-testowany2
+
+Wskazówka: jeśli wolisz, mogę to zrobić za Ciebie — wystarczy, że wyślesz
+zdjęcia z dowolnymi nazwami razem z informacją, które zdjęcie należy do
+którego gracza (np. w nazwie pliku albo w wiadomości), a ja je przemianuję
+i wgram we właściwe miejsce.

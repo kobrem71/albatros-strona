@@ -52,6 +52,7 @@ export function buildUpcomingEvents() {
           dateObj: new Date(day),
           time: rule.time,
           defaultLocation: rule.location || "",
+          label: rule.label || null,
         });
       }
     }
@@ -68,6 +69,7 @@ export function buildUpcomingEvents() {
         dateObj: evDate,
         time: ev.time,
         defaultLocation: ev.location || "",
+        label: ev.label || null,
       });
     }
   }
@@ -242,6 +244,7 @@ function renderSchedule() {
       <span class="event-type-badge">${meta.label}</span>
       <span class="event-date">${formatDateHuman(ev.dateObj)}</span>
       <span class="event-time">${ev.time}</span>
+      ${ev.label ? `<span class="event-label">${escapeHtml(ev.label)}</span>` : ""}
       <span class="event-address">${address ? "📍 " + escapeHtml(address) : "📍 adres nieustalony"}</span>
       <span class="event-counts">
         <b class="c-tak">${counts.tak}</b> Tak ·
@@ -285,6 +288,7 @@ function renderRoster() {
     <div>
       <span class="event-type-badge">${meta.label}</span>
       <h3>${formatDateHuman(ev.dateObj)} · ${ev.time}</h3>
+      ${ev.label ? `<p class="roster-event-label">${escapeHtml(ev.label)}</p>` : ""}
     </div>
   `;
 
@@ -350,35 +354,169 @@ function renderRoster() {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Tło z losowymi filmikami (dawne gify -> mp4, dużo lżejsze)
+// 3b. Statystyki frekwencji (na podstawie całej historii zapisów w Firestore)
+// ---------------------------------------------------------------------------
+const TYPE_KEYS_BY_LENGTH = Object.keys(TYPE_META).sort((a, b) => b.length - a.length);
+
+function eventTypeFromId(eventId) {
+  for (const key of TYPE_KEYS_BY_LENGTH) {
+    if (eventId.startsWith(`${key}-`)) return key;
+  }
+  return null;
+}
+
+function categoryOfType(type) {
+  if (type === "mecz") return "mecz";
+  if (type === "trening" || type === "trening-bramkarski") return "trening";
+  return null;
+}
+
+function computeAttendanceStats() {
+  const stats = {};
+  for (const p of PLAYERS) {
+    stats[p.slug] = {
+      trening: { tak: 0, total: 0 },
+      mecz: { tak: 0, total: 0 },
+    };
+  }
+
+  for (const [eventId, players] of Object.entries(state.signups)) {
+    const type = eventTypeFromId(eventId);
+    const category = categoryOfType(type);
+    if (!category) continue;
+    for (const [slug, resp] of Object.entries(players || {})) {
+      if (!stats[slug]) continue;
+      stats[slug][category].total++;
+      if (resp.status === "tak") stats[slug][category].tak++;
+    }
+  }
+
+  return stats;
+}
+
+function formatPct(bucket) {
+  if (!bucket || bucket.total === 0) return "—";
+  const pct = Math.round((bucket.tak / bucket.total) * 100);
+  return `${bucket.tak}/${bucket.total} (${pct}%)`;
+}
+
+function renderStats() {
+  const container = document.getElementById("stats-panel");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const stats = computeAttendanceStats();
+
+  const table = document.createElement("table");
+  table.className = "stats-table";
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Gracz</th>
+        <th>Frekwencja treningi</th>
+        <th>Frekwencja mecze</th>
+      </tr>
+    </thead>
+  `;
+  const tbody = document.createElement("tbody");
+
+  for (const player of PLAYERS) {
+    const tr = document.createElement("tr");
+    const tdPlayer = document.createElement("td");
+    tdPlayer.className = "stats-player-cell";
+    tdPlayer.appendChild(avatarNode(player));
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = player.name;
+    tdPlayer.appendChild(nameSpan);
+
+    const tdTrening = document.createElement("td");
+    tdTrening.textContent = formatPct(stats[player.slug]?.trening);
+    const tdMecz = document.createElement("td");
+    tdMecz.textContent = formatPct(stats[player.slug]?.mecz);
+
+    tr.appendChild(tdPlayer);
+    tr.appendChild(tdTrening);
+    tr.appendChild(tdMecz);
+    tbody.appendChild(tr);
+  }
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// ---------------------------------------------------------------------------
+// 4. Tło: mozaika małych "okienek" wideo wypełniająca cały ekran
 // ---------------------------------------------------------------------------
 const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `assets/gifs/gif${n}.mp4`);
+const BG_CELL_TARGET_W = 300; // px, orientacyjna szerokość jednego "okienka"
+const BG_CELL_ASPECT = 4 / 3; // proporcje okienka (szerokość / wysokość)
+const BG_MAX_COLUMNS = 7;
+const BG_MAX_ROWS = 5;
+const BG_MIN_COLUMNS = 2;
+const BG_MIN_ROWS = 2;
+
+function randomVideoSrc(excludeSrc) {
+  let pick;
+  do {
+    pick = BG_VIDEOS[Math.floor(Math.random() * BG_VIDEOS.length)];
+  } while (BG_VIDEOS.length > 1 && pick === excludeSrc);
+  return pick;
+}
 
 function initBackground() {
-  const a = document.getElementById("bg-video-a");
-  const b = document.getElementById("bg-video-b");
-  let showingA = true;
-  let pool = [];
+  const grid = document.getElementById("bg-grid");
+  let resizeTimer = null;
 
-  function nextSrc() {
-    if (pool.length === 0) pool = [...BG_VIDEOS].sort(() => Math.random() - 0.5);
-    return pool.pop();
+  function build() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    let columns = Math.round(w / BG_CELL_TARGET_W);
+    columns = Math.max(BG_MIN_COLUMNS, Math.min(BG_MAX_COLUMNS, columns));
+    const cellW = w / columns;
+    const cellH = cellW / BG_CELL_ASPECT;
+    let rows = Math.round(h / cellH);
+    rows = Math.max(BG_MIN_ROWS, Math.min(BG_MAX_ROWS, rows));
+
+    grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    grid.innerHTML = "";
+
+    const total = columns * rows;
+    for (let i = 0; i < total; i++) {
+      const cell = document.createElement("div");
+      cell.className = "bg-cell";
+      const video = document.createElement("video");
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      video.src = randomVideoSrc();
+      video.play().catch(() => {});
+      cell.appendChild(video);
+      grid.appendChild(cell);
+    }
   }
 
-  function swap() {
-    const incoming = showingA ? b : a;
-    const outgoing = showingA ? a : b;
-    incoming.src = nextSrc();
-    incoming.play().catch(() => {});
-    incoming.classList.add("visible");
-    outgoing.classList.remove("visible");
-    showingA = !showingA;
+  // Co jakiś czas podmień losową część okienek na inny filmik, dla żywszego tła.
+  function shuffleSome() {
+    const cells = grid.querySelectorAll(".bg-cell video");
+    if (cells.length === 0) return;
+    const howMany = Math.max(1, Math.round(cells.length * 0.2));
+    for (let i = 0; i < howMany; i++) {
+      const video = cells[Math.floor(Math.random() * cells.length)];
+      const newSrc = randomVideoSrc(video.getAttribute("src"));
+      video.src = newSrc;
+      video.play().catch(() => {});
+    }
   }
 
-  a.src = nextSrc();
-  a.play().catch(() => {});
-  a.classList.add("visible");
-  setInterval(swap, 22000);
+  build();
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(build, 400);
+  });
+  setInterval(shuffleSome, 9000);
 }
 
 // ---------------------------------------------------------------------------
@@ -390,6 +528,7 @@ async function init() {
   renderIdentityBar();
   renderSchedule();
   renderRoster();
+  renderStats();
 
   const banner = document.getElementById("demo-banner");
   if (!isFirebaseConfigured()) {
@@ -403,6 +542,7 @@ async function init() {
     state.signups = data;
     renderSchedule();
     renderRoster();
+    renderStats();
   });
   store.subscribeEventMeta((data) => {
     state.eventMeta = data;
