@@ -130,7 +130,9 @@ assets/img/players/krzysztof-obremski.jpg
 ```
 
 (obsługiwane rozszerzenia: `.jpg`, `.jpeg`, `.png`, `.webp`). Jeśli pliku
-nie ma, gracz dostaje kolorowy awatar z inicjałami — automatycznie, nic nie
+nie ma, gracz dostaje wspólny placeholder `assets/img/player-placeholder.png`
+(sylwetka bez zdjęcia) — a jeśli i tego pliku by nie było, dopiero wtedy
+kolorowy awatar z inicjałami. Wszystko dzieje się automatycznie, nic nie
 trzeba konfigurować.
 
 ## Jak działają zapisy (Tak / Nie / HGW)

@@ -108,6 +108,8 @@ function formatDateHuman(dateObj) {
 // ---------------------------------------------------------------------------
 // 2. Avatary graczy
 // ---------------------------------------------------------------------------
+const PLAYER_PLACEHOLDER_SRC = "assets/img/player-placeholder.png";
+
 const AVATAR_PALETTE = [
   "#2f7dd1",
   "#d4a21b",
@@ -156,9 +158,14 @@ function avatarNode(player) {
   const exts = ["jpg", "jpeg", "png", "webp"];
   img.style.display = "none";
   function tryNext() {
-    if (tried >= exts.length) return; // brak zdjęcia -> zostaje placeholder
-    img.src = `${player.photoBase}.${exts[tried]}`;
-    tried++;
+    if (tried < exts.length) {
+      img.src = `${player.photoBase}.${exts[tried]}`;
+      tried++;
+    } else if (tried === exts.length) {
+      tried++;
+      img.src = PLAYER_PLACEHOLDER_SRC; // brak własnego zdjęcia -> wspólny placeholder
+    }
+    // jeśli i placeholder się nie wczyta, zostają inicjały (fallback już w DOM)
   }
   img.onerror = tryNext;
   img.onload = () => {
