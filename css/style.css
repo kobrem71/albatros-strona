@@ -1,0 +1,285 @@
+:root {
+  --blue: #2f7dd1;
+  --blue-dark: #164a86;
+  --gold: #d4a21b;
+  --ink: #10202f;
+  --paper: #ffffff;
+  --paper-soft: #f4f7fb;
+  --muted: #5c6b7a;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(16, 32, 47, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--blue-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Tło wideo ---------- */
+.bg-video-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0d2a49, #1b4d82 60%, #0d2a49);
+}
+.bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+.bg-video.visible { opacity: 0.38; }
+.bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 26, 46, 0.72) 0%, rgba(9, 26, 46, 0.55) 40%, rgba(9, 26, 46, 0.82) 100%);
+}
+
+/* ---------- Layout ---------- */
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 28px 24px 10px;
+  max-width: 980px;
+  margin: 0 auto;
+  width: 100%;
+}
+.logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: white;
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+}
+.header-text h1 {
+  margin: 0;
+  color: white;
+  font-size: 2rem;
+  letter-spacing: 0.5px;
+}
+.header-text p {
+  margin: 2px 0 0;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.95rem;
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px 24px 60px;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+}
+.card h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  color: var(--blue-dark);
+}
+
+.demo-banner {
+  background: #fff3cd;
+  color: #6b5100;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  border-bottom: 2px solid #e6c260;
+}
+.demo-banner code {
+  background: rgba(0,0,0,0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ---------- Identity bar ---------- */
+.identity-card { padding: 16px 24px; }
+.identity-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+.identity-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cfd8e3;
+  font-size: 0.95rem;
+  max-width: 100%;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--blue);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+/* ---------- Schedule cards ---------- */
+.schedule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.event-card {
+  --accent: #2f7dd1;
+  --accent-soft: rgba(47,125,209,0.14);
+  text-align: left;
+  border: 2px solid transparent;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.event-card:hover { transform: translateY(-2px); }
+.event-card.active { border-color: var(--accent); }
+.event-type-badge {
+  align-self: flex-start;
+  background: var(--accent);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+.event-date { font-weight: 700; color: var(--ink); font-size: 1rem; text-transform: capitalize; }
+.event-time { color: var(--muted); font-size: 0.9rem; }
+.event-address { color: var(--muted); font-size: 0.85rem; }
+.event-counts { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+.c-tak { color: #1f9d55; }
+.c-nie { color: #d1453b; }
+.c-hgw { color: #b8860b; }
+
+/* ---------- Roster ---------- */
+.roster-header { margin-bottom: 6px; }
+.roster-header h3 {
+  margin: 6px 0 8px;
+  color: var(--ink);
+  text-transform: capitalize;
+}
+.address-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.roster-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.roster-row.me {
+  background: rgba(47, 125, 209, 0.08);
+  outline: 1px solid rgba(47,125,209,0.35);
+}
+.roster-name { font-size: 0.95rem; }
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.status-group {
+  display: flex;
+  gap: 6px;
+}
+.status-btn {
+  border: 1px solid #d5dce4;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.status-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.status-btn:not(:disabled):hover { border-color: var(--blue); }
+.status-btn.status-tak.selected { background: #1f9d55; color: white; border-color: #1f9d55; }
+.status-btn.status-nie.selected { background: #d1453b; color: white; border-color: #d1453b; }
+.status-btn.status-hgw.selected { background: #b8860b; color: white; border-color: #b8860b; }
+
+.muted { color: var(--muted); }
+
+.site-footer {
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.85rem;
+  padding: 18px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .site-header { padding: 20px 16px 6px; }
+  main { padding: 10px 16px 40px; }
+  .card { padding: 16px; }
+  .roster-row { grid-template-columns: 32px 1fr; }
+  .status-group { grid-column: 1 / -1; margin-top: 6px; }
+  .avatar { width: 32px; height: 32px; }
+}
