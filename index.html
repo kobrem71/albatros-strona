@@ -25,7 +25,15 @@
     <h1>Albatros Jaśkowice Legnickie</h1>
     <p>Zapisy na treningi i mecze</p>
   </div>
+  <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
+    🎲 <span>Losowy gif</span>
+  </button>
 </header>
+
+<div id="gif-overlay" class="gif-overlay" hidden>
+  <video id="gif-overlay-video" class="gif-overlay-video" autoplay playsinline></video>
+  <button id="gif-overlay-close" class="gif-overlay-close" type="button" aria-label="Zamknij">✕</button>
+</div>
 
 <main>
   <section class="card identity-card">

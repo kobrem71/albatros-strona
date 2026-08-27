@@ -661,11 +661,47 @@ function initBackground() {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Przycisk "Losowy gif" — pełnoekranowe odtworzenie, potem powrót
+// ---------------------------------------------------------------------------
+function initRandomGifButton() {
+  const btn = document.getElementById("random-gif-btn");
+  const overlay = document.getElementById("gif-overlay");
+  const video = document.getElementById("gif-overlay-video");
+  const closeBtn = document.getElementById("gif-overlay-close");
+  if (!btn || !overlay || !video || !closeBtn) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  }
+
+  function openOverlay() {
+    video.src = randomVideoSrc();
+    overlay.hidden = false;
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  }
+
+  btn.addEventListener("click", openOverlay);
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay(); // klik w tło poza filmikiem
+  });
+  video.addEventListener("ended", closeOverlay); // po odtworzeniu -> wraca na główną
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 5. Start
 // ---------------------------------------------------------------------------
 async function init() {
   document.getElementById("logo-img").src = "assets/img/logo.png";
   initBackground();
+  initRandomGifButton();
   renderIdentityBar();
   renderSchedule();
   renderRoster();
