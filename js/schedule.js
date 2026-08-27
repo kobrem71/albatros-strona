@@ -14,12 +14,12 @@
 // To najlepszy sposób, żeby poprawić adres, jeśli poniższy okaże się nieaktualny.
 
 export const TYPE_META = {
-  trening: { label: "Trening", color: "#2f7dd1", colorSoft: "rgba(47,125,209,0.14)" },
-  mecz: { label: "Mecz", color: "#d4a21b", colorSoft: "rgba(212,162,27,0.16)" },
+  trening: { label: "Trening", color: "#3fb6f0", colorSoft: "rgba(63,182,240,0.22)" },
+  mecz: { label: "Mecz", color: "#e0b23a", colorSoft: "rgba(224,178,58,0.22)" },
   "trening-bramkarski": {
     label: "Trening bramkarski",
-    color: "#a437c9",
-    colorSoft: "rgba(164,55,201,0.15)",
+    color: "#a879f5",
+    colorSoft: "rgba(168,121,245,0.24)",
   },
 };
 
