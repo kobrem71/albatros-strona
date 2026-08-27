@@ -108,8 +108,12 @@ Adres treningu/meczu **nie musi** być w kodzie — każdy może go ustawić
 bezpośrednio na stronie, przyciskiem "Ustaw adres" przy danym wydarzeniu
 (zapisze się dla wszystkich, jeśli Firebase jest skonfigurowany). Przyda się
 to zwłaszcza tam, gdzie w kodzie wpisana jest tylko nazwa miejscowości
-(Kościelec, Kwiatkowice, Mierzowice) — nie udało mi się znaleźć dokładnych
-adresów tych boisk w sieci.
+(Kwiatkowice, Mierzowice) — nie udało mi się znaleźć dokładnych adresów tych
+boisk w sieci.
+
+Sekcja "Plan na najbliższy czas" zawsze pokazuje najbliższych **6
+wydarzeń** (nie ogranicza się do 7 dni) — dzięki temu siatka zawsze jest
+pełna, nawet w tygodniach bez meczu.
 
 ## 4. Dodawanie / usuwanie graczy
 

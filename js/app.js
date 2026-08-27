@@ -29,15 +29,19 @@ function toDateStr(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+const EVENTS_TO_SHOW = 6;
+const SEARCH_DAYS_AHEAD = 60; // wystarczająco daleko, żeby zawsze znaleźć 6 wydarzeń
+
 export function buildUpcomingEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const days = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < SEARCH_DAYS_AHEAD; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     days.push(d);
   }
+  const dayStrs = new Set(days.map(toDateStr));
 
   const events = [];
 
@@ -59,14 +63,12 @@ export function buildUpcomingEvents() {
   }
 
   for (const ev of EXTRA_EVENTS) {
-    const evDate = new Date(ev.date + "T00:00:00");
-    const inWindow = days.some((d) => toDateStr(d) === ev.date);
-    if (inWindow) {
+    if (dayStrs.has(ev.date)) {
       events.push({
         id: `${ev.type}-${ev.date}`,
         type: ev.type,
         date: ev.date,
-        dateObj: evDate,
+        dateObj: new Date(ev.date + "T00:00:00"),
         time: ev.time,
         defaultLocation: ev.location || "",
         label: ev.label || null,
@@ -80,7 +82,7 @@ export function buildUpcomingEvents() {
     return da.localeCompare(db_);
   });
 
-  return events;
+  return events.slice(0, EVENTS_TO_SHOW);
 }
 
 function formatDateHuman(dateObj) {
@@ -224,7 +226,7 @@ function renderSchedule() {
   wrap.innerHTML = "";
 
   if (state.events.length === 0) {
-    wrap.innerHTML = `<p class="muted">Brak zaplanowanych wydarzeń w najbliższym tygodniu. Dodaj je w js/schedule.js.</p>`;
+    wrap.innerHTML = `<p class="muted">Brak zaplanowanych wydarzeń. Dodaj je w js/schedule.js.</p>`;
     return;
   }
 

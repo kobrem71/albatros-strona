@@ -34,9 +34,9 @@ export const RECURRING_RULES = [
 
 // Wydarzenia jednorazowe: mecze wg terminarza ligi (kolejki 3-13) + inne dodatkowe zajęcia.
 //
-// Adresy wyjazdowe: dla Kościelca, Kwiatkowic i Mierzowic nie udało się znaleźć
-// dokładnego adresu z numerem (małe boiska wiejskie, brak oficjalnego adresu w sieci)
-// — wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
+// Adresy wyjazdowe: dla Kwiatkowic i Mierzowic nie udało się znaleźć dokładnego
+// adresu z numerem (małe boiska wiejskie, brak oficjalnego adresu w sieci) —
+// wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
   {
@@ -51,7 +51,7 @@ export const EXTRA_EVENTS = [
     type: "mecz",
     date: "2026-08-30",
     time: "11:00",
-    location: "Kościelec",
+    location: "Witosa, 59-223 Krotoszyce",
     label: "Błękitni II Kościelec – Albatros Jaśkowice",
   },
   // Kolejka 4
