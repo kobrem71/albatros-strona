@@ -140,7 +140,10 @@ function avatarNode(player) {
   wrap.className = "avatar";
   const img = document.createElement("img");
   img.alt = player.name;
-  img.loading = "lazy";
+  // Uwaga: celowo BEZ loading="lazy" — w połączeniu z display:none (poniżej)
+  // przeglądarka nigdy nie wie, czy obrazek "wszedł" w viewport (brak layoutu),
+  // więc request o zdjęcie w ogóle się nie wysyła. Zdjęć jest niewiele, więc
+  // eager-loading nie szkodzi wydajności.
   const fallback = document.createElement("span");
   fallback.className = "avatar-fallback";
   fallback.textContent = initialsOf(player.name);
