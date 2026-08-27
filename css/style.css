@@ -94,25 +94,24 @@ body {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: white;
-  font-size: 0.9rem;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 10px 16px;
-  border-radius: 100px;
   cursor: pointer;
   backdrop-filter: blur(6px);
-  transition: background 0.15s ease, transform 0.15s ease;
 }
 .random-gif-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  transform: translateY(-1px);
+  border-color: var(--blue);
+  color: var(--ink);
 }
 @media (max-width: 600px) {
   .random-gif-btn span { display: none; }
-  .random-gif-btn { padding: 10px 12px; font-size: 1.1rem; }
+  .random-gif-btn { padding: 8px 10px; font-size: 1rem; }
 }
 
 /* ---------- Pełnoekranowy losowy gif ---------- */
