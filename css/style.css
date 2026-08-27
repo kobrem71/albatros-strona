@@ -168,7 +168,7 @@ main {
   --accent: #2f7dd1;
   --accent-soft: rgba(47,125,209,0.14);
   text-align: left;
-  border: 2px solid transparent;
+  border: 4px solid transparent;
   background: var(--accent-soft);
   border-radius: 12px;
   padding: 14px;
@@ -196,7 +196,29 @@ main {
 .event-time { color: var(--muted); font-size: 0.9rem; }
 .event-label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
 .event-address { color: var(--muted); font-size: 0.85rem; }
-.event-counts { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+.event-counts {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(16, 32, 47, 0.1);
+}
+.ec-item {
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.ec-item small {
+  font-weight: 800;
+  font-size: 0.62rem;
+  letter-spacing: 0.3px;
+}
+.ec-sep { color: var(--muted); font-weight: 400; font-size: 1rem; }
 .c-tak { color: #1f9d55; }
 .c-nie { color: #d1453b; }
 .c-hgw { color: #b8860b; }

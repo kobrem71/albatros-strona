@@ -16,6 +16,12 @@ const HIDDEN_NAMES = [
 ];
 const HIDDEN_SLUGS = new Set(HIDDEN_NAMES.map(slugify));
 
+// Bramkarze klubu — na trening bramkarski zapisują się tylko oni, więc lista
+// (i licząca się z niej frekwencja treningu bramkarskiego) jest zawężona
+// tylko do tej czwórki.
+const GOALKEEPER_NAMES = ["Dawid Bubień", "Janusz Tkacz", "Brajan Kwiatkowski", "Marek Taczyński"];
+const GOALKEEPER_SLUGS = new Set(GOALKEEPER_NAMES.map(slugify));
+
 const WEEKDAY_NAMES = [
   "niedziela",
   "poniedziałek",
@@ -272,9 +278,7 @@ function renderSchedule() {
       ${ev.label ? `<span class="event-label">${escapeHtml(ev.label)}</span>` : ""}
       <span class="event-address">${address ? "📍 " + escapeHtml(address) : "📍 adres nieustalony"}</span>
       <span class="event-counts">
-        <b class="c-tak">${counts.tak}</b> Tak ·
-        <b class="c-nie">${counts.nie}</b> Nie ·
-        <b class="c-hgw">${counts.hgw}</b> HGW
+        <span class="ec-item c-tak">${counts.tak}<small>TAK</small></span><span class="ec-sep">/</span><span class="ec-item c-nie">${counts.nie}<small>NIE</small></span><span class="ec-sep">/</span><span class="ec-item c-hgw">${counts.hgw}<small>HGW</small></span>
       </span>
     `;
     card.onclick = () => {
@@ -372,7 +376,8 @@ function renderRoster() {
     return row;
   }
 
-  const { visible, hidden } = getOrderedPlayerGroups();
+  const rosterPool = ev.type === "trening-bramkarski" ? PLAYERS.filter((p) => GOALKEEPER_SLUGS.has(p.slug)) : PLAYERS;
+  const { visible, hidden } = getOrderedPlayerGroups(rosterPool);
 
   const list = document.createElement("div");
   list.className = "roster-list";
@@ -482,11 +487,12 @@ function sortScore(stats, slug) {
 
 // Zwraca graczy posortowanych wg frekwencji (zamrożonej na bieżący 2-tyg.
 // okres), podzielonych na widocznych i zwiniętych pod "Pokaż więcej".
-export function getOrderedPlayerGroups() {
+// `pool` pozwala zawęzić listę (np. do samych bramkarzy na trening bramkarski).
+export function getOrderedPlayerGroups(pool = PLAYERS) {
   const cutoff = currentSortCutoffDateStr();
   const frozenStats = computeAttendanceStats(cutoff);
 
-  const sorted = [...PLAYERS].sort((a, b) => sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug));
+  const sorted = [...pool].sort((a, b) => sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug));
 
   return {
     visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug)),
