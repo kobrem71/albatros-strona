@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=14";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";

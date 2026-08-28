@@ -1,7 +1,16 @@
-import { PLAYERS, slugify } from "./players.js";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js";
-import { isFirebaseConfigured } from "./firebase-config.js";
-import { getStore } from "./store.js";
+// Uwaga: importy modułów JS też trzeba wersjonować przez ?v=, tak jak
+// <script src="js/app.js?v=..."> w index.html — inaczej po zmianie np.
+// league-data.js sam app.js odświeży się z cache'a (nowy numer wersji w
+// index.html), ale przeglądarka/GitHub Pages CDN może dalej serwować STARĄ
+// wersję league-data.js pod tym samym, niewersjonowanym adresem (10 min
+// cache) — co objawia się jak "undefined" w polach, których stara wersja
+// pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
+// (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
+// ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
+import { PLAYERS, slugify } from "./players.js?v=14";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=14";
+import { isFirebaseConfigured } from "./firebase-config.js?v=14";
+import { getStore } from "./store.js?v=14";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -11,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js";
+} from "./league-data.js?v=14";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
