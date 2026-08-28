@@ -225,6 +225,9 @@ body {
 .league-fixture-match em { color: var(--muted); font-style: normal; font-size: 0.82rem; }
 
 .league-stats-hint { margin: 0 6px 10px; font-size: 0.82rem; }
+.sortable-th { cursor: pointer; user-select: none; }
+.sortable-th:hover { color: var(--blue); }
+.sortable-th.active { color: var(--gold); }
 .league-stats-name { text-align: left !important; white-space: normal !important; }
 .league-stats-bench { margin: 10px 6px 0; font-size: 0.8rem; }
 
@@ -247,13 +250,14 @@ body {
 
 /* ---------- Karta zawodnika w stylu FIFA Ultimate Team ---------- */
 .fut-card {
-  --fut-shield: polygon(50% 0%, 85% 6%, 100% 22%, 100% 64%, 88% 84%, 50% 100%, 12% 84%, 0% 64%, 0% 22%, 15% 6%);
-  width: 220px;
-  aspect-ratio: 0.68;
+  --fut-shield: polygon(6% 0%, 94% 0%, 100% 9%, 100% 60%, 86% 86%, 50% 100%, 14% 86%, 0% 60%, 0% 9%);
+  width: 250px;
+  aspect-ratio: 0.72;
   clip-path: var(--fut-shield);
   background: linear-gradient(160deg, var(--gold), #8a6420 55%, var(--blue-deep));
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
   padding: 3px;
+  margin: 0 auto;
 }
 .fut-card-face {
   width: 100%;
@@ -263,7 +267,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 10px 10px;
+  padding: 18px 16px 10px;
   box-sizing: border-box;
   position: relative;
 }

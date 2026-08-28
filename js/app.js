@@ -806,9 +806,30 @@ function renderAlbatrosFixtures(container) {
   }).join("");
 }
 
+// Sortowanie tabeli statystyk — klik w nagłówek kolumny sortuje po niej
+// (domyślnie malejąco po minutach; ponowny klik w tę samą kolumnę odwraca
+// kierunek). Stan trzymany w module, więc przetrwa ponowne otwarcie okienka.
+const STATS_COLUMNS = [
+  { key: "matches", label: "M" },
+  { key: "minutes", label: "Min" },
+  { key: "goals", label: "Gole" },
+  { key: "yellowCards", label: "ŻK" },
+  { key: "redCards", label: "CK" },
+];
+let playerStatsSort = { key: "minutes", dir: "desc" };
+
 function renderPlayerStats(tableEl, benchEl) {
-  const played = PLAYER_STATS.filter((p) => p.matches > 0).sort((a, b) => b.minutes - a.minutes);
   const bench = PLAYER_STATS.filter((p) => p.matches === 0).map((p) => p.name);
+  const played = PLAYER_STATS.filter((p) => p.matches > 0).sort((a, b) => {
+    const diff = b[playerStatsSort.key] - a[playerStatsSort.key];
+    return playerStatsSort.dir === "desc" ? diff : -diff;
+  });
+
+  const headCells = STATS_COLUMNS.map((col) => {
+    const active = col.key === playerStatsSort.key;
+    const arrow = active ? (playerStatsSort.dir === "desc" ? " ▼" : " ▲") : "";
+    return `<th class="sortable-th${active ? " active" : ""}" data-sort-key="${col.key}">${col.label}${arrow}</th>`;
+  }).join("");
 
   const rows = played.map((p) => `
       <tr>
@@ -816,14 +837,27 @@ function renderPlayerStats(tableEl, benchEl) {
         <td>${p.matches}</td>
         <td>${p.minutes}'</td>
         <td>${p.goals}</td>
-        <td>${p.cards}</td>
+        <td>${p.yellowCards}</td>
+        <td>${p.redCards}</td>
       </tr>`).join("");
 
   tableEl.innerHTML = `
     <thead>
-      <tr><th>Zawodnik</th><th>M</th><th>Min</th><th>Gole</th><th>Kartki</th></tr>
+      <tr><th>Zawodnik</th>${headCells}</tr>
     </thead>
     <tbody>${rows}</tbody>`;
+
+  tableEl.querySelectorAll("th.sortable-th").forEach((th) => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sortKey;
+      if (playerStatsSort.key === key) {
+        playerStatsSort = { key, dir: playerStatsSort.dir === "desc" ? "asc" : "desc" };
+      } else {
+        playerStatsSort = { key, dir: "desc" };
+      }
+      renderPlayerStats(tableEl, benchEl);
+    });
+  });
 
   tableEl.querySelectorAll("td.player-name-link").forEach((td) => {
     const player = PLAYERS.find((p) => p.slug === td.dataset.slug);
@@ -932,7 +966,7 @@ function openPlayerCard(player) {
   summary.className = "player-card-summary";
   summary.innerHTML =
     stats && stats.matches > 0
-      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.cards}</strong> kartek`
+      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
       : `Brak jeszcze występu w tym sezonie (wg laczynaspilka.pl).`;
   head.appendChild(summary);
 
@@ -944,7 +978,8 @@ function openPlayerCard(player) {
         : `${match.opponent} – Albatros Jaśkowice`;
       const events = [
         ...match.goalMinutes.map((t) => `⚽ ${t}`),
-        ...match.cardMinutes.map((t) => `🟨 ${t}`),
+        ...match.yellowMinutes.map((t) => `🟨 ${t}`),
+        ...match.redMinutes.map((t) => `🟥 ${t}`),
       ].join(" ");
       const competitionTag = match.competition ? ` <em>(${escapeHtml(match.competition)})</em>` : "";
       return `
