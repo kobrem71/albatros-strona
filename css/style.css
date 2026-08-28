@@ -250,9 +250,12 @@ body {
 
 /* ---------- Karta zawodnika w stylu FIFA Ultimate Team ---------- */
 .fut-card {
-  --fut-shield: polygon(6% 0%, 94% 0%, 100% 9%, 100% 60%, 86% 86%, 50% 100%, 14% 86%, 0% 60%, 0% 9%);
+  /* Płaski góra i dół (tylko lekko ścięte narożniki) — właściwy, ostry
+     szpic tarczy jest tylko w ostatnich ~10% wysokości, żeby nie ucinał
+     treści karty (OVR/flaga u góry, 6 statystyk u dołu). */
+  --fut-shield: polygon(6% 0%, 94% 0%, 100% 8%, 100% 92%, 92% 97%, 50% 100%, 8% 97%, 0% 92%, 0% 8%);
   width: 250px;
-  aspect-ratio: 0.72;
+  aspect-ratio: 0.65;
   clip-path: var(--fut-shield);
   background: linear-gradient(160deg, var(--gold), #8a6420 55%, var(--blue-deep));
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
@@ -267,7 +270,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 18px 16px 10px;
+  padding: 18px 16px 16px;
   box-sizing: border-box;
   position: relative;
 }
@@ -281,20 +284,25 @@ body {
 .fut-ovr { font-size: 1.9rem; font-weight: 800; color: var(--gold); }
 .fut-pos { font-size: 0.72rem; font-weight: 700; color: var(--ink); letter-spacing: 0.5px; margin-top: 2px; }
 .fut-card-badges { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.fut-flag { font-size: 1.3rem; line-height: 1; }
+.fut-flag {
+  width: 26px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
 .fut-crest { width: 26px; height: 26px; object-fit: contain; }
 .fut-card-photo-wrap {
-  flex: 1;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  margin-top: -4px;
+  margin-top: 4px;
 }
 .fut-card-photo-img {
-  width: 118px;
-  height: 128px;
+  width: 100px;
+  height: 100px;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
@@ -304,22 +312,26 @@ body {
 .fut-card-photo-img .avatar-fallback { font-size: 2rem; }
 .fut-card-name {
   margin-top: 8px;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: var(--ink);
   text-transform: uppercase;
   border-top: 1px solid rgba(255, 255, 255, 0.25);
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 4px 0;
-  width: 82%;
+  padding: 4px 2px;
+  width: 88%;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 .fut-card-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3px 16px;
-  margin-top: 10px;
+  gap: 6px 16px;
+  margin-top: 12px;
   width: 88%;
 }
 .fut-stat {

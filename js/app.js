@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=14";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=14";
-import { isFirebaseConfigured } from "./firebase-config.js?v=14";
-import { getStore } from "./store.js?v=14";
+import { PLAYERS, slugify } from "./players.js?v=16";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=16";
+import { isFirebaseConfigured } from "./firebase-config.js?v=16";
+import { getStore } from "./store.js?v=16";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=14";
+} from "./league-data.js?v=16";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -906,9 +906,64 @@ const UKRAINIAN_SLUGS = new Set([
   "oleksandr-kolvakh",
 ]);
 function flagFor(slug) {
-  if (UKRAINIAN_SLUGS.has(slug)) return "🇺🇦";
-  if (slug === "filip-kubiak") return "🇪🇸";
-  return "🇵🇱";
+  if (UKRAINIAN_SLUGS.has(slug)) return "assets/flagi/UA.png";
+  if (slug === "filip-kubiak") return "assets/flagi/ES.webp";
+  return "assets/flagi/PL.png";
+}
+
+// Pseudonimy na kartę zawodnika (klubowe ksywki). Jeśli gracza nie ma na
+// liście (np. nowy dopisany do players.js), spada na awaryjną regułę:
+// pierwsza litera imienia + kropka + nazwisko, wielkimi literami.
+const NICKNAMES = {
+  "Maksym Dobryvoda": "MAKS",
+  "Vladyslav Didenko": "WŁADZIU",
+  "Dominik Duchnicki": "DUSZEK",
+  "Remigiusz Dubaniewicz": "REMEK",
+  "Bartosz Fudali": "FUDALITO",
+  "Kamil Felsztyński": "FELU",
+  "Maciej Gdaniec": "MACIEK",
+  "Bartosz Gresiuk": "B.GRESIUK",
+  "Mateusz Gresiuk": "M.GRESIUK",
+  "Maksym Hlibichuk": "MAKSIU",
+  "Rafał Kanasiuk": "R.KANASIUK",
+  "Oleksandr Kolvakh": "SASZA",
+  "Kacper Malinowski": "MALINA",
+  "Krzysztof Obremski": "KOBREM",
+  "Damian Pachołek": "PACHOŁEK",
+  "Michał Papaj": "PAPAJ",
+  "Paweł Pęczkowski": "PĄCZEK",
+  "Marcin Rozpędowski": "ROZPĘD",
+  "Filip Siwak": "SIWY",
+  "Mateusz Styrcz": "STYRCZU",
+  "Marcin Świtoń": "MARCIN",
+  "Gabriel Świerbutowicz": "GABRYŚ",
+  "Bartłomiej Taczyński": "B.TACZYŃSKI",
+  "Krzysztof Taczyński": "K.TACZYŃSKI",
+  "Marek Taczyński": "M.TACZYŃSKI",
+  "Stanisław Taczyński": "STASIU",
+  "Mateusz Taraciński": "TARA",
+  "Janusz Tkacz": "JANUSZ",
+  "Patryk Wątroba": "P.WĄTROBA",
+  "Jonatan Wyporkiewicz": "JOOONEK",
+  "Hubert Zdziech": "HUBERT",
+  "Konrad Zębacki": "KONDZIO",
+  "Yevhen Borblik": "ŻENIA",
+  "Artur Borysenko": "ARTUR",
+  "Dawid Bubień": "DZIUBEL",
+  "Filip Kubiak": "CUBARSI",
+  "Jakub Cofór": "J.COFÓR",
+  "Alan Lichman": "A.LICHMAN",
+  "Brajan Kwiatkowski": "BRAJAN",
+  "Jakub Behrendt": "SKALMAR",
+  "Zawodnik Testowany1": "TESTOWANY1",
+  "Zawodnik Testowany2": "TESTOWANY2",
+};
+function nicknameFor(name) {
+  if (NICKNAMES[name]) return NICKNAMES[name];
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1] : "";
+  return `${first}.${last}`.toUpperCase();
 }
 
 // "Karta FIFA" — 6 fikcyjnych statystyk (0-30) i ocena ogólna, losowane raz
@@ -928,7 +983,7 @@ function buildFutCard(player) {
   const { stats, ovr } = futStatsFor(player.slug);
   const pos = GOALKEEPER_SLUGS.has(player.slug) ? "BR" : "ZAW";
   const flag = flagFor(player.slug);
-  const firstName = player.name.trim().split(/\s+/)[0].toUpperCase();
+  const nickname = nicknameFor(player.name);
 
   const card = document.createElement("div");
   card.className = "fut-card";
@@ -940,12 +995,12 @@ function buildFutCard(player) {
           <span class="fut-pos">${pos}</span>
         </div>
         <div class="fut-card-badges">
-          <span class="fut-flag">${flag}</span>
+          <img class="fut-flag" src="${flag}" alt="" />
           <img class="fut-crest" src="assets/img/logo.png" alt="" />
         </div>
       </div>
       <div class="fut-card-photo-wrap"></div>
-      <div class="fut-card-name">${escapeHtml(firstName)}</div>
+      <div class="fut-card-name">${escapeHtml(nickname)}</div>
       <div class="fut-card-stats">
         <div class="fut-stat"><b>${stats.PAC}</b> PAC</div>
         <div class="fut-stat"><b>${stats.DRI}</b> DRI</div>
