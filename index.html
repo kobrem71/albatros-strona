@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=21" />
+<link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body>
 
@@ -37,15 +37,17 @@
     <h1>Albatros Jaśkowice Legnickie</h1>
     <p>Zapisy na treningi i mecze</p>
   </div>
-  <button id="league-btn" class="random-gif-btn" type="button" title="Tabela i terminarz">
-    📊 <span>Tabela i terminarz</span>
-  </button>
-  <button id="tactic-btn" class="random-gif-btn" type="button" title="Taktyka">
-    🧠 <span>Taktyka</span>
-  </button>
-  <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
-    🎲 <span>Losowy gif</span>
-  </button>
+  <div class="header-actions">
+    <button id="league-btn" class="random-gif-btn" type="button" title="Tabela i terminarz">
+      📊 <span>Tabela i terminarz</span>
+    </button>
+    <button id="tactic-btn" class="random-gif-btn" type="button" title="Taktyka">
+      🧠 <span>Taktyka</span>
+    </button>
+    <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
+      🎲 <span>Losowy gif</span>
+    </button>
+  </div>
 </header>
 
 <div id="gif-overlay" class="gif-overlay" hidden>
@@ -129,7 +131,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=21"></script>
+<script type="module" src="js/app.js?v=22"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

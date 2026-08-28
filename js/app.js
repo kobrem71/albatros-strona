@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=21";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=21";
-import { isFirebaseConfigured } from "./firebase-config.js?v=21";
-import { getStore } from "./store.js?v=21";
+import { PLAYERS, slugify } from "./players.js?v=22";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=22";
+import { isFirebaseConfigured } from "./firebase-config.js?v=22";
+import { getStore } from "./store.js?v=22";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=21";
+} from "./league-data.js?v=22";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1300,7 +1300,10 @@ function initPlayerOverlay() {
 // wysokości obrazka, żeby nakładka trafiała w kółka niezależnie od rozmiaru
 // okna.
 // ---------------------------------------------------------------------------
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg";
+// ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
+// pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
+// starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=22";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 const TACTIC_SLOTS = [
   { id: "st1", label: "ST", xPct: 35.42, yPct: 25.36 },
@@ -1315,6 +1318,11 @@ const TACTIC_SLOTS = [
   { id: "cb3", label: "CB", xPct: 69.79, yPct: 67.3 },
   { id: "gk", label: "GK", xPct: 50.39, yPct: 80.45 },
 ];
+// Kółka mają szerokość 13.5% szerokości planszy (patrz .tactic-slot w CSS);
+// przeliczone na % wysokości planszy (bo obrazek nie jest kwadratowy) to
+// promień ~3.77% + mały odstęp — tyle trzeba zejść niżej, żeby etykieta z
+// ksywką była tuż pod kółkiem, a nie na nim.
+const TACTIC_SLOT_LABEL_VOFFSET_PCT = 4.4;
 
 function renderTacticBoard(container) {
   container.innerHTML = "";
@@ -1342,6 +1350,17 @@ function renderTacticBoard(container) {
     }
     marker.addEventListener("click", () => openTacticPicker(slot));
     wrap.appendChild(marker);
+
+    // Ksywka z karty gracza pod zdjęciem — żeby było widać kto stoi na
+    // pozycji bez najeżdżania myszką (samo kółko jest za małe na tekst).
+    if (player) {
+      const label = document.createElement("span");
+      label.className = "tactic-slot-label";
+      label.style.left = `${slot.xPct}%`;
+      label.style.top = `${slot.yPct + TACTIC_SLOT_LABEL_VOFFSET_PCT}%`;
+      label.textContent = nicknameFor(player.name);
+      wrap.appendChild(label);
+    }
   }
 
   container.appendChild(wrap);
