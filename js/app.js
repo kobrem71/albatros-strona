@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=22";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=22";
-import { isFirebaseConfigured } from "./firebase-config.js?v=22";
-import { getStore } from "./store.js?v=22";
+import { PLAYERS, slugify } from "./players.js?v=23";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=23";
+import { isFirebaseConfigured } from "./firebase-config.js?v=23";
+import { getStore } from "./store.js?v=23";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=22";
+} from "./league-data.js?v=23";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1303,7 +1303,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=22";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=23";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 const TACTIC_SLOTS = [
   { id: "st1", label: "ST", xPct: 35.42, yPct: 25.36 },
@@ -1383,18 +1383,50 @@ function refreshTacticBoardIfOpen() {
   if (overlay && !overlay.hidden && board) renderTacticBoard(board);
 }
 
+// Najbliższy nierozegrany mecz (nie trening) — mecze w tym klubie są zawsze
+// jednorazowymi wpisami w EXTRA_EVENTS (nigdy cotygodniową regułą), więc
+// wystarczy je odfiltrować po dacie i posortować, bez powtarzania całego
+// skanowania dni jak w buildUpcomingEvents().
+function findNextMatchEvent() {
+  const todayStr = toDateStr(new Date());
+  const matches = EXTRA_EVENTS.filter((ev) => ev.type === "mecz" && ev.date >= todayStr);
+  matches.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  const next = matches[0];
+  if (!next) return null;
+  return { id: `mecz-${next.date}`, ...next };
+}
+
 function openTacticPicker(slot) {
   const overlay = document.getElementById("tactic-picker-overlay");
   const title = document.getElementById("tactic-picker-title");
+  const matchHint = document.getElementById("tactic-picker-match-hint");
   const search = document.getElementById("tactic-picker-search");
   const clearBtn = document.getElementById("tactic-picker-clear");
   const grid = document.getElementById("tactic-picker-grid");
-  if (!overlay || !title || !search || !clearBtn || !grid) return;
+  if (!overlay || !title || !matchHint || !search || !clearBtn || !grid) return;
 
   const currentSlug = state.tactic[slot.id];
   title.textContent = `Wybierz zawodnika — ${slot.label}`;
   search.value = "";
   clearBtn.hidden = !currentSlug;
+
+  // Kto zapisał się na TAK na najbliższy mecz — tacy gracze idą na górę
+  // listy i dostają zieloną obwódkę, żeby łatwiej było układać skład z
+  // dostępnych zawodników.
+  const nextMatch = findNextMatchEvent();
+  const attendingSlugs = new Set();
+  if (nextMatch) {
+    const responses = state.signups[nextMatch.id] || {};
+    for (const [slug, resp] of Object.entries(responses)) {
+      if (resp.status === "tak") attendingSlugs.add(slug);
+    }
+    const dateObj = new Date(nextMatch.date + "T00:00:00");
+    matchHint.textContent = `🟢 = zapisani na TAK na najbliższy mecz: ${nextMatch.label} (${formatDateHuman(dateObj)} · ${nextMatch.time})`;
+    matchHint.hidden = false;
+  } else {
+    matchHint.textContent = "";
+    matchHint.hidden = true;
+  }
 
   function assign(slug) {
     const nextSlots = {};
@@ -1415,12 +1447,19 @@ function openTacticPicker(slot) {
 
   function renderGrid(filter) {
     const q = filter.trim().toLowerCase();
-    const list = PLAYERS.filter((p) => p.name.toLowerCase().includes(q));
+    const list = PLAYERS.filter((p) => p.name.toLowerCase().includes(q)).sort((a, b) => {
+      const aIn = attendingSlugs.has(a.slug) ? 0 : 1;
+      const bIn = attendingSlugs.has(b.slug) ? 0 : 1;
+      return aIn - bIn; // dostępni na TAK najpierw, reszta w oryginalnej kolejności
+    });
     grid.innerHTML = "";
     for (const player of list) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "tactic-picker-item" + (player.slug === currentSlug ? " is-current" : "");
+      btn.className =
+        "tactic-picker-item" +
+        (player.slug === currentSlug ? " is-current" : "") +
+        (attendingSlugs.has(player.slug) ? " is-attending" : "");
       btn.appendChild(playerPhotoNode(player, "tactic-picker-item-photo"));
       const name = document.createElement("span");
       name.textContent = nicknameFor(player.name);
@@ -1440,7 +1479,8 @@ function initTacticButton() {
   const overlay = document.getElementById("tactic-overlay");
   const closeBtn = document.getElementById("tactic-overlay-close");
   const board = document.getElementById("tactic-board");
-  if (!btn || !overlay || !closeBtn || !board) return;
+  const clearAllBtn = document.getElementById("tactic-clear-all");
+  if (!btn || !overlay || !closeBtn || !board || !clearAllBtn) return;
 
   function closeOverlay() {
     overlay.hidden = true;
@@ -1449,6 +1489,16 @@ function initTacticButton() {
     renderTacticBoard(board);
     overlay.hidden = false;
   }
+
+  clearAllBtn.addEventListener("click", () => {
+    const isEmpty = TACTIC_SLOTS.every((s) => !state.tactic[s.id]);
+    if (isEmpty) return;
+    const ok = confirm("Skasować całą taktykę i zacząć od nowa? Zobaczą to wszyscy.");
+    if (!ok) return;
+    const emptySlots = {};
+    for (const s of TACTIC_SLOTS) emptySlots[s.id] = "";
+    saveTacticSlots(emptySlots);
+  });
 
   btn.addEventListener("click", openOverlay);
   closeBtn.addEventListener("click", closeOverlay);
