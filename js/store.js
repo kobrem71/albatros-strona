@@ -1,10 +1,11 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=17";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=20";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
+const DEMO_PLAYER_CARD_STATS_KEY = "albatros_demo_player_card_stats_v1";
 
 function readLocal(key) {
   try {
@@ -25,6 +26,7 @@ function writeLocal(key, value) {
 function createLocalStore() {
   const signupListeners = new Set();
   const eventListeners = new Set();
+  const playerCardStatsListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -34,10 +36,15 @@ function createLocalStore() {
     const data = readLocal(DEMO_EVENTS_KEY);
     eventListeners.forEach((cb) => cb(data));
   }
+  function notifyPlayerCardStats() {
+    const data = readLocal(DEMO_PLAYER_CARD_STATS_KEY);
+    playerCardStatsListeners.forEach((cb) => cb(data));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
     if (e.key === DEMO_EVENTS_KEY) notifyEvents();
+    if (e.key === DEMO_PLAYER_CARD_STATS_KEY) notifyPlayerCardStats();
   });
 
   return {
@@ -52,6 +59,11 @@ function createLocalStore() {
       eventListeners.add(cb);
       return () => eventListeners.delete(cb);
     },
+    subscribePlayerCardStats(cb) {
+      cb(readLocal(DEMO_PLAYER_CARD_STATS_KEY));
+      playerCardStatsListeners.add(cb);
+      return () => playerCardStatsListeners.delete(cb);
+    },
     async setStatus(eventId, slug, name, status) {
       const data = readLocal(DEMO_SIGNUPS_KEY);
       data[eventId] = data[eventId] || {};
@@ -65,6 +77,16 @@ function createLocalStore() {
       writeLocal(DEMO_EVENTS_KEY, data);
       notifyEvents();
     },
+    // Jednorazowy przydział 90 punktów na karcie zawodnika. Zapisuje się tylko
+    // raz — jeśli w bazie już jest wpis dla tego slug, kolejne wywołanie jest
+    // ignorowane (blokada po stronie store'a, niezależnie od UI).
+    async setPlayerCardStats(slug, stats) {
+      const data = readLocal(DEMO_PLAYER_CARD_STATS_KEY);
+      if (data[slug]) return; // już zablokowane
+      data[slug] = { stats, ts: Date.now() };
+      writeLocal(DEMO_PLAYER_CARD_STATS_KEY, data);
+      notifyPlayerCardStats();
+    },
   };
 }
 
@@ -77,6 +99,7 @@ async function createFirebaseStore() {
     getFirestore,
     collection,
     doc,
+    getDoc,
     onSnapshot,
     setDoc,
     serverTimestamp,
@@ -103,12 +126,28 @@ async function createFirebaseStore() {
         cb(data);
       });
     },
+    subscribePlayerCardStats(cb) {
+      return onSnapshot(collection(db, "playerCardStats"), (snap) => {
+        const data = {};
+        snap.forEach((d) => (data[d.id] = d.data()));
+        cb(data);
+      });
+    },
     async setStatus(eventId, slug, name, status) {
       await setDoc(
         doc(db, "signups", eventId),
         { players: { [slug]: { status, name, ts: serverTimestamp() } } },
         { merge: true }
       );
+    },
+    // Jednorazowy przydział 90 punktów na karcie zawodnika — blokada po
+    // stronie store'a: jeśli dokument już istnieje, nic nie nadpisuje (nawet
+    // gdyby ktoś ominął blokadę w UI).
+    async setPlayerCardStats(slug, stats) {
+      const ref = doc(db, "playerCardStats", slug);
+      const existing = await getDoc(ref);
+      if (existing.exists()) return;
+      await setDoc(ref, { stats, updatedAt: serverTimestamp() });
     },
     async setEventAddress(eventId, address) {
       await setDoc(

@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=17";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=17";
-import { isFirebaseConfigured } from "./firebase-config.js?v=17";
-import { getStore } from "./store.js?v=17";
+import { PLAYERS, slugify } from "./players.js?v=20";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=20";
+import { isFirebaseConfigured } from "./firebase-config.js?v=20";
+import { getStore } from "./store.js?v=20";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=17";
+} from "./league-data.js?v=20";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -218,6 +218,10 @@ export const state = {
   signups: {},
   eventMeta: {},
   identitySlug: localStorage.getItem(IDENTITY_KEY) || "",
+  // Zapisane na stałe (raz na zawsze) przydziały 90 punktów na kartę FIFA —
+  // { [slug]: { stats: { PAC: .., ... }, updatedAt } }. Dopóki gracz nie
+  // zapisze swojego rozdziału, karta pokazuje losowe wartości jak dawniej.
+  playerCardStats: {},
 };
 
 function renderIdentityBar() {
@@ -966,6 +970,75 @@ function nicknameFor(name) {
   return `${first}.${last}`.toUpperCase();
 }
 
+// Numery koszulek — z listy zawodników uprawnionych na kluby24.pzpn.pl
+// (Klub -> Zawodnicy -> Lista zawodników uprawnionych), stan na 2026-08-28.
+// Gracze bez numeru na liście PZPN (albo nieobecni na tej liście) po prostu
+// nie mają tej etykiety na karcie — reszta karty wygląda jak wcześniej.
+const JERSEY_NUMBERS = {
+  "Bartosz Gresiuk": 11,
+  "Gabriel Świerbutowicz": 18,
+  "Krzysztof Obremski": 15,
+  "Dawid Bubień": 12,
+  "Michał Papaj": 17,
+  "Remigiusz Dubaniewicz": 7,
+  "Marcin Rozpędowski": 16,
+  "Bartosz Fudali": 19,
+  "Janusz Tkacz": 1,
+  "Mateusz Gresiuk": 10,
+  "Artur Borysenko": 9,
+  "Yevhen Borblik": 79,
+  "Vladyslav Didenko": 4,
+};
+
+// Pozycje na karcie (klubowe, częściowo żartobliwe — nie oficjalne dane PZPN).
+const POSITIONS = {
+  "Maksym Dobryvoda": "Napastnik",
+  "Vladyslav Didenko": "Obrońca",
+  "Dominik Duchnicki": "Pomocnik",
+  "Remigiusz Dubaniewicz": "Pomocnik",
+  "Bartosz Fudali": "Napastnik",
+  "Kamil Felsztyński": "Kibic/Obrońca",
+  "Maciej Gdaniec": "Obrońca",
+  "Bartosz Gresiuk": "Napastnik",
+  "Mateusz Gresiuk": "Pomocnik",
+  "Maksym Hlibichuk": "Wahadłowy",
+  "Rafał Kanasiuk": "Kibic",
+  "Oleksandr Kolvakh": "Pomocnik",
+  "Kacper Malinowski": "Napastnik",
+  "Krzysztof Obremski": "Rezerwowy",
+  "Damian Pachołek": "Napastnik",
+  "Michał Papaj": "Obrońca",
+  "Paweł Pęczkowski": "Obrońca/Napastnik",
+  "Marcin Rozpędowski": "Pomocnik",
+  "Filip Siwak": "Wahadłowy",
+  "Mateusz Styrcz": "Obrońca",
+  "Marcin Świtoń": "Obrońca",
+  "Gabriel Świerbutowicz": "Obrońca/Napastnik",
+  "Bartłomiej Taczyński": "Wahadłowy",
+  "Krzysztof Taczyński": "Kibic",
+  "Marek Taczyński": "Bramkarz",
+  "Stanisław Taczyński": "Legenda",
+  "Mateusz Taraciński": "Obrońca/Napastnik",
+  "Janusz Tkacz": "Bramkarz",
+  "Patryk Wątroba": "Wahadłowy/Pomocnik",
+  "Jonatan Wyporkiewicz": "Uniwersalny żołnierz",
+  "Hubert Zdziech": "Pomocnik",
+  "Konrad Zębacki": "Obrońca",
+  "Yevhen Borblik": "Obrońca",
+  "Artur Borysenko": "Napastnik",
+  "Dawid Bubień": "Bramkarz",
+  "Filip Kubiak": "Junior",
+  "Jakub Cofór": "Junior",
+  "Alan Lichman": "Junior",
+  "Brajan Kwiatkowski": "Bramkarz",
+  "Jakub Behrendt": "Junior",
+  "Zawodnik Testowany1": "zawodnik-testowany1",
+  "Zawodnik Testowany2": "zawodnik-testowany2",
+};
+
+// Kapitan drużyny — na karcie dostaje złotą ramkę i odznakę "C" przy ksywce.
+const CAPTAIN_NAME = "Mateusz Gresiuk";
+
 // "Karta FIFA" — 6 fikcyjnych statystyk (0-30) i ocena ogólna, losowane raz
 // na zawodnika (deterministycznie, na podstawie sluga), żeby karta pokazywała
 // zawsze te same liczby przy każdym otwarciu, a nie nowe za każdym razem.
@@ -973,21 +1046,40 @@ function nicknameFor(name) {
 // zamiast PAC/SHO/PAS/DRI/DEF/PHY dla zawodników z pola).
 const OUTFIELD_STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"];
 const GK_STAT_KEYS = ["DIV", "HAN", "KIC", "REF", "SPD", "POS"];
+const POINTS_POOL = 90;
+const STAT_CAP = 30;
+
+function statKeysFor(slug) {
+  return GOALKEEPER_SLUGS.has(slug) ? GK_STAT_KEYS : OUTFIELD_STAT_KEYS;
+}
+
+// Jeśli gracz sam zapisał swój (jednorazowy, na stałe) przydział 90 punktów —
+// karta pokazuje te liczby. Dopóki tego nie zrobi, karta pokazuje losowe,
+// ale zawsze te same (deterministyczne, na podstawie sluga) wartości 0-30.
 function futStatsFor(slug, keys) {
+  const saved = state.playerCardStats[slug];
+  if (saved && saved.stats) {
+    const stats = saved.stats;
+    const ovr = Math.round(keys.reduce((sum, k) => sum + (stats[k] || 0), 0) / keys.length);
+    return { stats, ovr, isCustom: true };
+  }
   const stats = {};
   for (const key of keys) {
     stats[key] = hashStr(`${slug}::${key}`) % 31; // 0-30
   }
   const ovr = Math.round(keys.reduce((sum, k) => sum + stats[k], 0) / keys.length);
-  return { stats, ovr };
+  return { stats, ovr, isCustom: false };
 }
 
 function buildFutCard(player) {
   const isGoalkeeper = GOALKEEPER_SLUGS.has(player.slug);
-  const keys = isGoalkeeper ? GK_STAT_KEYS : OUTFIELD_STAT_KEYS;
+  const keys = statKeysFor(player.slug);
   const { stats, ovr } = futStatsFor(player.slug, keys);
   const flag = flagFor(player.slug);
   const nickname = nicknameFor(player.name);
+  const jerseyNumber = JERSEY_NUMBERS[player.name];
+  const position = POSITIONS[player.name] || "";
+  const isCaptain = player.name === CAPTAIN_NAME;
   // Kolejność w siatce 2 kolumny x 3 wiersze — dla bramkarza tak, jak
   // standardowo w FIFA (Nurkowanie/Wybicia, Ręce/Refleks, Szybkość/Ustawianie).
   const statRows = isGoalkeeper
@@ -1001,13 +1093,14 @@ function buildFutCard(player) {
     .join("");
 
   const card = document.createElement("div");
-  card.className = "fut-card";
+  card.className = "fut-card" + (isCaptain ? " is-captain" : "");
   card.innerHTML = `
     <div class="fut-card-face">
       <div class="fut-card-top">
         <div class="fut-card-rating">
           <span class="fut-ovr">${ovr}</span>
-          ${isGoalkeeper ? '<span class="fut-pos">BR</span>' : ""}
+          ${position ? `<span class="fut-pos">${escapeHtml(position)}</span>` : ""}
+          ${jerseyNumber ? `<span class="fut-num">Nr ${jerseyNumber}</span>` : ""}
         </div>
         <div class="fut-card-badges">
           <img class="fut-flag" src="${flag}" alt="" />
@@ -1015,7 +1108,7 @@ function buildFutCard(player) {
         </div>
       </div>
       <div class="fut-card-photo-wrap"></div>
-      <div class="fut-card-name">${escapeHtml(nickname)}</div>
+      <div class="fut-card-name"><span class="fut-card-name-text">${escapeHtml(nickname)}</span>${isCaptain ? '<span class="fut-captain-badge" title="Kapitan">C</span>' : ""}</div>
       <div class="fut-card-stats">
         ${statsHtml}
       </div>
@@ -1025,12 +1118,112 @@ function buildFutCard(player) {
   return card;
 }
 
+// Panel do jednorazowego rozdzielenia 90 punktów — widoczny tylko właścicielowi
+// karty (zalogowany jako ten zawodnik) i tylko dopóki nie zapisał jeszcze
+// swojego przydziału. Po zapisie: blokada na stałe (egzekwowana też przez
+// firestore.rules, nie tylko przez to, że przestajemy pokazywać formularz).
+function buildFutEditor(player) {
+  const keys = statKeysFor(player.slug);
+  const { stats: startingStats } = futStatsFor(player.slug, keys);
+
+  const wrap = document.createElement("div");
+  wrap.className = "fut-editor";
+
+  const hint = document.createElement("p");
+  hint.className = "fut-editor-hint";
+  hint.textContent = `To Twoja karta — rozdziel ${POINTS_POOL} punktów między swoje statystyki (maks. ${STAT_CAP} na jedną). Zapisujesz tylko raz, na stałe!`;
+  wrap.appendChild(hint);
+
+  const grid = document.createElement("div");
+  grid.className = "fut-editor-grid";
+  const inputs = {};
+  for (const key of keys) {
+    const row = document.createElement("label");
+    row.className = "fut-editor-row";
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = key;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.max = String(STAT_CAP);
+    input.step = "1";
+    input.value = String(Math.min(STAT_CAP, startingStats[key] ?? 0));
+    row.appendChild(labelSpan);
+    row.appendChild(input);
+    grid.appendChild(row);
+    inputs[key] = input;
+  }
+  wrap.appendChild(grid);
+
+  const sumLine = document.createElement("p");
+  sumLine.className = "fut-editor-sum";
+  wrap.appendChild(sumLine);
+
+  const errorLine = document.createElement("p");
+  errorLine.className = "fut-editor-error";
+  errorLine.hidden = true;
+  wrap.appendChild(errorLine);
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "fut-editor-save";
+  saveBtn.textContent = `Zapisz na stałe`;
+  wrap.appendChild(saveBtn);
+
+  function currentSum() {
+    return keys.reduce((sum, key) => sum + (parseInt(inputs[key].value, 10) || 0), 0);
+  }
+  function refreshSum() {
+    const sum = currentSum();
+    const ok = sum === POINTS_POOL;
+    sumLine.innerHTML = `Suma: <b class="${ok ? "is-ok" : "is-bad"}">${sum}</b> / ${POINTS_POOL}`;
+    saveBtn.disabled = !ok;
+  }
+  for (const key of keys) {
+    inputs[key].addEventListener("input", () => {
+      let v = parseInt(inputs[key].value, 10);
+      if (Number.isNaN(v)) v = 0;
+      v = Math.max(0, Math.min(STAT_CAP, v));
+      inputs[key].value = String(v);
+      refreshSum();
+    });
+  }
+  refreshSum();
+
+  saveBtn.addEventListener("click", async () => {
+    if (currentSum() !== POINTS_POOL) return;
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Zapisywanie…";
+    errorLine.hidden = true;
+    const statsToSave = {};
+    for (const key of keys) statsToSave[key] = Math.max(0, Math.min(STAT_CAP, parseInt(inputs[key].value, 10) || 0));
+    try {
+      store = store || (await getStore());
+      await store.setPlayerCardStats(player.slug, statsToSave);
+      state.playerCardStats[player.slug] = { stats: statsToSave };
+      openPlayerCard(player); // odśwież kartę i schowaj formularz (już zablokowany)
+    } catch (err) {
+      console.error("Nie udało się zapisać statystyk karty:", err);
+      errorLine.textContent =
+        "Nie udało się zapisać (sprawdź połączenie albo napisz do Claude — może brakować reguł Firestore dla nowej kolekcji).";
+      errorLine.hidden = false;
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Zapisz na stałe";
+    }
+  });
+
+  return wrap;
+}
+
+let openPlayerSlug = null;
+
 function openPlayerCard(player) {
   const overlay = document.getElementById("player-overlay");
   const head = document.getElementById("player-card-head");
   const matchesEl = document.getElementById("player-card-matches");
   if (!overlay || !head || !matchesEl) return;
 
+  openPlayerSlug = player.slug;
   const stats = PLAYER_STATS_BY_SLUG.get(player.slug);
 
   head.innerHTML = "";
@@ -1043,6 +1236,12 @@ function openPlayerCard(player) {
       ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
       : `Brak jeszcze występu w tym sezonie (wg laczynaspilka.pl).`;
   head.appendChild(summary);
+
+  const isOwnCard = state.identitySlug === player.slug;
+  const hasSavedStats = Boolean(state.playerCardStats[player.slug]);
+  if (isOwnCard && !hasSavedStats) {
+    head.appendChild(buildFutEditor(player));
+  }
 
   if (stats && stats.matchLog.length > 0) {
     matchesEl.innerHTML = stats.matchLog.map((match) => {
@@ -1077,6 +1276,7 @@ function initPlayerOverlay() {
 
   function closeOverlay() {
     overlay.hidden = true;
+    openPlayerSlug = null;
   }
 
   closeBtn.addEventListener("click", closeOverlay);
@@ -1160,6 +1360,17 @@ async function init() {
     state.eventMeta = data;
     renderSchedule();
     renderRoster();
+  });
+  store.subscribePlayerCardStats((data) => {
+    state.playerCardStats = data;
+    // Jeśli w tej chwili ktoś patrzy na kartę, dla której właśnie przyszły
+    // nowe dane (np. sam zapisał swój przydział na innym urządzeniu) —
+    // odśwież widok, żeby nie utknął na starym formularzu/losowych statach.
+    const overlay = document.getElementById("player-overlay");
+    if (overlay && !overlay.hidden && openPlayerSlug) {
+      const player = PLAYERS.find((p) => p.slug === openPlayerSlug);
+      if (player) openPlayerCard(player);
+    }
   });
 }
 

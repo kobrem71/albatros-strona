@@ -255,12 +255,17 @@ body {
      treści karty (OVR/flaga u góry, 6 statystyk u dołu). */
   --fut-shield: polygon(6% 0%, 94% 0%, 100% 8%, 100% 92%, 92% 97%, 50% 100%, 8% 97%, 0% 92%, 0% 8%);
   width: 250px;
-  aspect-ratio: 0.63;
+  aspect-ratio: 0.58;
   clip-path: var(--fut-shield);
   background: linear-gradient(160deg, var(--gold), #8a6420 55%, var(--blue-deep));
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
   padding: 3px;
   margin: 0 auto;
+}
+/* Kapitan drużyny — wyraźnie bardziej złota, "specjalna" ramka karty. */
+.fut-card.is-captain {
+  background: linear-gradient(160deg, #ffe08a, var(--gold) 45%, #a9780f 100%);
+  filter: drop-shadow(0 10px 26px rgba(212, 162, 27, 0.6));
 }
 .fut-card-face {
   width: 100%;
@@ -280,9 +285,24 @@ body {
   align-items: flex-start;
   width: 100%;
 }
-.fut-card-rating { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
-.fut-ovr { font-size: 1.9rem; font-weight: 800; color: var(--gold); }
-.fut-pos { font-size: 0.72rem; font-weight: 700; color: var(--ink); letter-spacing: 0.5px; margin-top: 2px; }
+.fut-card-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  max-width: 58%;
+  min-width: 0;
+}
+.fut-ovr { font-size: 1.9rem; font-weight: 800; color: var(--gold); line-height: 1; }
+.fut-pos {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.3px;
+  margin-top: 3px;
+  white-space: normal;
+}
+.fut-num { font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-top: 3px; }
 .fut-card-badges { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .fut-flag {
   width: 36px;
@@ -312,20 +332,41 @@ body {
 .fut-card-photo-img .avatar-fallback { font-size: 2rem; }
 .fut-card-name {
   margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 2px;
+  width: 88%;
+  box-sizing: border-box;
+}
+.fut-card-name-text {
   font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   color: var(--ink);
   text-transform: uppercase;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 4px 2px;
-  width: 88%;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-sizing: border-box;
+  min-width: 0;
+}
+.fut-captain-badge {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #1c2350;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
 }
 .fut-card-stats {
   display: grid;
@@ -345,6 +386,61 @@ body {
   justify-content: center;
 }
 .fut-stat b { color: var(--gold); font-size: 1.2rem; min-width: 24px; display: inline-block; text-align: right; }
+
+/* ---------- Panel rozdziału 90 punktów (jednorazowy, na własnej karcie) ---------- */
+.fut-editor {
+  margin: 14px 6px 0;
+  padding: 14px;
+  border: 1px solid rgba(224, 178, 58, 0.35);
+  border-radius: 12px;
+  background: rgba(224, 178, 58, 0.06);
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.fut-editor-hint { margin: 0 0 10px; font-size: 0.85rem; color: var(--muted); text-align: center; }
+.fut-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+}
+.fut-editor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fut-editor-row input {
+  width: 56px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+  font-size: 0.95rem;
+  text-align: center;
+}
+.fut-editor-sum { margin: 12px 0 4px; text-align: center; font-size: 0.9rem; color: var(--muted); }
+.fut-editor-sum .is-ok { color: #2fbf6e; }
+.fut-editor-sum .is-bad { color: var(--gold); }
+.fut-editor-error { margin: 6px 0 0; font-size: 0.82rem; color: #e0653f; text-align: center; }
+.fut-editor-save {
+  display: block;
+  margin: 10px auto 0;
+  padding: 8px 22px;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: #1c2350;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.fut-editor-save:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; color: var(--muted); }
+.fut-editor-save:not(:disabled):hover { filter: brightness(1.08); }
 
 main {
   max-width: 980px;

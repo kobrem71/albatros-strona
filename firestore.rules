@@ -22,6 +22,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Jednorazowy przydział 90 punktów na karcie zawodnika (dokument = slug
+    // gracza). Celowo "allow update: if false" — to jest właściwa blokada
+    // "raz na zawsze": pierwszy zapis (create) przechodzi, każda kolejna
+    // próba nadpisania tego samego dokumentu jest odrzucana przez samą bazę,
+    // niezależnie od tego, co robi kod w przeglądarce.
+    match /playerCardStats/{slug} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
