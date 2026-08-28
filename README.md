@@ -135,6 +135,22 @@ nie ma, gracz dostaje wspólny placeholder `assets/img/player-placeholder.png`
 kolorowy awatar z inicjałami. Wszystko dzieje się automatycznie, nic nie
 trzeba konfigurować.
 
+## 6. Instalacja na telefonie jako aplikacja
+
+Strona jest skonfigurowana jako PWA (Progressive Web App), więc każdy może
+dodać ją do ekranu głównego z ikoną klubu — po dotknięciu otwiera się bez
+paska adresu, jak zwykła aplikacja.
+
+**Android (Chrome):** otwórz stronę → menu (⋮) → "Dodaj do ekranu głównego"
+/ "Zainstaluj aplikację".
+
+**iPhone (Safari):** otwórz stronę → przycisk udostępniania (□↑) → "Dodaj do
+ekranu początkowego".
+
+Jeśli chcesz zmienić ikonę (np. inny wariant logo), podmień pliki w
+`assets/img/icons/` (te same nazwy, te same wymiary) — nic więcej nie trzeba
+przestawiać.
+
 ## Jak działają zapisy (Tak / Nie / HGW)
 
 Przy pierwszej wizycie gracz wybiera swoje imię i nazwisko z listy u góry
@@ -155,6 +171,9 @@ js/store.js               logika zapisu (Firebase albo tryb demo)
 js/app.js                 cała logika strony
 assets/img/logo.png       logo klubu
 assets/img/players/       zdjęcia graczy (dorzucasz sam)
+assets/img/icons/         ikony aplikacji (PWA, ekran główny telefonu)
 assets/gifs/*.mp4         filmiki tła (losowane)
+manifest.json             konfiguracja PWA (nazwa, ikony, kolory)
+sw.js                     Service Worker (wymagany do instalacji jako appka)
 firestore.rules           reguły bezpieczeństwa bazy (wklej w Firebase)
 ```

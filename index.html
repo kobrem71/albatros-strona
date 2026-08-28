@@ -4,7 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Albatros Jaśkowice Legnickie — Zapisy na treningi</title>
-<link rel="icon" href="assets/img/logo.png" />
+
+<!-- PWA: pozwala zainstalować stronę na telefonie jako ikonę/aplikację -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0a1330" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Albatros" />
+<link rel="apple-touch-icon" href="assets/img/icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
+
 <link rel="stylesheet" href="css/style.css?v=7" />
 </head>
 <body>
@@ -64,5 +76,12 @@
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
 <script type="module" src="js/app.js?v=7"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>
