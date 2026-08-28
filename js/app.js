@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=20";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=20";
-import { isFirebaseConfigured } from "./firebase-config.js?v=20";
-import { getStore } from "./store.js?v=20";
+import { PLAYERS, slugify } from "./players.js?v=21";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=21";
+import { isFirebaseConfigured } from "./firebase-config.js?v=21";
+import { getStore } from "./store.js?v=21";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=20";
+} from "./league-data.js?v=21";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -222,6 +222,9 @@ export const state = {
   // { [slug]: { stats: { PAC: .., ... }, updatedAt } }. Dopóki gracz nie
   // zapisze swojego rozdziału, karta pokazuje losowe wartości jak dawniej.
   playerCardStats: {},
+  // Wspólna plansza taktyki — { [slotId]: slug albo "" }. Ta sama dla
+  // wszystkich odwiedzających (zapisana w bazie), nie tylko lokalnie.
+  tactic: {},
 };
 
 function renderIdentityBar() {
@@ -1288,6 +1291,177 @@ function initPlayerOverlay() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// 4e. Taktyka — wspólna plansza (jedna dla wszystkich, zapisana w bazie).
+// Na razie jest tylko jedno zdjęcie/formacja (assets/img/taktyka.jpg,
+// 3-5-2 pionowo) — jak powstanie panel trenera z wyborem formacji, tu
+// dojdzie lista kilku plansz zamiast jednej na stałe. Współrzędne kółek
+// wykryte automatycznie na zdjęciu (OpenCV Hough circles), jako % szerokości/
+// wysokości obrazka, żeby nakładka trafiała w kółka niezależnie od rozmiaru
+// okna.
+// ---------------------------------------------------------------------------
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg";
+const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
+const TACTIC_SLOTS = [
+  { id: "st1", label: "ST", xPct: 35.42, yPct: 25.36 },
+  { id: "st2", label: "ST", xPct: 65.36, yPct: 25.36 },
+  { id: "lwb", label: "LWB", xPct: 15.62, yPct: 54.51 },
+  { id: "cm1", label: "CM", xPct: 33.33, yPct: 50.0 },
+  { id: "cdm", label: "CDM", xPct: 50.13, yPct: 50.0 },
+  { id: "cm2", label: "CM", xPct: 67.06, yPct: 50.07 },
+  { id: "rwb", label: "RWB", xPct: 84.77, yPct: 54.51 },
+  { id: "cb1", label: "CB", xPct: 30.34, yPct: 67.3 },
+  { id: "cb2", label: "CB", xPct: 50.26, yPct: 67.3 },
+  { id: "cb3", label: "CB", xPct: 69.79, yPct: 67.3 },
+  { id: "gk", label: "GK", xPct: 50.39, yPct: 80.45 },
+];
+
+function renderTacticBoard(container) {
+  container.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "tactic-board-wrap";
+  const img = document.createElement("img");
+  img.className = "tactic-board-img";
+  img.src = TACTIC_BOARD_IMAGE;
+  img.alt = `Taktyka ${TACTIC_FORMATION_LABEL}`;
+  wrap.appendChild(img);
+
+  for (const slot of TACTIC_SLOTS) {
+    const slug = state.tactic[slot.id];
+    const player = slug ? PLAYERS.find((p) => p.slug === slug) : null;
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = "tactic-slot" + (player ? " is-filled" : "");
+    marker.style.left = `${slot.xPct}%`;
+    marker.style.top = `${slot.yPct}%`;
+    marker.title = player ? `${player.name} (${slot.label})` : `Wstaw zawodnika — ${slot.label}`;
+    if (player) {
+      marker.appendChild(playerPhotoNode(player, "tactic-slot-photo"));
+    } else {
+      marker.innerHTML = `<span class="tactic-slot-plus">+</span>`;
+    }
+    marker.addEventListener("click", () => openTacticPicker(slot));
+    wrap.appendChild(marker);
+  }
+
+  container.appendChild(wrap);
+}
+
+async function saveTacticSlots(nextSlots) {
+  state.tactic = nextSlots;
+  refreshTacticBoardIfOpen();
+  try {
+    store = store || (await getStore());
+    await store.setTacticSlots(nextSlots);
+  } catch (err) {
+    console.error("Nie udało się zapisać taktyki:", err);
+  }
+}
+
+function refreshTacticBoardIfOpen() {
+  const overlay = document.getElementById("tactic-overlay");
+  const board = document.getElementById("tactic-board");
+  if (overlay && !overlay.hidden && board) renderTacticBoard(board);
+}
+
+function openTacticPicker(slot) {
+  const overlay = document.getElementById("tactic-picker-overlay");
+  const title = document.getElementById("tactic-picker-title");
+  const search = document.getElementById("tactic-picker-search");
+  const clearBtn = document.getElementById("tactic-picker-clear");
+  const grid = document.getElementById("tactic-picker-grid");
+  if (!overlay || !title || !search || !clearBtn || !grid) return;
+
+  const currentSlug = state.tactic[slot.id];
+  title.textContent = `Wybierz zawodnika — ${slot.label}`;
+  search.value = "";
+  clearBtn.hidden = !currentSlug;
+
+  function assign(slug) {
+    const nextSlots = {};
+    for (const s of TACTIC_SLOTS) nextSlots[s.id] = state.tactic[s.id] || "";
+    // Zawodnik gra tylko na jednej pozycji naraz — jeśli już gdzieś stoi,
+    // zdejmujemy go stamtąd.
+    if (slug) {
+      for (const sid of Object.keys(nextSlots)) {
+        if (nextSlots[sid] === slug) nextSlots[sid] = "";
+      }
+    }
+    nextSlots[slot.id] = slug || "";
+    saveTacticSlots(nextSlots);
+    overlay.hidden = true;
+  }
+
+  clearBtn.onclick = () => assign("");
+
+  function renderGrid(filter) {
+    const q = filter.trim().toLowerCase();
+    const list = PLAYERS.filter((p) => p.name.toLowerCase().includes(q));
+    grid.innerHTML = "";
+    for (const player of list) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tactic-picker-item" + (player.slug === currentSlug ? " is-current" : "");
+      btn.appendChild(playerPhotoNode(player, "tactic-picker-item-photo"));
+      const name = document.createElement("span");
+      name.textContent = nicknameFor(player.name);
+      btn.appendChild(name);
+      btn.addEventListener("click", () => assign(player.slug));
+      grid.appendChild(btn);
+    }
+  }
+  renderGrid("");
+  search.oninput = () => renderGrid(search.value);
+
+  overlay.hidden = false;
+}
+
+function initTacticButton() {
+  const btn = document.getElementById("tactic-btn");
+  const overlay = document.getElementById("tactic-overlay");
+  const closeBtn = document.getElementById("tactic-overlay-close");
+  const board = document.getElementById("tactic-board");
+  if (!btn || !overlay || !closeBtn || !board) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+  function openOverlay() {
+    renderTacticBoard(board);
+    overlay.hidden = false;
+  }
+
+  btn.addEventListener("click", openOverlay);
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || overlay.hidden) return;
+    const picker = document.getElementById("tactic-picker-overlay");
+    if (picker && !picker.hidden) return; // najpierw zamyka się okno wyboru gracza
+    closeOverlay();
+  });
+}
+
+function initTacticPickerOverlay() {
+  const overlay = document.getElementById("tactic-picker-overlay");
+  const closeBtn = document.getElementById("tactic-picker-close");
+  if (!overlay || !closeBtn) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
+}
+
 function initLeagueButton() {
   const btn = document.getElementById("league-btn");
   const overlay = document.getElementById("league-overlay");
@@ -1337,6 +1511,8 @@ async function init() {
   initRandomGifButton();
   initLeagueButton();
   initPlayerOverlay();
+  initTacticButton();
+  initTacticPickerOverlay();
   renderIdentityBar();
   renderSchedule();
   renderRoster();
@@ -1371,6 +1547,10 @@ async function init() {
       const player = PLAYERS.find((p) => p.slug === openPlayerSlug);
       if (player) openPlayerCard(player);
     }
+  });
+  store.subscribeTacticSlots((data) => {
+    state.tactic = data;
+    refreshTacticBoardIfOpen();
   });
 }
 

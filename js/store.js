@@ -1,11 +1,12 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=20";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=21";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
 const DEMO_PLAYER_CARD_STATS_KEY = "albatros_demo_player_card_stats_v1";
+const DEMO_TACTIC_KEY = "albatros_demo_tactic_v1";
 
 function readLocal(key) {
   try {
@@ -27,6 +28,7 @@ function createLocalStore() {
   const signupListeners = new Set();
   const eventListeners = new Set();
   const playerCardStatsListeners = new Set();
+  const tacticListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -40,11 +42,16 @@ function createLocalStore() {
     const data = readLocal(DEMO_PLAYER_CARD_STATS_KEY);
     playerCardStatsListeners.forEach((cb) => cb(data));
   }
+  function notifyTactic() {
+    const data = readLocal(DEMO_TACTIC_KEY);
+    tacticListeners.forEach((cb) => cb(data.slots || {}));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
     if (e.key === DEMO_EVENTS_KEY) notifyEvents();
     if (e.key === DEMO_PLAYER_CARD_STATS_KEY) notifyPlayerCardStats();
+    if (e.key === DEMO_TACTIC_KEY) notifyTactic();
   });
 
   return {
@@ -86,6 +93,18 @@ function createLocalStore() {
       data[slug] = { stats, ts: Date.now() };
       writeLocal(DEMO_PLAYER_CARD_STATS_KEY, data);
       notifyPlayerCardStats();
+    },
+    subscribeTacticSlots(cb) {
+      const data = readLocal(DEMO_TACTIC_KEY);
+      cb(data.slots || {});
+      tacticListeners.add(cb);
+      return () => tacticListeners.delete(cb);
+    },
+    // Cała plansza (jedna, wspólna dla wszystkich) — zapisujemy zawsze pełną
+    // mapę pozycja -> slug gracza, żeby każdy widział to samo.
+    async setTacticSlots(slots) {
+      writeLocal(DEMO_TACTIC_KEY, { slots, ts: Date.now() });
+      notifyTactic();
     },
   };
 }
@@ -133,6 +152,11 @@ async function createFirebaseStore() {
         cb(data);
       });
     },
+    subscribeTacticSlots(cb) {
+      return onSnapshot(doc(db, "tactic", "current"), (snap) => {
+        cb((snap.exists() && snap.data().slots) || {});
+      });
+    },
     async setStatus(eventId, slug, name, status) {
       await setDoc(
         doc(db, "signups", eventId),
@@ -155,6 +179,9 @@ async function createFirebaseStore() {
         { address, updatedAt: serverTimestamp() },
         { merge: true }
       );
+    },
+    async setTacticSlots(slots) {
+      await setDoc(doc(db, "tactic", "current"), { slots, updatedAt: serverTimestamp() }, { merge: true });
     },
   };
 }

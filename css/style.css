@@ -729,6 +729,88 @@ main {
   padding: 18px;
 }
 
+/* ---------- Taktyka (wspólna plansza) ---------- */
+.tactic-hint { margin: 0 6px 14px; font-size: 0.85rem; }
+.tactic-board { display: flex; justify-content: center; }
+.tactic-board-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 1536 / 2752;
+}
+.tactic-board-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.tactic-slot {
+  position: absolute;
+  width: 13.5%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  background: rgba(10, 15, 35, 0.35);
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tactic-slot:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.25); }
+.tactic-slot.is-filled { border: 2px solid var(--gold); background: rgba(10, 15, 35, 0.2); }
+.tactic-slot-plus { color: white; font-size: 1.4rem; font-weight: 800; line-height: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.tactic-slot-photo { width: 100%; height: 100%; }
+.tactic-slot-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.tactic-slot-photo .avatar-fallback { font-size: 0.7rem; }
+
+.tactic-picker-overlay { z-index: 1100; }
+.tactic-picker-panel { max-width: 460px; }
+.tactic-picker-search {
+  display: block;
+  width: 100%;
+  margin: 6px 0 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+.tactic-picker-clear-btn { display: block; margin: 0 0 10px; }
+.tactic-picker-clear-btn[hidden] { display: none; }
+.tactic-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+.tactic-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.tactic-picker-item:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.14); }
+.tactic-picker-item.is-current { border-color: var(--gold); background: rgba(224, 178, 58, 0.16); }
+.tactic-picker-item-photo { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; }
+.tactic-picker-item-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+.tactic-picker-item-photo .avatar-fallback { font-size: 0.75rem; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
   .site-header { padding: 20px 16px 6px; }

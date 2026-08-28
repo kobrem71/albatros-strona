@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=20" />
+<link rel="stylesheet" href="css/style.css?v=21" />
 </head>
 <body>
 
@@ -39,6 +39,9 @@
   </div>
   <button id="league-btn" class="random-gif-btn" type="button" title="Tabela i terminarz">
     📊 <span>Tabela i terminarz</span>
+  </button>
+  <button id="tactic-btn" class="random-gif-btn" type="button" title="Taktyka">
+    🧠 <span>Taktyka</span>
   </button>
   <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
     🎲 <span>Losowy gif</span>
@@ -79,6 +82,25 @@
   </div>
 </div>
 
+<div id="tactic-overlay" class="league-overlay" hidden>
+  <div class="league-panel">
+    <button id="tactic-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h2>Taktyka</h2>
+    <p class="muted tactic-hint">Kliknij w kółko na planszy, żeby wstawić (albo zmienić) zawodnika na tej pozycji. Widzi to każdy, kto wejdzie na stronę.</p>
+    <div id="tactic-board" class="tactic-board"></div>
+  </div>
+</div>
+
+<div id="tactic-picker-overlay" class="league-overlay tactic-picker-overlay" hidden>
+  <div class="league-panel tactic-picker-panel">
+    <button id="tactic-picker-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h3 id="tactic-picker-title"></h3>
+    <input id="tactic-picker-search" class="tactic-picker-search" type="text" placeholder="Szukaj zawodnika…" />
+    <button id="tactic-picker-clear" class="link-btn tactic-picker-clear-btn" type="button">Wyczyść tę pozycję</button>
+    <div id="tactic-picker-grid" class="tactic-picker-grid"></div>
+  </div>
+</div>
+
 <main>
   <section class="card identity-card">
     <div id="identity-bar" class="identity-bar"></div>
@@ -107,7 +129,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=20"></script>
+<script type="module" src="js/app.js?v=21"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
