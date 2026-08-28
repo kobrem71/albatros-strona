@@ -62,16 +62,21 @@ export const EXTRA_EVENTS = [
     location: HOME_ADDRESS,
     label: "Albatros Jaśkowice – Korona Kawice",
   },
-  // Kolejka 5
+  // Kolejka 5: PAUZA - kolejka wolna, brak meczu (wg oficjalnego terminarza
+  // 90minut.pl / laczynaspilka.pl; poprzednio było tu błędnie wpisane
+  // "Krokus Kwiatkowice", drużyna spoza tej grupy)
+
+  // Kolejka 6 — UWAGA: termin jeszcze NIE jest oficjalnie potwierdzony przez
+  // ligę (na laczynaspilka.pl widnieje jako "-"), tylko przedział "19-20
+  // września" na 90minut.pl. Niedziela 20.09 to szacunek wg wzorca innych
+  // kolejek — sprawdź bliżej terminu i popraw datę/godzinę, jeśli się zmieni.
   {
     type: "mecz",
-    date: "2026-09-13",
+    date: "2026-09-20",
     time: "11:00",
-    location: "Kwiatkowice, gm. Prochowice",
-    label: "Krokus Kwiatkowice – Albatros Jaśkowice",
+    location: "ul. Sportowa, 59-307 Raszówka",
+    label: "Huzar Raszówka – Albatros Jaśkowice",
   },
-  // Kolejka 6: PAUZA - kolejka wolna, brak meczu
-
   // Kolejka 7
   {
     type: "mecz",
@@ -96,11 +101,12 @@ export const EXTRA_EVENTS = [
     location: HOME_ADDRESS,
     label: "Albatros Jaśkowice – Dąb Stow. II Siedliska",
   },
-  // Kolejka 10
+  // Kolejka 10 — godzina 14:30 potwierdzona na stronie drużyny laczynaspilka.pl
+  // (nie domyślne 11:00, jak na 90minut.pl)
   {
     type: "mecz",
     date: "2026-10-18",
-    time: "11:00",
+    time: "14:30",
     location: "ul. Władysława Grabskiego 24, Legnica",
     label: "Konfeks II Legnica – Albatros Jaśkowice",
   },

@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=7" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -37,6 +37,9 @@
     <h1>Albatros Jaśkowice Legnickie</h1>
     <p>Zapisy na treningi i mecze</p>
   </div>
+  <button id="league-btn" class="random-gif-btn" type="button" title="Tabela i terminarz">
+    📊 <span>Tabela i terminarz</span>
+  </button>
   <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
     🎲 <span>Losowy gif</span>
   </button>
@@ -45,6 +48,26 @@
 <div id="gif-overlay" class="gif-overlay" hidden>
   <video id="gif-overlay-video" class="gif-overlay-video" autoplay playsinline></video>
   <button id="gif-overlay-close" class="gif-overlay-close" type="button" aria-label="Zamknij">✕</button>
+</div>
+
+<div id="league-overlay" class="league-overlay" hidden>
+  <div class="league-panel">
+    <button id="league-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h2 id="league-name"></h2>
+    <p class="muted league-updated"></p>
+    <h3>Tabela</h3>
+    <div class="league-table-wrap">
+      <table id="league-table" class="league-table"></table>
+    </div>
+    <h3>Terminarz Albatrosa</h3>
+    <div id="league-fixtures" class="league-fixtures"></div>
+    <h3>Statystyki zawodników</h3>
+    <p class="muted league-stats-hint">Mecze / minuty / gole / kartki w sezonie 2026/2027 (wg laczynaspilka.pl).</p>
+    <div class="league-table-wrap">
+      <table id="league-stats-table" class="league-table"></table>
+    </div>
+    <p id="league-stats-bench" class="muted league-stats-bench"></p>
+  </div>
 </div>
 
 <main>
@@ -75,7 +98,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=7"></script>
+<script type="module" src="js/app.js?v=9"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

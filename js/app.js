@@ -2,6 +2,15 @@ import { PLAYERS, slugify } from "./players.js";
 import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js";
 import { isFirebaseConfigured } from "./firebase-config.js";
 import { getStore } from "./store.js";
+import {
+  LEAGUE_NAME,
+  LEAGUE_SOURCE_URL,
+  LEAGUE_UPDATED,
+  LEAGUE_TABLE,
+  ALBATROS_TEAM_NAME,
+  ALBATROS_FIXTURES,
+  PLAYER_STATS,
+} from "./league-data.js";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -696,12 +705,162 @@ function initRandomGifButton() {
 }
 
 // ---------------------------------------------------------------------------
+// 4c. Przycisk "Tabela i terminarz" — tabela ligi + mecze samego Albatrosa
+// ---------------------------------------------------------------------------
+function renderLeagueTable(container) {
+  const rows = LEAGUE_TABLE.map((t) => {
+    const isAlbatros = t.name === ALBATROS_TEAM_NAME;
+    return `
+      <tr class="${isAlbatros ? "is-albatros" : ""}">
+        <td>${t.pos}.</td>
+        <td>${t.name}</td>
+        <td>${t.m}</td>
+        <td class="pts">${t.pts}</td>
+        <td>${t.w}</td>
+        <td>${t.d}</td>
+        <td>${t.l}</td>
+        <td>${t.gf}-${t.ga}</td>
+      </tr>`;
+  }).join("");
+
+  container.innerHTML = `
+    <thead>
+      <tr>
+        <th>#</th><th>Drużyna</th><th>M</th><th>Pkt</th><th>Z</th><th>R</th><th>P</th><th>Bramki</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>`;
+}
+
+function renderAlbatrosFixtures(container) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Pierwszy jeszcze nierozegrany mecz z ustaloną datą — podświetlamy go.
+  const nextIndex = ALBATROS_FIXTURES.findIndex(
+    (f) => f.status === "scheduled" && new Date(f.date + "T00:00:00") >= today
+  );
+
+  container.innerHTML = ALBATROS_FIXTURES.map((f, i) => {
+    if (f.status === "bye") {
+      return `
+        <div class="league-fixture is-bye">
+          <span class="league-fixture-round">${f.round}.</span>
+          <span class="league-fixture-match">kolejka wolna — pauza</span>
+        </div>`;
+    }
+
+    const matchLabel = f.home
+      ? `Albatros Jaśkowice – ${f.opponent}`
+      : `${f.opponent} – Albatros Jaśkowice`;
+
+    if (f.status === "played") {
+      const dateObj = new Date(f.date + "T00:00:00");
+      return `
+        <div class="league-fixture">
+          <span class="league-fixture-round">${f.round}.</span>
+          <span class="league-fixture-date">${formatDateHuman(dateObj)}</span>
+          <span class="league-fixture-match">${matchLabel}</span>
+          <span class="league-fixture-score">${f.score}</span>
+        </div>`;
+    }
+
+    if (f.status === "scheduled") {
+      const dateObj = new Date(f.date + "T00:00:00");
+      return `
+        <div class="league-fixture${i === nextIndex ? " is-next" : ""}">
+          <span class="league-fixture-round">${f.round}.</span>
+          <span class="league-fixture-date">${formatDateHuman(dateObj)} · ${f.time}</span>
+          <span class="league-fixture-match">${matchLabel}</span>
+        </div>`;
+    }
+
+    // status "tbd" — termin jeszcze nieustalony przez ligę (opcjonalnie
+    // przybliżona data w f.estimatedDate, do potwierdzenia bliżej terminu)
+    const dateLabel = f.estimatedDate
+      ? `ok. ${formatDateHuman(new Date(f.estimatedDate + "T00:00:00"))} (niepotwierdzone)`
+      : "termin nieznany";
+    return `
+      <div class="league-fixture">
+        <span class="league-fixture-round">${f.round}.</span>
+        <span class="league-fixture-date">${dateLabel}</span>
+        <span class="league-fixture-match">${matchLabel}</span>
+      </div>`;
+  }).join("");
+}
+
+function renderPlayerStats(tableEl, benchEl) {
+  const played = PLAYER_STATS.filter((p) => p.matches > 0).sort((a, b) => b.minutes - a.minutes);
+  const bench = PLAYER_STATS.filter((p) => p.matches === 0).map((p) => p.name);
+
+  const rows = played.map((p) => `
+      <tr>
+        <td class="league-stats-name">${p.name}</td>
+        <td>${p.matches}</td>
+        <td>${p.minutes}'</td>
+        <td>${p.goals}</td>
+        <td>${p.cards}</td>
+      </tr>`).join("");
+
+  tableEl.innerHTML = `
+    <thead>
+      <tr><th>Zawodnik</th><th>M</th><th>Min</th><th>Gole</th><th>Kartki</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>`;
+
+  benchEl.textContent = bench.length
+    ? `Bez występu w tym sezonie: ${bench.join(", ")}.`
+    : "";
+}
+
+function initLeagueButton() {
+  const btn = document.getElementById("league-btn");
+  const overlay = document.getElementById("league-overlay");
+  const closeBtn = document.getElementById("league-overlay-close");
+  if (!btn || !overlay || !closeBtn) return;
+
+  let rendered = false;
+  function renderOnce() {
+    if (rendered) return;
+    rendered = true;
+    document.getElementById("league-name").textContent = LEAGUE_NAME;
+    const updatedEl = document.querySelector(".league-updated");
+    const updatedDate = formatDateHuman(new Date(LEAGUE_UPDATED + "T00:00:00"));
+    updatedEl.innerHTML = `Stan na ${updatedDate} · źródło: <a href="${LEAGUE_SOURCE_URL}" target="_blank" rel="noopener">90minut.pl</a>`;
+    renderLeagueTable(document.getElementById("league-table"));
+    renderAlbatrosFixtures(document.getElementById("league-fixtures"));
+    renderPlayerStats(
+      document.getElementById("league-stats-table"),
+      document.getElementById("league-stats-bench")
+    );
+  }
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+  function openOverlay() {
+    renderOnce();
+    overlay.hidden = false;
+  }
+
+  btn.addEventListener("click", openOverlay);
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 5. Start
 // ---------------------------------------------------------------------------
 async function init() {
   document.getElementById("logo-img").src = "assets/img/logo.png";
   initBackground();
   initRandomGifButton();
+  initLeagueButton();
   renderIdentityBar();
   renderSchedule();
   renderRoster();
