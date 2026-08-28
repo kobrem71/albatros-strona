@@ -222,10 +222,112 @@ body {
 .league-fixture-date { color: var(--ink); font-weight: 600; min-width: 108px; text-transform: capitalize; }
 .league-fixture-match { flex: 1; color: var(--ink); }
 .league-fixture-score { font-weight: 700; color: var(--gold); }
+.league-fixture-match em { color: var(--muted); font-style: normal; font-size: 0.82rem; }
 
 .league-stats-hint { margin: 0 6px 10px; font-size: 0.82rem; }
 .league-stats-name { text-align: left !important; white-space: normal !important; }
 .league-stats-bench { margin: 10px 6px 0; font-size: 0.8rem; }
+
+/* ---------- Klikalne nazwisko -> karta zawodnika ---------- */
+.player-name-link {
+  cursor: pointer;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.35);
+}
+.player-name-link:hover { color: var(--blue); border-color: var(--blue); }
+
+.player-card-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 6px 18px;
+}
+.player-card-summary { margin: 0; color: var(--muted); font-size: 0.88rem; text-align: center; }
+.player-card-summary strong { color: var(--gold); }
+
+/* ---------- Karta zawodnika w stylu FIFA Ultimate Team ---------- */
+.fut-card {
+  --fut-shield: polygon(50% 0%, 85% 6%, 100% 22%, 100% 64%, 88% 84%, 50% 100%, 12% 84%, 0% 64%, 0% 22%, 15% 6%);
+  width: 220px;
+  aspect-ratio: 0.68;
+  clip-path: var(--fut-shield);
+  background: linear-gradient(160deg, var(--gold), #8a6420 55%, var(--blue-deep));
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
+  padding: 3px;
+}
+.fut-card-face {
+  width: 100%;
+  height: 100%;
+  clip-path: var(--fut-shield);
+  background: linear-gradient(165deg, #0f1530 0%, #1c2350 55%, #12183a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 10px 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+.fut-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+.fut-card-rating { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+.fut-ovr { font-size: 1.9rem; font-weight: 800; color: var(--gold); }
+.fut-pos { font-size: 0.72rem; font-weight: 700; color: var(--ink); letter-spacing: 0.5px; margin-top: 2px; }
+.fut-card-badges { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fut-flag { font-size: 1.3rem; line-height: 1; }
+.fut-crest { width: 26px; height: 26px; object-fit: contain; }
+.fut-card-photo-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: -4px;
+}
+.fut-card-photo-img {
+  width: 118px;
+  height: 128px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+}
+.fut-card-photo-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.fut-card-photo-img .avatar-fallback { font-size: 2rem; }
+.fut-card-name {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--ink);
+  text-transform: uppercase;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 0;
+  width: 82%;
+  text-align: center;
+}
+.fut-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 16px;
+  margin-top: 10px;
+  width: 88%;
+}
+.fut-stat {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.fut-stat b { color: var(--gold); font-size: 0.98rem; min-width: 20px; display: inline-block; text-align: right; }
 
 main {
   max-width: 980px;

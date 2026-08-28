@@ -85,48 +85,75 @@ export const ALBATROS_FIXTURES = [
 // od czerwonej z samego tekstu strony, więc kolor nie jest rozróżniany.
 // Zawodnicy z "matches: 0" nie mieli jeszcze zgłoszonego występu w meczu
 // ligowym w tym sezonie (albo dopiero dołączyli, albo nie grali).
+//
+// matchLog: lista rozegranych meczów tego zawodnika (do karty zawodnika po
+// kliknięciu w nazwisko) — data, przeciwnik, czy u siebie, wynik (z
+// perspektywy Albatrosa), minuty na boisku, minuty goli i kartek.
+//
+// Uwzględnia też jeden mecz Pucharu Polski "Strefa Legnica" (09.08.2026,
+// runda wstępna, Albatros odpadł 1:5 z Błękitnymi Koskowice) — więcej
+// meczów pucharowych w tym sezonie już nie będzie (drużyna odpadła w 1.
+// rundzie), więc przy kolejnych aktualizacjach statystyk wystarczy sprawdzać
+// tylko ligę (Klasa B) na laczynaspilka.pl, bez zakładki Puchar Polski.
 export const PLAYER_STATS_UPDATED = "2026-08-28";
+
+// Rozegrane dotąd mecze — wspólne dane, żeby nie powtarzać ich przy każdym
+// zawodniku. "competition" pokazuje się na karcie zawodnika tylko wtedy, gdy
+// to nie liga (żeby nie zaśmiecać typowego przypadku).
+const M1 = { date: "2026-08-16", opponent: "Miedź III Legnica", home: false, score: "0:23" };
+const M2 = { date: "2026-08-23", opponent: "Rycerz II Legnickie Pole", home: true, score: "5:2" };
+const CUP1 = {
+  date: "2026-08-09",
+  opponent: "Błękitni Koskowice",
+  home: true,
+  score: "1:5",
+  competition: "Puchar Polski",
+};
+function m(matchInfo, minutes, goalMinutes = [], cardMinutes = []) {
+  return { ...matchInfo, minutes, goalMinutes, cardMinutes };
+}
+
 export const PLAYER_STATS = [
-  { name: "Maksym Dobryvoda", matches: 2, minutes: 134, goals: 3, cards: 0 },
-  { name: "Vladyslav Didenko", matches: 1, minutes: 50, goals: 0, cards: 0 },
-  { name: "Dominik Duchnicki", matches: 1, minutes: 83, goals: 0, cards: 0 },
-  { name: "Remigiusz Dubaniewicz", matches: 1, minutes: 0, goals: 0, cards: 0 },
-  { name: "Bartosz Fudali", matches: 2, minutes: 37, goals: 0, cards: 0 },
-  { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Maciej Gdaniec", matches: 2, minutes: 130, goals: 0, cards: 0 },
-  { name: "Bartosz Gresiuk", matches: 1, minutes: 66, goals: 0, cards: 0 },
-  { name: "Mateusz Gresiuk", matches: 2, minutes: 180, goals: 0, cards: 0 },
-  { name: "Maksym Hlibichuk", matches: 1, minutes: 90, goals: 0, cards: 0 },
-  { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, cards: 0 },
-  { name: "Kacper Malinowski", matches: 2, minutes: 17, goals: 0, cards: 0 },
-  { name: "Krzysztof Obremski", matches: 1, minutes: 20, goals: 0, cards: 1 },
-  { name: "Damian Pachołek", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Michał Papaj", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Paweł Pęczkowski", matches: 1, minutes: 70, goals: 0, cards: 0 },
-  { name: "Marcin Rozpędowski", matches: 1, minutes: 45, goals: 0, cards: 0 },
-  { name: "Filip Siwak", matches: 2, minutes: 75, goals: 0, cards: 0 },
-  { name: "Mateusz Styrcz", matches: 2, minutes: 156, goals: 1, cards: 0 },
-  { name: "Marcin Świtoń", matches: 2, minutes: 24, goals: 0, cards: 0 },
-  { name: "Gabriel Świerbutowicz", matches: 2, minutes: 16, goals: 0, cards: 0 },
-  { name: "Bartłomiej Taczyński", matches: 1, minutes: 45, goals: 0, cards: 0 },
-  { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, cards: 0 },
-  { name: "Stanisław Taczyński", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Mateusz Taraciński", matches: 1, minutes: 77, goals: 1, cards: 0 },
-  { name: "Janusz Tkacz", matches: 1, minutes: 60, goals: 0, cards: 0 },
-  { name: "Patryk Wątroba", matches: 2, minutes: 170, goals: 0, cards: 0 },
-  { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Konrad Zębacki", matches: 1, minutes: 90, goals: 0, cards: 0 },
-  { name: "Yevhen Borblik", matches: 1, minutes: 90, goals: 0, cards: 0 },
-  { name: "Artur Borysenko", matches: 2, minutes: 45, goals: 0, cards: 1 },
-  { name: "Dawid Bubień", matches: 2, minutes: 120, goals: 0, cards: 0 },
+  { name: "Maksym Dobryvoda", matches: 3, minutes: 195, goals: 3, cards: 0, matchLog: [m(M2, 74, ["30'", "35'", "55'"]), m(M1, 60), m(CUP1, 61)] },
+  { name: "Vladyslav Didenko", matches: 2, minutes: 106, goals: 0, cards: 3, matchLog: [m(M1, 50), m(CUP1, 56, [], ["15'", "56'", "56'"])] },
+  { name: "Dominik Duchnicki", matches: 2, minutes: 112, goals: 0, cards: 0, matchLog: [m(M2, 83), m(CUP1, 29)] },
+  { name: "Remigiusz Dubaniewicz", matches: 1, minutes: 0, goals: 0, cards: 0, matchLog: [m(M1, 0)] },
+  { name: "Bartosz Fudali", matches: 3, minutes: 60, goals: 0, cards: 0, matchLog: [m(M2, 13), m(M1, 24), m(CUP1, 23)] },
+  { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Maciej Gdaniec", matches: 3, minutes: 202, goals: 0, cards: 0, matchLog: [m(M2, 90), m(M1, 40), m(CUP1, 72)] },
+  { name: "Bartosz Gresiuk", matches: 2, minutes: 145, goals: 0, cards: 0, matchLog: [m(M1, 66), m(CUP1, 79)] },
+  { name: "Mateusz Gresiuk", matches: 3, minutes: 270, goals: 1, cards: 0, matchLog: [m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
+  { name: "Maksym Hlibichuk", matches: 1, minutes: 90, goals: 0, cards: 0, matchLog: [m(M2, 90)] },
+  { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, cards: 0, matchLog: [m(M1, 90)] },
+  { name: "Kacper Malinowski", matches: 3, minutes: 28, goals: 0, cards: 0, matchLog: [m(M2, 7), m(M1, 10), m(CUP1, 11)] },
+  { name: "Krzysztof Obremski", matches: 2, minutes: 20, goals: 0, cards: 1, matchLog: [m(M2, 20, [], ["83'"]), m(CUP1, 0)] },
+  { name: "Damian Pachołek", matches: 1, minutes: 60, goals: 0, cards: 0, matchLog: [m(CUP1, 60)] },
+  { name: "Michał Papaj", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Paweł Pęczkowski", matches: 1, minutes: 70, goals: 0, cards: 0, matchLog: [m(M2, 70)] },
+  { name: "Marcin Rozpędowski", matches: 2, minutes: 75, goals: 0, cards: 0, matchLog: [m(M1, 45), m(CUP1, 30)] },
+  { name: "Filip Siwak", matches: 3, minutes: 93, goals: 0, cards: 0, matchLog: [m(M2, 45), m(M1, 30), m(CUP1, 18)] },
+  { name: "Mateusz Styrcz", matches: 3, minutes: 223, goals: 1, cards: 0, matchLog: [m(M2, 66, ["38'"]), m(M1, 90), m(CUP1, 67)] },
+  { name: "Marcin Świtoń", matches: 2, minutes: 24, goals: 0, cards: 0, matchLog: [m(M2, 24), m(M1, 0)] },
+  { name: "Gabriel Świerbutowicz", matches: 3, minutes: 16, goals: 0, cards: 0, matchLog: [m(M2, 16), m(M1, 0), m(CUP1, 0)] },
+  { name: "Bartłomiej Taczyński", matches: 2, minutes: 135, goals: 0, cards: 0, matchLog: [m(M2, 45), m(CUP1, 90)] },
+  { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, cards: 0, matchLog: [m(M2, 0)] },
+  { name: "Stanisław Taczyński", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Mateusz Taraciński", matches: 1, minutes: 77, goals: 1, cards: 0, matchLog: [m(M2, 77, ["42'"])] },
+  { name: "Janusz Tkacz", matches: 2, minutes: 150, goals: 0, cards: 0, matchLog: [m(M1, 60), m(CUP1, 90)] },
+  { name: "Patryk Wątroba", matches: 2, minutes: 170, goals: 0, cards: 0, matchLog: [m(M2, 90), m(M1, 80)] },
+  { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Konrad Zębacki", matches: 1, minutes: 90, goals: 0, cards: 0, matchLog: [m(M1, 90)] },
+  { name: "Yevhen Borblik", matches: 2, minutes: 180, goals: 0, cards: 0, matchLog: [m(M1, 90), m(CUP1, 90)] },
+  { name: "Artur Borysenko", matches: 3, minutes: 135, goals: 0, cards: 1, matchLog: [m(M2, 0), m(M1, 45, [], ["65'"]), m(CUP1, 90)] },
+  { name: "Dawid Bubień", matches: 3, minutes: 120, goals: 0, cards: 0, matchLog: [m(M2, 90), m(M1, 30), m(CUP1, 0)] },
   // Poniżsi nie mieli jeszcze zgłoszonego profilu/występu w kadrze meczowej
   // na laczynaspilka.pl w tym sezonie (być może dopiero dołączyli do klubu):
-  { name: "Filip Kubiak", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Jakub Cofór", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Alan Lichman", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Brajan Kwiatkowski", matches: 0, minutes: 0, goals: 0, cards: 0 },
-  { name: "Jakub Behrendt", matches: 0, minutes: 0, goals: 0, cards: 0 },
+  { name: "Filip Kubiak", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Jakub Cofór", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Alan Lichman", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Brajan Kwiatkowski", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
+  { name: "Jakub Behrendt", matches: 0, minutes: 0, goals: 0, cards: 0, matchLog: [] },
 ];

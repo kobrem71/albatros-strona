@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=9" />
+<link rel="stylesheet" href="css/style.css?v=12" />
 </head>
 <body>
 
@@ -70,6 +70,15 @@
   </div>
 </div>
 
+<div id="player-overlay" class="league-overlay" hidden>
+  <div class="league-panel">
+    <button id="player-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <div id="player-card-head" class="player-card-head"></div>
+    <h3>Rozegrane mecze</h3>
+    <div id="player-card-matches" class="league-fixtures"></div>
+  </div>
+</div>
+
 <main>
   <section class="card identity-card">
     <div id="identity-bar" class="identity-bar"></div>
@@ -98,7 +107,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=9"></script>
+<script type="module" src="js/app.js?v=12"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

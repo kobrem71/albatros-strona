@@ -10,6 +10,7 @@ import {
   ALBATROS_TEAM_NAME,
   ALBATROS_FIXTURES,
   PLAYER_STATS,
+  PLAYER_STATS_UPDATED,
 } from "./league-data.js";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
@@ -152,9 +153,12 @@ function initialsOf(name) {
   return (first + last).toUpperCase();
 }
 
-function avatarNode(player) {
+// Wspólna logika ładowania zdjęcia gracza (próbuje kolejne rozszerzenia,
+// potem wspólny placeholder, na końcu zostają inicjały) — używana zarówno
+// przez mały okrągły awatar, jak i duże zdjęcie na karcie zawodnika.
+function playerPhotoNode(player, wrapClassName) {
   const wrap = document.createElement("div");
-  wrap.className = "avatar";
+  wrap.className = wrapClassName;
   const img = document.createElement("img");
   img.alt = player.name;
   // Uwaga: celowo BEZ loading="lazy" — w połączeniu z display:none (poniżej)
@@ -190,6 +194,10 @@ function avatarNode(player) {
   tryNext();
 
   return wrap;
+}
+
+function avatarNode(player) {
+  return playerPhotoNode(player, "avatar");
 }
 
 // ---------------------------------------------------------------------------
@@ -371,6 +379,7 @@ function renderRoster() {
     const nameEl = document.createElement("span");
     nameEl.className = "roster-name";
     nameEl.textContent = player.name;
+    makeNameClickable(nameEl, player);
     row.appendChild(nameEl);
 
     const currentStatus = playersData[player.slug]?.status;
@@ -396,7 +405,7 @@ function renderRoster() {
   }
 
   const rosterPool = rosterPoolForEvent(ev);
-  const { visible, hidden } = getOrderedPlayerGroups(rosterPool, playersData);
+  const { visible, hidden } = getOrderedPlayerGroups(rosterPool, playersData, state.identitySlug);
 
   const list = document.createElement("div");
   list.className = "roster-list";
@@ -512,16 +521,23 @@ function statusRank(eventPlayersData, slug) {
   return STATUS_RANK[status] ?? 3;
 }
 
-// Zwraca graczy posortowanych: najpierw wg odpowiedzi na TO wydarzenie (Tak
-// -> Nie -> HGW -> brak odpowiedzi, jeśli podano `eventPlayersData`), a w
-// obrębie tej samej odpowiedzi — wg frekwencji (zamrożonej na bieżący
-// 2-tyg. okres). Podzieleni na widocznych i zwiniętych pod "Pokaż więcej".
+// Zwraca graczy posortowanych: najpierw zalogowany zawodnik (jeśli podano
+// `identitySlug` — żeby mógł od razu, bez szukania, zagłosować), potem wg
+// odpowiedzi na TO wydarzenie (Tak -> Nie -> HGW -> brak odpowiedzi, jeśli
+// podano `eventPlayersData`), a w obrębie tej samej odpowiedzi — wg
+// frekwencji (zamrożonej na bieżący 2-tyg. okres). Podzieleni na widocznych
+// i zwiniętych pod "Pokaż więcej" — zalogowany zawodnik zawsze widoczny,
+// nawet jeśli normalnie byłby ukryty.
 // `pool` pozwala zawęzić listę (np. do samych bramkarzy na trening bramkarski).
-export function getOrderedPlayerGroups(pool = PLAYERS, eventPlayersData = null) {
+export function getOrderedPlayerGroups(pool = PLAYERS, eventPlayersData = null, identitySlug = null) {
   const cutoff = currentSortCutoffDateStr();
   const frozenStats = computeAttendanceStats(cutoff);
 
   const sorted = [...pool].sort((a, b) => {
+    if (identitySlug) {
+      if (a.slug === identitySlug && b.slug !== identitySlug) return -1;
+      if (b.slug === identitySlug && a.slug !== identitySlug) return 1;
+    }
     if (eventPlayersData) {
       const rankDiff = statusRank(eventPlayersData, a.slug) - statusRank(eventPlayersData, b.slug);
       if (rankDiff !== 0) return rankDiff;
@@ -530,8 +546,8 @@ export function getOrderedPlayerGroups(pool = PLAYERS, eventPlayersData = null) 
   });
 
   return {
-    visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug)),
-    hidden: sorted.filter((p) => HIDDEN_SLUGS.has(p.slug)),
+    visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug) || p.slug === identitySlug),
+    hidden: sorted.filter((p) => HIDDEN_SLUGS.has(p.slug) && p.slug !== identitySlug),
   };
 }
 
@@ -556,6 +572,7 @@ function buildStatsTable(players, stats) {
     tdPlayer.appendChild(avatarNode(player));
     const nameSpan = document.createElement("span");
     nameSpan.textContent = player.name;
+    makeNameClickable(nameSpan, player);
     tdPlayer.appendChild(nameSpan);
 
     const tdTrening = document.createElement("td");
@@ -795,7 +812,7 @@ function renderPlayerStats(tableEl, benchEl) {
 
   const rows = played.map((p) => `
       <tr>
-        <td class="league-stats-name">${p.name}</td>
+        <td class="league-stats-name player-name-link" data-slug="${slugify(p.name)}">${escapeHtml(p.name)}</td>
         <td>${p.matches}</td>
         <td>${p.minutes}'</td>
         <td>${p.goals}</td>
@@ -808,9 +825,158 @@ function renderPlayerStats(tableEl, benchEl) {
     </thead>
     <tbody>${rows}</tbody>`;
 
+  tableEl.querySelectorAll("td.player-name-link").forEach((td) => {
+    const player = PLAYERS.find((p) => p.slug === td.dataset.slug);
+    if (player) td.addEventListener("click", () => openPlayerCard(player));
+  });
+
   benchEl.textContent = bench.length
     ? `Bez występu w tym sezonie: ${bench.join(", ")}.`
     : "";
+}
+
+// ---------------------------------------------------------------------------
+// 4d. Karta zawodnika — klik w nazwisko otwiera okienko z jego statystykami
+// ---------------------------------------------------------------------------
+const PLAYER_STATS_BY_SLUG = new Map(PLAYER_STATS.map((p) => [slugify(p.name), p]));
+
+function makeNameClickable(el, player) {
+  el.classList.add("player-name-link");
+  el.tabIndex = 0;
+  el.setAttribute("role", "button");
+  el.onclick = () => openPlayerCard(player);
+  el.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openPlayerCard(player);
+    }
+  };
+}
+
+// Kraj zawodnika -> flaga na karcie (domyślnie polska; kilku zawodników gra
+// dla klubu spoza Polski — flaga ukraińska; jeden żartobliwy wyjątek).
+const UKRAINIAN_SLUGS = new Set([
+  "maksym-dobryvoda",
+  "maksym-hlibichuk",
+  "artur-borysenko",
+  "vladyslav-didenko",
+  "oleksandr-kolvakh",
+]);
+function flagFor(slug) {
+  if (UKRAINIAN_SLUGS.has(slug)) return "🇺🇦";
+  if (slug === "filip-kubiak") return "🇪🇸";
+  return "🇵🇱";
+}
+
+// "Karta FIFA" — 6 fikcyjnych statystyk (0-30) i ocena ogólna, losowane raz
+// na zawodnika (deterministycznie, na podstawie sluga), żeby karta pokazywała
+// zawsze te same liczby przy każdym otwarciu, a nie nowe za każdym razem.
+const FUT_STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"];
+function futStatsFor(slug) {
+  const stats = {};
+  for (const key of FUT_STAT_KEYS) {
+    stats[key] = hashStr(`${slug}::${key}`) % 31; // 0-30
+  }
+  const ovr = Math.round(FUT_STAT_KEYS.reduce((sum, k) => sum + stats[k], 0) / FUT_STAT_KEYS.length);
+  return { stats, ovr };
+}
+
+function buildFutCard(player) {
+  const { stats, ovr } = futStatsFor(player.slug);
+  const pos = GOALKEEPER_SLUGS.has(player.slug) ? "BR" : "ZAW";
+  const flag = flagFor(player.slug);
+  const firstName = player.name.trim().split(/\s+/)[0].toUpperCase();
+
+  const card = document.createElement("div");
+  card.className = "fut-card";
+  card.innerHTML = `
+    <div class="fut-card-face">
+      <div class="fut-card-top">
+        <div class="fut-card-rating">
+          <span class="fut-ovr">${ovr}</span>
+          <span class="fut-pos">${pos}</span>
+        </div>
+        <div class="fut-card-badges">
+          <span class="fut-flag">${flag}</span>
+          <img class="fut-crest" src="assets/img/logo.png" alt="" />
+        </div>
+      </div>
+      <div class="fut-card-photo-wrap"></div>
+      <div class="fut-card-name">${escapeHtml(firstName)}</div>
+      <div class="fut-card-stats">
+        <div class="fut-stat"><b>${stats.PAC}</b> PAC</div>
+        <div class="fut-stat"><b>${stats.DRI}</b> DRI</div>
+        <div class="fut-stat"><b>${stats.SHO}</b> SHO</div>
+        <div class="fut-stat"><b>${stats.DEF}</b> DEF</div>
+        <div class="fut-stat"><b>${stats.PAS}</b> PAS</div>
+        <div class="fut-stat"><b>${stats.PHY}</b> PHY</div>
+      </div>
+    </div>
+  `;
+  card.querySelector(".fut-card-photo-wrap").appendChild(playerPhotoNode(player, "fut-card-photo-img"));
+  return card;
+}
+
+function openPlayerCard(player) {
+  const overlay = document.getElementById("player-overlay");
+  const head = document.getElementById("player-card-head");
+  const matchesEl = document.getElementById("player-card-matches");
+  if (!overlay || !head || !matchesEl) return;
+
+  const stats = PLAYER_STATS_BY_SLUG.get(player.slug);
+
+  head.innerHTML = "";
+  head.appendChild(buildFutCard(player));
+
+  const summary = document.createElement("p");
+  summary.className = "player-card-summary";
+  summary.innerHTML =
+    stats && stats.matches > 0
+      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.cards}</strong> kartek`
+      : `Brak jeszcze występu w tym sezonie (wg laczynaspilka.pl).`;
+  head.appendChild(summary);
+
+  if (stats && stats.matchLog.length > 0) {
+    matchesEl.innerHTML = stats.matchLog.map((match) => {
+      const dateObj = new Date(match.date + "T00:00:00");
+      const label = match.home
+        ? `Albatros Jaśkowice – ${match.opponent}`
+        : `${match.opponent} – Albatros Jaśkowice`;
+      const events = [
+        ...match.goalMinutes.map((t) => `⚽ ${t}`),
+        ...match.cardMinutes.map((t) => `🟨 ${t}`),
+      ].join(" ");
+      const competitionTag = match.competition ? ` <em>(${escapeHtml(match.competition)})</em>` : "";
+      return `
+        <div class="league-fixture">
+          <span class="league-fixture-date">${formatDateHuman(dateObj)}</span>
+          <span class="league-fixture-match">${escapeHtml(label)} <span class="league-fixture-score">${match.score}</span>${competitionTag}</span>
+          <span class="league-fixture-round">${match.minutes}'${events ? " · " + events : ""}</span>
+        </div>`;
+    }).join("");
+  } else {
+    matchesEl.innerHTML = `<p class="muted">Brak rozegranych meczów w tym sezonie.</p>`;
+  }
+
+  overlay.hidden = false;
+}
+
+function initPlayerOverlay() {
+  const overlay = document.getElementById("player-overlay");
+  const closeBtn = document.getElementById("player-overlay-close");
+  if (!overlay || !closeBtn) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
 }
 
 function initLeagueButton() {
@@ -861,6 +1027,7 @@ async function init() {
   initBackground();
   initRandomGifButton();
   initLeagueButton();
+  initPlayerOverlay();
   renderIdentityBar();
   renderSchedule();
   renderRoster();
