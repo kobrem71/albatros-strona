@@ -255,7 +255,7 @@ body {
      treści karty (OVR/flaga u góry, 6 statystyk u dołu). */
   --fut-shield: polygon(6% 0%, 94% 0%, 100% 8%, 100% 92%, 92% 97%, 50% 100%, 8% 97%, 0% 92%, 0% 8%);
   width: 250px;
-  aspect-ratio: 0.65;
+  aspect-ratio: 0.63;
   clip-path: var(--fut-shield);
   background: linear-gradient(160deg, var(--gold), #8a6420 55%, var(--blue-deep));
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
@@ -283,15 +283,15 @@ body {
 .fut-card-rating { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
 .fut-ovr { font-size: 1.9rem; font-weight: 800; color: var(--gold); }
 .fut-pos { font-size: 0.72rem; font-weight: 700; color: var(--ink); letter-spacing: 0.5px; margin-top: 2px; }
-.fut-card-badges { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fut-card-badges { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .fut-flag {
-  width: 26px;
-  height: 18px;
+  width: 36px;
+  height: 25px;
   object-fit: cover;
   border-radius: 3px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
-.fut-crest { width: 26px; height: 26px; object-fit: contain; }
+.fut-crest { width: 36px; height: 36px; object-fit: contain; }
 .fut-card-photo-wrap {
   width: 100%;
   display: flex;
@@ -330,20 +330,21 @@ body {
 .fut-card-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 16px;
-  margin-top: 12px;
-  width: 88%;
+  gap: 10px 14px;
+  margin-top: 14px;
+  width: 94%;
 }
 .fut-stat {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--muted);
   display: flex;
-  gap: 6px;
+  gap: 7px;
   align-items: baseline;
   white-space: nowrap;
+  justify-content: center;
 }
-.fut-stat b { color: var(--gold); font-size: 0.98rem; min-width: 20px; display: inline-block; text-align: right; }
+.fut-stat b { color: var(--gold); font-size: 1.2rem; min-width: 24px; display: inline-block; text-align: right; }
 
 main {
   max-width: 980px;

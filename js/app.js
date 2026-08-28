@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=16";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=16";
-import { isFirebaseConfigured } from "./firebase-config.js?v=16";
-import { getStore } from "./store.js?v=16";
+import { PLAYERS, slugify } from "./players.js?v=17";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=17";
+import { isFirebaseConfigured } from "./firebase-config.js?v=17";
+import { getStore } from "./store.js?v=17";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=16";
+} from "./league-data.js?v=17";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -969,21 +969,36 @@ function nicknameFor(name) {
 // "Karta FIFA" — 6 fikcyjnych statystyk (0-30) i ocena ogólna, losowane raz
 // na zawodnika (deterministycznie, na podstawie sluga), żeby karta pokazywała
 // zawsze te same liczby przy każdym otwarciu, a nie nowe za każdym razem.
-const FUT_STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"];
-function futStatsFor(slug) {
+// Bramkarze dostają inny zestaw statystyk niż w FIFA (DIV/HAN/KIC/REF/SPD/POS
+// zamiast PAC/SHO/PAS/DRI/DEF/PHY dla zawodników z pola).
+const OUTFIELD_STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"];
+const GK_STAT_KEYS = ["DIV", "HAN", "KIC", "REF", "SPD", "POS"];
+function futStatsFor(slug, keys) {
   const stats = {};
-  for (const key of FUT_STAT_KEYS) {
+  for (const key of keys) {
     stats[key] = hashStr(`${slug}::${key}`) % 31; // 0-30
   }
-  const ovr = Math.round(FUT_STAT_KEYS.reduce((sum, k) => sum + stats[k], 0) / FUT_STAT_KEYS.length);
+  const ovr = Math.round(keys.reduce((sum, k) => sum + stats[k], 0) / keys.length);
   return { stats, ovr };
 }
 
 function buildFutCard(player) {
-  const { stats, ovr } = futStatsFor(player.slug);
-  const pos = GOALKEEPER_SLUGS.has(player.slug) ? "BR" : "ZAW";
+  const isGoalkeeper = GOALKEEPER_SLUGS.has(player.slug);
+  const keys = isGoalkeeper ? GK_STAT_KEYS : OUTFIELD_STAT_KEYS;
+  const { stats, ovr } = futStatsFor(player.slug, keys);
   const flag = flagFor(player.slug);
   const nickname = nicknameFor(player.name);
+  // Kolejność w siatce 2 kolumny x 3 wiersze — dla bramkarza tak, jak
+  // standardowo w FIFA (Nurkowanie/Wybicia, Ręce/Refleks, Szybkość/Ustawianie).
+  const statRows = isGoalkeeper
+    ? [["DIV", "HAN"], ["KIC", "REF"], ["SPD", "POS"]]
+    : [["PAC", "DRI"], ["SHO", "DEF"], ["PAS", "PHY"]];
+  const statsHtml = statRows
+    .map(
+      ([a, b]) =>
+        `<div class="fut-stat"><b>${stats[a]}</b> ${a}</div><div class="fut-stat"><b>${stats[b]}</b> ${b}</div>`
+    )
+    .join("");
 
   const card = document.createElement("div");
   card.className = "fut-card";
@@ -992,7 +1007,7 @@ function buildFutCard(player) {
       <div class="fut-card-top">
         <div class="fut-card-rating">
           <span class="fut-ovr">${ovr}</span>
-          <span class="fut-pos">${pos}</span>
+          ${isGoalkeeper ? '<span class="fut-pos">BR</span>' : ""}
         </div>
         <div class="fut-card-badges">
           <img class="fut-flag" src="${flag}" alt="" />
@@ -1002,12 +1017,7 @@ function buildFutCard(player) {
       <div class="fut-card-photo-wrap"></div>
       <div class="fut-card-name">${escapeHtml(nickname)}</div>
       <div class="fut-card-stats">
-        <div class="fut-stat"><b>${stats.PAC}</b> PAC</div>
-        <div class="fut-stat"><b>${stats.DRI}</b> DRI</div>
-        <div class="fut-stat"><b>${stats.SHO}</b> SHO</div>
-        <div class="fut-stat"><b>${stats.DEF}</b> DEF</div>
-        <div class="fut-stat"><b>${stats.PAS}</b> PAS</div>
-        <div class="fut-stat"><b>${stats.PHY}</b> PHY</div>
+        ${statsHtml}
       </div>
     </div>
   `;
