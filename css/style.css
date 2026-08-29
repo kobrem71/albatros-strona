@@ -510,6 +510,7 @@ main {
   max-width: 100%;
 }
 .identity-select option { color: #10192f; }
+.identity-select optgroup { color: #10192f; font-style: normal; }
 .link-btn {
   background: none;
   border: none;
@@ -797,9 +798,30 @@ main {
   pointer-events: none;
 }
 
-.tactic-clear-all-btn {
+.tactic-publish-btn {
   display: block;
   margin: 18px auto 0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(47, 191, 110, 0.5);
+  background: rgba(47, 191, 110, 0.15);
+  color: #2fbf6e;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tactic-publish-btn:hover { background: rgba(47, 191, 110, 0.26); }
+.tactic-publish-btn[hidden] { display: none; }
+.tactic-publish-btn.is-published {
+  border-color: rgba(159, 176, 200, 0.5);
+  background: rgba(159, 176, 200, 0.12);
+  color: var(--muted);
+}
+.tactic-publish-btn.is-published:hover { background: rgba(159, 176, 200, 0.22); }
+
+.tactic-clear-all-btn {
+  display: block;
+  margin: 10px auto 0;
   padding: 8px 16px;
   border-radius: 8px;
   border: 1px solid rgba(224, 101, 63, 0.5);
@@ -810,6 +832,7 @@ main {
   cursor: pointer;
 }
 .tactic-clear-all-btn:hover { background: rgba(224, 101, 63, 0.22); }
+.tactic-clear-all-btn[hidden] { display: none; }
 
 .tactic-picker-overlay { z-index: 1100; }
 .tactic-picker-panel { max-width: 460px; }
@@ -858,46 +881,8 @@ main {
 .tactic-picker-item-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
 .tactic-picker-item-photo .avatar-fallback { font-size: 0.75rem; }
 
-/* ---------- Panel trenera/kierownika (logowanie na hasło) ---------- */
-.staff-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-size: 0.9rem;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-.staff-bar-label { color: var(--muted); }
-.staff-photo {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center 20%;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  flex-shrink: 0;
-}
-.staff-login-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ink);
-  padding: 5px 12px 5px 5px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.staff-login-btn:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.14); }
-.staff-current {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* Logowanie trenera/kierownika teraz w .identity-bar (patrz JS) — dodatkowe
+   zdjęcie w kółeczku po zalogowaniu korzysta z .message-avatar + .identity-photo. */
 
 /* ---------- Wiadomości do wszystkich ---------- */
 .message-btn { position: relative; }
@@ -928,6 +913,25 @@ main {
   padding: 4px 4px 4px 0;
 }
 .message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  margin-top: 2px;
+}
+.message-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.message-avatar .avatar-fallback { font-size: 0.68rem; }
+.identity-photo { margin-right: 2px; }
+.message-bubble {
+  flex: 1;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--card-border);
   border-radius: 10px;

@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=24";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=24";
-import { isFirebaseConfigured } from "./firebase-config.js?v=24";
-import { getStore } from "./store.js?v=24";
+import { PLAYERS, slugify } from "./players.js?v=25";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=25";
+import { isFirebaseConfigured } from "./firebase-config.js?v=25";
+import { getStore } from "./store.js?v=25";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=24";
+} from "./league-data.js?v=25";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -238,9 +238,13 @@ export const state = {
   // { [slug]: { stats: { PAC: .., ... }, updatedAt } }. Dopóki gracz nie
   // zapisze swojego rozdziału, karta pokazuje losowe wartości jak dawniej.
   playerCardStats: {},
-  // Wspólna plansza taktyki — { [slotId]: slug albo "" }. Ta sama dla
-  // wszystkich odwiedzających (zapisana w bazie), nie tylko lokalnie.
+  // Wspólna plansza taktyki — { [slotId]: slug albo "" }. To zawsze
+  // prawdziwy, roboczy skład — czy zwykli użytkownicy go widzą, zależy od
+  // poniższej flagi (patrz visibleTacticSlots()).
   tactic: {},
+  // Czy skład jest opublikowany dla wszystkich, czy widoczny na razie tylko
+  // dla trenera/kierownika/Krzysztofa Obremskiego.
+  tacticPublished: false,
   // Rola zalogowana na tym urządzeniu przez panel trenera/kierownika ("trener",
   // "kierownik" albo "" jeśli nikt się nie zalogował) — patrz STAFF_ROLE_KEY.
   role: localStorage.getItem(STAFF_ROLE_KEY) || "",
@@ -266,11 +270,33 @@ function currentSenderName() {
   return player ? player.name : "Ktoś z klubu";
 }
 
+// Logowanie jako trener/kierownik jest teraz jedną z opcji na końcu tej samej
+// listy "Kim jesteś?" (nie osobnym rzędem przycisków na stronie głównej) —
+// wybranie jednej z nich pyta o hasło zamiast od razu zmieniać tożsamość.
 function renderIdentityBar() {
   const bar = document.getElementById("identity-bar");
   bar.innerHTML = "";
 
-  if (state.identitySlug) {
+  if (state.role && STAFF[state.role]) {
+    // Zalogowany jako trener/kierownik (osobno od "Kim jesteś?" graczy).
+    const staff = STAFF[state.role];
+    const photo = staffAvatarNode(state.role);
+    photo.classList.add("identity-photo");
+    const text = document.createElement("span");
+    text.innerHTML = `Zalogowany jako <strong>${staff.name}</strong>`;
+    const change = document.createElement("button");
+    change.className = "link-btn";
+    change.textContent = "Wyloguj";
+    change.onclick = () => {
+      state.role = "";
+      localStorage.removeItem(STAFF_ROLE_KEY);
+      renderIdentityBar();
+      refreshPermissionUI();
+    };
+    bar.appendChild(photo);
+    bar.appendChild(text);
+    bar.appendChild(change);
+  } else if (state.identitySlug) {
     const player = PLAYERS.find((p) => p.slug === state.identitySlug);
     const text = document.createElement("span");
     text.innerHTML = `Jesteś zalogowany jako <strong>${player ? player.name : state.identitySlug}</strong>`;
@@ -301,14 +327,31 @@ function renderIdentityBar() {
       opt.textContent = p.name;
       select.appendChild(opt);
     }
+    // Trener i kierownik na samym końcu listy, oddzieleni jako osobna grupa —
+    // wybranie jednego z nich pyta o hasło (patrz select.onchange niżej).
+    const staffGroup = document.createElement("optgroup");
+    staffGroup.label = "Personel klubu";
+    for (const roleKey of Object.keys(STAFF)) {
+      const opt = document.createElement("option");
+      opt.value = `staff:${roleKey}`;
+      opt.textContent = STAFF[roleKey].name;
+      staffGroup.appendChild(opt);
+    }
+    select.appendChild(staffGroup);
+
     select.onchange = () => {
-      if (select.value) {
-        state.identitySlug = select.value;
-        localStorage.setItem(IDENTITY_KEY, select.value);
-        renderIdentityBar();
-        renderRoster();
-        refreshPermissionUI();
+      const value = select.value;
+      select.value = ""; // reset od razu — dalszy ciąg albo przerysuje cały pasek, albo (złe hasło) ma tu wrócić
+      if (!value) return;
+      if (value.startsWith("staff:")) {
+        promptStaffLogin(value.slice("staff:".length));
+        return;
       }
+      state.identitySlug = value;
+      localStorage.setItem(IDENTITY_KEY, value);
+      renderIdentityBar();
+      renderRoster();
+      refreshPermissionUI();
     };
     bar.appendChild(label);
     bar.appendChild(select);
@@ -316,8 +359,20 @@ function renderIdentityBar() {
 }
 
 // ---------------------------------------------------------------------------
-// 3b. Panel trenera/kierownika — logowanie na sztywne hasło
+// 3b. Panel trenera/kierownika — logowanie na sztywne hasło (wybór z listy
+// "Kim jesteś?" wyżej, nie osobny przycisk na stronie głównej).
 // ---------------------------------------------------------------------------
+function staffAvatarNode(roleKey) {
+  const staff = STAFF[roleKey];
+  const wrap = document.createElement("div");
+  wrap.className = "message-avatar";
+  const img = document.createElement("img");
+  img.src = staff.photo;
+  img.alt = staff.name;
+  wrap.appendChild(img);
+  return wrap;
+}
+
 function promptStaffLogin(roleKey) {
   const staff = STAFF[roleKey];
   const pwd = window.prompt(`Hasło — logowanie jako: ${staff.name}`);
@@ -325,65 +380,32 @@ function promptStaffLogin(roleKey) {
   if (pwd === STAFF_PASSWORD) {
     state.role = roleKey;
     localStorage.setItem(STAFF_ROLE_KEY, roleKey);
-    renderStaffBar();
+    renderIdentityBar();
     refreshPermissionUI();
   } else {
     // Złe hasło: zostaje niezalogowany albo na poprzednim swoim loginie —
-    // celowo NIE dotykamy state.role/localStorage w ogóle.
+    // celowo NIE dotykamy state.role/localStorage w ogóle (select już wrócił
+    // do pustej opcji w renderIdentityBar, zanim otworzyło się to okno).
     alert("Błędne hasło.");
   }
 }
 
-function renderStaffBar() {
-  const bar = document.getElementById("staff-bar");
-  if (!bar) return;
-  bar.innerHTML = "";
-
-  if (state.role && STAFF[state.role]) {
-    const staff = STAFF[state.role];
-    const wrap = document.createElement("div");
-    wrap.className = "staff-current";
-    const img = document.createElement("img");
-    img.className = "staff-photo";
-    img.src = staff.photo;
-    img.alt = staff.name;
-    const text = document.createElement("span");
-    text.innerHTML = `Zalogowany jako <strong>${staff.name}</strong>`;
-    const logout = document.createElement("button");
-    logout.className = "link-btn";
-    logout.textContent = "Wyloguj";
-    logout.onclick = () => {
-      state.role = "";
-      localStorage.removeItem(STAFF_ROLE_KEY);
-      renderStaffBar();
-      refreshPermissionUI();
-    };
-    wrap.appendChild(img);
-    wrap.appendChild(text);
-    wrap.appendChild(logout);
-    bar.appendChild(wrap);
-  } else {
-    const label = document.createElement("span");
-    label.className = "staff-bar-label";
-    label.textContent = "Panel trenera/kierownika:";
-    bar.appendChild(label);
-    for (const roleKey of Object.keys(STAFF)) {
-      const staff = STAFF[roleKey];
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "staff-login-btn";
-      const img = document.createElement("img");
-      img.className = "staff-photo";
-      img.src = staff.photo;
-      img.alt = staff.name;
-      const span = document.createElement("span");
-      span.textContent = staff.name;
-      btn.appendChild(img);
-      btn.appendChild(span);
-      btn.addEventListener("click", () => promptStaffLogin(roleKey));
-      bar.appendChild(btn);
-    }
-  }
+// Zdjęcie autora wiadomości w kółeczku — trener/kierownik mają jedno stałe
+// zdjęcie, gracz swoje (z tym samym mechanizmem prób rozszerzeń co reszta
+// strony), a dla nieznanego autora zostają same inicjały.
+function authorAvatarNode(authorName) {
+  if (authorName === STAFF.trener.name) return staffAvatarNode("trener");
+  if (authorName === STAFF.kierownik.name) return staffAvatarNode("kierownik");
+  const player = PLAYERS.find((p) => p.name === authorName);
+  if (player) return playerPhotoNode(player, "message-avatar");
+  const wrap = document.createElement("div");
+  wrap.className = "message-avatar";
+  const fallback = document.createElement("span");
+  fallback.className = "avatar-fallback";
+  fallback.textContent = initialsOf(authorName || "?");
+  fallback.style.background = AVATAR_PALETTE[hashStr(authorName || "?") % AVATAR_PALETTE.length];
+  wrap.appendChild(fallback);
+  return wrap;
 }
 
 // Odświeża wszystkie miejsca w UI, których zawartość zależy od canManage()
@@ -391,14 +413,6 @@ function renderStaffBar() {
 // zmianie roli albo tożsamości gracza.
 function refreshPermissionUI() {
   refreshTacticBoardIfOpen();
-
-  const tacticOverlay = document.getElementById("tactic-overlay");
-  const clearAllBtn = document.getElementById("tactic-clear-all");
-  const tacticHint = document.querySelector(".tactic-hint");
-  if (tacticOverlay && !tacticOverlay.hidden) {
-    if (clearAllBtn) clearAllBtn.hidden = !canManage();
-    if (tacticHint) tacticHint.textContent = canManage() ? TACTIC_HINT_EDIT : TACTIC_HINT_READONLY;
-  }
 
   const messageOverlay = document.getElementById("message-overlay");
   const compose = document.getElementById("message-compose");
@@ -1438,12 +1452,37 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=24";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=25";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
-const TACTIC_HINT_EDIT =
-  "Kliknij w kółko na planszy, żeby wstawić (albo zmienić) zawodnika na tej pozycji. Widzi to każdy, kto wejdzie na stronę.";
-const TACTIC_HINT_READONLY =
+// Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
+// Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
+// dopóki trener (albo kierownik/Krzysztof) nie kliknie zielonego "Opublikuj" —
+// dopiero wtedy skład staje się widoczny dla wszystkich (i zostaje taki,
+// łącznie z kolejnymi zmianami na żywo, aż ktoś z tej trójki go schowa).
+const TACTIC_HINT_EDIT_UNPUBLISHED =
+  "Kliknij w kółko, żeby wstawić zawodnika. Tego składu na razie NIE widzą zwykli użytkownicy — kliknij „Opublikuj”, gdy będzie gotowy.";
+const TACTIC_HINT_EDIT_PUBLISHED =
+  "Kliknij w kółko na planszy, żeby wstawić (albo zmienić) zawodnika na tej pozycji. Skład jest opublikowany — widzi go każdy, kto wejdzie na stronę.";
+const TACTIC_HINT_READONLY_PUBLISHED =
   "Podgląd taktyki — zmieniać skład i kasować planszę mogą tylko trener, kierownik albo Krzysztof Obremski.";
+const TACTIC_HINT_READONLY_UNPUBLISHED =
+  "Trener jeszcze nie opublikował składu. Zajrzyj tu ponownie bliżej meczu.";
+
+function tacticHintText() {
+  if (canManage()) return state.tacticPublished ? TACTIC_HINT_EDIT_PUBLISHED : TACTIC_HINT_EDIT_UNPUBLISHED;
+  return state.tacticPublished ? TACTIC_HINT_READONLY_PUBLISHED : TACTIC_HINT_READONLY_UNPUBLISHED;
+}
+
+// Sloty widoczne DLA TEJ osoby: trener/kierownik/Krzysztof zawsze widzą
+// prawdziwy (roboczy) skład; reszta widzi go dopiero po publikacji, a do
+// tego czasu dostaje pustą planszę. Uwaga: to jest zabezpieczenie tylko po
+// stronie przeglądarki (tak jak reszta strony — bez logowania Firebase nie
+// da się tego wymusić w regułach bazy), ale spójne z resztą zaufaniowego
+// modelu tej strony.
+function visibleTacticSlots() {
+  if (canManage() || state.tacticPublished) return state.tactic;
+  return {};
+}
 const TACTIC_SLOTS = [
   { id: "st1", label: "ST", xPct: 35.42, yPct: 25.36 },
   { id: "st2", label: "ST", xPct: 65.36, yPct: 25.36 },
@@ -1473,8 +1512,9 @@ function renderTacticBoard(container) {
   img.alt = `Taktyka ${TACTIC_FORMATION_LABEL}`;
   wrap.appendChild(img);
 
+  const visibleSlots = visibleTacticSlots();
   for (const slot of TACTIC_SLOTS) {
-    const slug = state.tactic[slot.id];
+    const slug = visibleSlots[slot.id];
     const player = slug ? PLAYERS.find((p) => p.slug === slug) : null;
     const marker = document.createElement("button");
     marker.type = "button";
@@ -1524,10 +1564,51 @@ async function saveTacticSlots(nextSlots) {
   }
 }
 
+// Przełącznik widoczności całej planszy dla zwykłych użytkowników — nie
+// zmienia samego składu, tylko flagę "published" w bazie.
+async function setTacticPublishedState(published) {
+  state.tacticPublished = published;
+  refreshTacticBoardIfOpen();
+  try {
+    store = store || (await getStore());
+    await store.setTacticPublished(published);
+  } catch (err) {
+    console.error("Nie udało się zmienić publikacji taktyki:", err);
+  }
+}
+
+// Uaktualnia przycisk "Opublikuj"/"Kasuj" i podpowiedź nad planszą wg
+// aktualnych uprawnień i stanu publikacji — wołane za każdym razem, gdy coś
+// z tego się mogło zmienić, o ile okno taktyki jest akurat otwarte.
+function refreshTacticActionsUI() {
+  const clearAllBtn = document.getElementById("tactic-clear-all");
+  const publishBtn = document.getElementById("tactic-publish-btn");
+  const hint = document.querySelector(".tactic-hint");
+  const manage = canManage();
+
+  if (clearAllBtn) clearAllBtn.hidden = !manage;
+  if (publishBtn) {
+    publishBtn.hidden = !manage;
+    if (manage) {
+      if (state.tacticPublished) {
+        publishBtn.textContent = "🙈 Cofnij publikację (schowaj przed innymi)";
+        publishBtn.classList.add("is-published");
+      } else {
+        publishBtn.textContent = "✅ Opublikuj taktykę dla wszystkich";
+        publishBtn.classList.remove("is-published");
+      }
+    }
+  }
+  if (hint) hint.textContent = tacticHintText();
+}
+
 function refreshTacticBoardIfOpen() {
   const overlay = document.getElementById("tactic-overlay");
   const board = document.getElementById("tactic-board");
-  if (overlay && !overlay.hidden && board) renderTacticBoard(board);
+  if (overlay && !overlay.hidden && board) {
+    renderTacticBoard(board);
+    refreshTacticActionsUI();
+  }
 }
 
 // Najbliższy nierozegrany mecz (nie trening) — mecze w tym klubie są zawsze
@@ -1628,18 +1709,30 @@ function initTacticButton() {
   const closeBtn = document.getElementById("tactic-overlay-close");
   const board = document.getElementById("tactic-board");
   const clearAllBtn = document.getElementById("tactic-clear-all");
-  if (!btn || !overlay || !closeBtn || !board || !clearAllBtn) return;
+  const publishBtn = document.getElementById("tactic-publish-btn");
+  if (!btn || !overlay || !closeBtn || !board || !clearAllBtn || !publishBtn) return;
 
   function closeOverlay() {
     overlay.hidden = true;
   }
   function openOverlay() {
     renderTacticBoard(board);
-    const hint = document.querySelector(".tactic-hint");
-    if (hint) hint.textContent = canManage() ? TACTIC_HINT_EDIT : TACTIC_HINT_READONLY;
-    clearAllBtn.hidden = !canManage();
+    refreshTacticActionsUI();
     overlay.hidden = false;
   }
+
+  publishBtn.addEventListener("click", async () => {
+    if (!canManage()) return; // zabezpieczenie — przycisk i tak jest ukryty
+    if (state.tacticPublished) {
+      const ok = confirm(
+        "Schować opublikowaną taktykę przed wszystkimi? Zwykli użytkownicy zobaczą pustą planszę, dopóki nie opublikujesz jej ponownie."
+      );
+      if (!ok) return;
+      await setTacticPublishedState(false);
+    } else {
+      await setTacticPublishedState(true);
+    }
+  });
 
   clearAllBtn.addEventListener("click", () => {
     if (!canManage()) return; // zabezpieczenie — przycisk i tak jest ukryty
@@ -1729,9 +1822,13 @@ function renderMessageList() {
 
     const item = document.createElement("div");
     item.className = "message-item";
-    item.innerHTML = `
+    item.appendChild(authorAvatarNode(m.author || ""));
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.innerHTML = `
       <div class="message-meta"><strong>${escapeHtml(m.author || "Ktoś z klubu")}</strong><span class="message-time">${dateStr}${dateStr ? " · " : ""}${timeStr}</span></div>
       <div class="message-text">${escapeHtml(m.text || "")}</div>`;
+    item.appendChild(bubble);
     list.appendChild(item);
   }
 
@@ -1846,7 +1943,6 @@ async function init() {
   initTacticPickerOverlay();
   initMessageButton();
   renderIdentityBar();
-  renderStaffBar();
   updateMessageBadge();
   renderSchedule();
   renderRoster();
@@ -1883,7 +1979,8 @@ async function init() {
     }
   });
   store.subscribeTacticSlots((data) => {
-    state.tactic = data;
+    state.tactic = data.slots || {};
+    state.tacticPublished = !!data.published;
     refreshTacticBoardIfOpen();
   });
   store.subscribeMessages((data) => {

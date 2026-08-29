@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=24";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=25";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
@@ -46,7 +46,7 @@ function createLocalStore() {
   }
   function notifyTactic() {
     const data = readLocal(DEMO_TACTIC_KEY);
-    tacticListeners.forEach((cb) => cb(data.slots || {}));
+    tacticListeners.forEach((cb) => cb({ slots: data.slots || {}, published: !!data.published }));
   }
   function notifyMessages() {
     const data = readLocal(DEMO_MESSAGES_KEY);
@@ -104,14 +104,24 @@ function createLocalStore() {
     },
     subscribeTacticSlots(cb) {
       const data = readLocal(DEMO_TACTIC_KEY);
-      cb(data.slots || {});
+      cb({ slots: data.slots || {}, published: !!data.published });
       tacticListeners.add(cb);
       return () => tacticListeners.delete(cb);
     },
     // Cała plansza (jedna, wspólna dla wszystkich) — zapisujemy zawsze pełną
-    // mapę pozycja -> slug gracza, żeby każdy widział to samo.
+    // mapę pozycja -> slug gracza, żeby każdy widział to samo. Flaga
+    // "published" (patrz setTacticPublished) zostaje przy tym nietknięta.
     async setTacticSlots(slots) {
-      writeLocal(DEMO_TACTIC_KEY, { slots, ts: Date.now() });
+      const data = readLocal(DEMO_TACTIC_KEY);
+      writeLocal(DEMO_TACTIC_KEY, { slots, published: !!data.published, ts: Date.now() });
+      notifyTactic();
+    },
+    // Widoczność planszy dla zwykłych użytkowników — dopóki trener/kierownik/
+    // Krzysztof Obremski tego nie włączą, oni widzą pustą planszę (patrz
+    // visibleTacticSlots() w app.js), niezależnie od tego, co jest w "slots".
+    async setTacticPublished(published) {
+      const data = readLocal(DEMO_TACTIC_KEY);
+      writeLocal(DEMO_TACTIC_KEY, { slots: data.slots || {}, published, ts: Date.now() });
       notifyTactic();
     },
     // Wiadomości od trenera/kierownika do wszystkich — lista rośnie tylko
@@ -186,7 +196,8 @@ async function createFirebaseStore() {
     },
     subscribeTacticSlots(cb) {
       return onSnapshot(doc(db, "tactic", "current"), (snap) => {
-        cb((snap.exists() && snap.data().slots) || {});
+        const d = snap.exists() ? snap.data() : {};
+        cb({ slots: d.slots || {}, published: !!d.published });
       });
     },
     async setStatus(eventId, slug, name, status) {
@@ -212,8 +223,13 @@ async function createFirebaseStore() {
         { merge: true }
       );
     },
+    // merge:true celowo — nadpisuje tylko "slots", flaga "published" (patrz
+    // setTacticPublished) zostaje bez zmian.
     async setTacticSlots(slots) {
       await setDoc(doc(db, "tactic", "current"), { slots, updatedAt: serverTimestamp() }, { merge: true });
+    },
+    async setTacticPublished(published) {
+      await setDoc(doc(db, "tactic", "current"), { published, updatedAt: serverTimestamp() }, { merge: true });
     },
     // Wiadomości od trenera/kierownika do wszystkich. clientTs (liczba, zegar
     // urządzenia nadawcy) służy do sortowania i wyświetlania godziny od razu —
