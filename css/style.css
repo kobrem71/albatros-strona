@@ -772,6 +772,9 @@ main {
 }
 .tactic-slot:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.25); }
 .tactic-slot.is-filled { border: 2px solid var(--gold); background: rgba(10, 15, 35, 0.2); }
+.tactic-slot.is-readonly { cursor: default; }
+.tactic-slot.is-readonly:hover { border-color: rgba(255, 255, 255, 0.55); background: rgba(10, 15, 35, 0.35); }
+.tactic-slot.is-readonly.is-filled:hover { border-color: var(--gold); background: rgba(10, 15, 35, 0.2); }
 .tactic-slot-plus { color: white; font-size: 1.4rem; font-weight: 800; line-height: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
 .tactic-slot-photo { width: 100%; height: 100%; }
 .tactic-slot-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
@@ -854,6 +857,124 @@ main {
 .tactic-picker-item-photo { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; }
 .tactic-picker-item-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
 .tactic-picker-item-photo .avatar-fallback { font-size: 0.75rem; }
+
+/* ---------- Panel trenera/kierownika (logowanie na hasło) ---------- */
+.staff-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.staff-bar-label { color: var(--muted); }
+.staff-photo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 20%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+.staff-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.staff-login-btn:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.14); }
+.staff-current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Wiadomości do wszystkich ---------- */
+.message-btn { position: relative; }
+.message-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e0653f;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #0a1330;
+}
+.message-panel { max-width: 560px; display: flex; flex-direction: column; }
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 14px 0;
+  padding: 4px 4px 4px 0;
+}
+.message-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.message-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.message-meta strong { color: var(--gold); }
+.message-time { white-space: nowrap; }
+.message-text { font-size: 0.92rem; white-space: pre-wrap; word-break: break-word; }
+.message-compose {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.message-compose[hidden] { display: none; }
+.message-input {
+  flex: 1;
+  resize: vertical;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.92rem;
+  box-sizing: border-box;
+}
+.message-send-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(63, 182, 240, 0.5);
+  background: rgba(63, 182, 240, 0.16);
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+.message-send-btn:hover { background: rgba(63, 182, 240, 0.28); }
+.message-send-btn:disabled { opacity: 0.6; cursor: default; }
+.message-readonly-hint[hidden] { display: none; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {

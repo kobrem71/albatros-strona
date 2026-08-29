@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=23" />
+<link rel="stylesheet" href="css/style.css?v=24" />
 </head>
 <body>
 
@@ -46,6 +46,10 @@
     </button>
     <button id="random-gif-btn" class="random-gif-btn" type="button" title="Losowy gif">
       🎲 <span>Losowy gif</span>
+    </button>
+    <button id="message-btn" class="random-gif-btn message-btn" type="button" title="Wiadomości">
+      ✉️ <span>Wiadomości</span>
+      <span id="message-badge" class="message-badge" hidden>0</span>
     </button>
   </div>
 </header>
@@ -94,6 +98,22 @@
   </div>
 </div>
 
+<div id="message-overlay" class="league-overlay" hidden>
+  <div class="league-panel message-panel">
+    <button id="message-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h2>Wiadomości do wszystkich</h2>
+    <p class="muted">Ogłoszenia od trenera i kierownika klubu.</p>
+    <div id="message-list" class="message-list"></div>
+    <div id="message-compose" class="message-compose" hidden>
+      <textarea id="message-input" class="message-input" placeholder="Napisz wiadomość do wszystkich…" rows="2"></textarea>
+      <button id="message-send-btn" class="message-send-btn" type="button">Wyślij</button>
+    </div>
+    <p id="message-readonly-hint" class="muted message-readonly-hint" hidden>
+      Tylko trener, kierownik lub Krzysztof Obremski mogą wysyłać wiadomości. Ty możesz je tylko przeczytać.
+    </p>
+  </div>
+</div>
+
 <div id="tactic-picker-overlay" class="league-overlay tactic-picker-overlay" hidden>
   <div class="league-panel tactic-picker-panel">
     <button id="tactic-picker-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
@@ -108,6 +128,7 @@
 <main>
   <section class="card identity-card">
     <div id="identity-bar" class="identity-bar"></div>
+    <div id="staff-bar" class="staff-bar"></div>
   </section>
 
   <section class="card">
@@ -133,7 +154,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=23"></script>
+<script type="module" src="js/app.js?v=24"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

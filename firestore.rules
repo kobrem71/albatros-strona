@@ -42,6 +42,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Wiadomości od trenera/kierownika do wszystkich (ogłoszenia). Kto może
+    // wysyłać, pilnuje strona (panel trenera/kierownika, hasło) — tu, tak jak
+    // w reszcie kolekcji, nie ma logowania Firebase, więc reguły same nie
+    // odróżnią ról. Za to nikt nic nie może nadpisać ani skasować — kanał
+    // rośnie tylko przez dopisywanie nowych wiadomości.
+    match /messages/{msgId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

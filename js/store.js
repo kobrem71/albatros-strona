@@ -1,12 +1,13 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=23";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=24";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
 const DEMO_PLAYER_CARD_STATS_KEY = "albatros_demo_player_card_stats_v1";
 const DEMO_TACTIC_KEY = "albatros_demo_tactic_v1";
+const DEMO_MESSAGES_KEY = "albatros_demo_messages_v1";
 
 function readLocal(key) {
   try {
@@ -29,6 +30,7 @@ function createLocalStore() {
   const eventListeners = new Set();
   const playerCardStatsListeners = new Set();
   const tacticListeners = new Set();
+  const messageListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -46,12 +48,18 @@ function createLocalStore() {
     const data = readLocal(DEMO_TACTIC_KEY);
     tacticListeners.forEach((cb) => cb(data.slots || {}));
   }
+  function notifyMessages() {
+    const data = readLocal(DEMO_MESSAGES_KEY);
+    const list = Array.isArray(data.list) ? data.list : [];
+    messageListeners.forEach((cb) => cb(list));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
     if (e.key === DEMO_EVENTS_KEY) notifyEvents();
     if (e.key === DEMO_PLAYER_CARD_STATS_KEY) notifyPlayerCardStats();
     if (e.key === DEMO_TACTIC_KEY) notifyTactic();
+    if (e.key === DEMO_MESSAGES_KEY) notifyMessages();
   });
 
   return {
@@ -106,6 +114,27 @@ function createLocalStore() {
       writeLocal(DEMO_TACTIC_KEY, { slots, ts: Date.now() });
       notifyTactic();
     },
+    // Wiadomości od trenera/kierownika do wszystkich — lista rośnie tylko
+    // przez dopisywanie (nikt nic nie kasuje ani nie edytuje), więc kolejność
+    // wg clientTs = kolejność wg indeksu w tablicy.
+    subscribeMessages(cb) {
+      const data = readLocal(DEMO_MESSAGES_KEY);
+      cb(Array.isArray(data.list) ? data.list : []);
+      messageListeners.add(cb);
+      return () => messageListeners.delete(cb);
+    },
+    async sendMessage(author, text) {
+      const data = readLocal(DEMO_MESSAGES_KEY);
+      const list = Array.isArray(data.list) ? data.list : [];
+      list.push({
+        id: `m${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        author,
+        text,
+        clientTs: Date.now(),
+      });
+      writeLocal(DEMO_MESSAGES_KEY, { list });
+      notifyMessages();
+    },
   };
 }
 
@@ -121,6 +150,9 @@ async function createFirebaseStore() {
     getDoc,
     onSnapshot,
     setDoc,
+    addDoc,
+    query,
+    orderBy,
     serverTimestamp,
   } = await import(
     "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
@@ -182,6 +214,25 @@ async function createFirebaseStore() {
     },
     async setTacticSlots(slots) {
       await setDoc(doc(db, "tactic", "current"), { slots, updatedAt: serverTimestamp() }, { merge: true });
+    },
+    // Wiadomości od trenera/kierownika do wszystkich. clientTs (liczba, zegar
+    // urządzenia nadawcy) służy do sortowania i wyświetlania godziny od razu —
+    // serverTimestamp() dopisuje się dopiero po synchronizacji z serwerem.
+    subscribeMessages(cb) {
+      const q = query(collection(db, "messages"), orderBy("clientTs", "asc"));
+      return onSnapshot(q, (snap) => {
+        const list = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        cb(list);
+      });
+    },
+    async sendMessage(author, text) {
+      await addDoc(collection(db, "messages"), {
+        author,
+        text,
+        clientTs: Date.now(),
+        ts: serverTimestamp(),
+      });
     },
   };
 }

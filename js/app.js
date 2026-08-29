@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=23";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=23";
-import { isFirebaseConfigured } from "./firebase-config.js?v=23";
-import { getStore } from "./store.js?v=23";
+import { PLAYERS, slugify } from "./players.js?v=24";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=24";
+import { isFirebaseConfigured } from "./firebase-config.js?v=24";
+import { getStore } from "./store.js?v=24";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=23";
+} from "./league-data.js?v=24";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -56,6 +56,22 @@ const STATUSES = [
   { key: "hgw", label: "HGW" },
 ];
 const IDENTITY_KEY = "albatros_identity_slug_v1";
+
+// Panel trenera/kierownika — logowanie na sztywne hasło (bez prawdziwego
+// backendu/Firebase Auth, tak jak reszta strony), raz wpisane poprawnie
+// hasło zostaje zapamiętane na tym urządzeniu na zawsze (localStorage).
+const STAFF_ROLE_KEY = "albatros_staff_role_v1";
+const STAFF_PASSWORD = "albatros123";
+const STAFF = {
+  trener: { name: "Trener Artiem", photo: "assets/img/trener.jpg" },
+  kierownik: { name: "Kierownik Iskra", photo: "assets/kierownik.png" },
+};
+// Poza trenerem i kierownikiem, ten jeden konkretny zawodnik (identyfikowany
+// przez wybór "Kim jesteś?") też ma prawa do edycji taktyki i wysyłania
+// wiadomości do wszystkich.
+const SUPERUSER_SLUG = "krzysztof-obremski";
+
+const MESSAGES_READ_KEY = "albatros_messages_read_count_v1";
 
 // ---------------------------------------------------------------------------
 // 1. Wyznacz wydarzenia na najbliższe 7 dni (regularne + jednorazowe)
@@ -225,7 +241,30 @@ export const state = {
   // Wspólna plansza taktyki — { [slotId]: slug albo "" }. Ta sama dla
   // wszystkich odwiedzających (zapisana w bazie), nie tylko lokalnie.
   tactic: {},
+  // Rola zalogowana na tym urządzeniu przez panel trenera/kierownika ("trener",
+  // "kierownik" albo "" jeśli nikt się nie zalogował) — patrz STAFF_ROLE_KEY.
+  role: localStorage.getItem(STAFF_ROLE_KEY) || "",
+  // Wiadomości do wszystkich, chronologicznie (najstarsze pierwsze) — wspólne
+  // dla wszystkich (zapisane w bazie).
+  messages: [],
+  // Ile wiadomości z powyższej listy już przeczytano NA TYM urządzeniu —
+  // różnica długości daje liczbę nieprzeczytanych (badge na kopercie).
+  messagesReadCount: parseInt(localStorage.getItem(MESSAGES_READ_KEY) || "0", 10) || 0,
 };
+
+// Czy ta osoba (na tym urządzeniu, z obecnie wybraną tożsamością) może
+// zmieniać taktykę i wysyłać wiadomości do wszystkich: trener, kierownik
+// albo Krzysztof Obremski (niezależnie od roli).
+function canManage() {
+  return state.role === "trener" || state.role === "kierownik" || state.identitySlug === SUPERUSER_SLUG;
+}
+
+// Nazwa wyświetlana jako autor wysłanej wiadomości.
+function currentSenderName() {
+  if (state.role === "trener" || state.role === "kierownik") return STAFF[state.role].name;
+  const player = PLAYERS.find((p) => p.slug === state.identitySlug);
+  return player ? player.name : "Ktoś z klubu";
+}
 
 function renderIdentityBar() {
   const bar = document.getElementById("identity-bar");
@@ -243,6 +282,7 @@ function renderIdentityBar() {
       localStorage.removeItem(IDENTITY_KEY);
       renderIdentityBar();
       renderRoster();
+      refreshPermissionUI();
     };
     bar.appendChild(text);
     bar.appendChild(change);
@@ -267,10 +307,105 @@ function renderIdentityBar() {
         localStorage.setItem(IDENTITY_KEY, select.value);
         renderIdentityBar();
         renderRoster();
+        refreshPermissionUI();
       }
     };
     bar.appendChild(label);
     bar.appendChild(select);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3b. Panel trenera/kierownika — logowanie na sztywne hasło
+// ---------------------------------------------------------------------------
+function promptStaffLogin(roleKey) {
+  const staff = STAFF[roleKey];
+  const pwd = window.prompt(`Hasło — logowanie jako: ${staff.name}`);
+  if (pwd === null) return; // anulowano okno — nic się nie zmienia
+  if (pwd === STAFF_PASSWORD) {
+    state.role = roleKey;
+    localStorage.setItem(STAFF_ROLE_KEY, roleKey);
+    renderStaffBar();
+    refreshPermissionUI();
+  } else {
+    // Złe hasło: zostaje niezalogowany albo na poprzednim swoim loginie —
+    // celowo NIE dotykamy state.role/localStorage w ogóle.
+    alert("Błędne hasło.");
+  }
+}
+
+function renderStaffBar() {
+  const bar = document.getElementById("staff-bar");
+  if (!bar) return;
+  bar.innerHTML = "";
+
+  if (state.role && STAFF[state.role]) {
+    const staff = STAFF[state.role];
+    const wrap = document.createElement("div");
+    wrap.className = "staff-current";
+    const img = document.createElement("img");
+    img.className = "staff-photo";
+    img.src = staff.photo;
+    img.alt = staff.name;
+    const text = document.createElement("span");
+    text.innerHTML = `Zalogowany jako <strong>${staff.name}</strong>`;
+    const logout = document.createElement("button");
+    logout.className = "link-btn";
+    logout.textContent = "Wyloguj";
+    logout.onclick = () => {
+      state.role = "";
+      localStorage.removeItem(STAFF_ROLE_KEY);
+      renderStaffBar();
+      refreshPermissionUI();
+    };
+    wrap.appendChild(img);
+    wrap.appendChild(text);
+    wrap.appendChild(logout);
+    bar.appendChild(wrap);
+  } else {
+    const label = document.createElement("span");
+    label.className = "staff-bar-label";
+    label.textContent = "Panel trenera/kierownika:";
+    bar.appendChild(label);
+    for (const roleKey of Object.keys(STAFF)) {
+      const staff = STAFF[roleKey];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "staff-login-btn";
+      const img = document.createElement("img");
+      img.className = "staff-photo";
+      img.src = staff.photo;
+      img.alt = staff.name;
+      const span = document.createElement("span");
+      span.textContent = staff.name;
+      btn.appendChild(img);
+      btn.appendChild(span);
+      btn.addEventListener("click", () => promptStaffLogin(roleKey));
+      bar.appendChild(btn);
+    }
+  }
+}
+
+// Odświeża wszystkie miejsca w UI, których zawartość zależy od canManage()
+// (uprawnienia trenera/kierownika/Krzysztofa Obremskiego) — wołane po każdej
+// zmianie roli albo tożsamości gracza.
+function refreshPermissionUI() {
+  refreshTacticBoardIfOpen();
+
+  const tacticOverlay = document.getElementById("tactic-overlay");
+  const clearAllBtn = document.getElementById("tactic-clear-all");
+  const tacticHint = document.querySelector(".tactic-hint");
+  if (tacticOverlay && !tacticOverlay.hidden) {
+    if (clearAllBtn) clearAllBtn.hidden = !canManage();
+    if (tacticHint) tacticHint.textContent = canManage() ? TACTIC_HINT_EDIT : TACTIC_HINT_READONLY;
+  }
+
+  const messageOverlay = document.getElementById("message-overlay");
+  const compose = document.getElementById("message-compose");
+  const readonlyHint = document.getElementById("message-readonly-hint");
+  if (messageOverlay && !messageOverlay.hidden) {
+    if (compose) compose.hidden = !canManage();
+    if (readonlyHint) readonlyHint.hidden = canManage();
   }
 }
 
@@ -630,7 +765,7 @@ function renderStats() {
 // ---------------------------------------------------------------------------
 // 4. Tło: mozaika małych "okienek" wideo wypełniająca cały ekran
 // ---------------------------------------------------------------------------
-const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `assets/gifs/gif${n}.mp4`);
+const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => `assets/gifs/gif${n}.mp4`);
 const BG_CELL_TARGET_W = 300; // px, orientacyjna szerokość jednego "okienka"
 const BG_CELL_ASPECT = 4 / 3; // proporcje okienka (szerokość / wysokość)
 const BG_MAX_COLUMNS = 7;
@@ -1303,8 +1438,12 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=23";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=24";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
+const TACTIC_HINT_EDIT =
+  "Kliknij w kółko na planszy, żeby wstawić (albo zmienić) zawodnika na tej pozycji. Widzi to każdy, kto wejdzie na stronę.";
+const TACTIC_HINT_READONLY =
+  "Podgląd taktyki — zmieniać skład i kasować planszę mogą tylko trener, kierownik albo Krzysztof Obremski.";
 const TACTIC_SLOTS = [
   { id: "st1", label: "ST", xPct: 35.42, yPct: 25.36 },
   { id: "st2", label: "ST", xPct: 65.36, yPct: 25.36 },
@@ -1339,16 +1478,24 @@ function renderTacticBoard(container) {
     const player = slug ? PLAYERS.find((p) => p.slug === slug) : null;
     const marker = document.createElement("button");
     marker.type = "button";
-    marker.className = "tactic-slot" + (player ? " is-filled" : "");
+    const editable = canManage();
+    marker.className = "tactic-slot" + (player ? " is-filled" : "") + (editable ? "" : " is-readonly");
     marker.style.left = `${slot.xPct}%`;
     marker.style.top = `${slot.yPct}%`;
-    marker.title = player ? `${player.name} (${slot.label})` : `Wstaw zawodnika — ${slot.label}`;
+    marker.title = player
+      ? `${player.name} (${slot.label})`
+      : editable
+      ? `Wstaw zawodnika — ${slot.label}`
+      : slot.label;
     if (player) {
       marker.appendChild(playerPhotoNode(player, "tactic-slot-photo"));
     } else {
-      marker.innerHTML = `<span class="tactic-slot-plus">+</span>`;
+      marker.innerHTML = editable ? `<span class="tactic-slot-plus">+</span>` : "";
     }
-    marker.addEventListener("click", () => openTacticPicker(slot));
+    marker.addEventListener("click", () => {
+      if (!canManage()) return; // tylko podgląd — brak uprawnień do edycji
+      openTacticPicker(slot);
+    });
     wrap.appendChild(marker);
 
     // Ksywka z karty gracza pod zdjęciem — żeby było widać kto stoi na
@@ -1397,6 +1544,7 @@ function findNextMatchEvent() {
 }
 
 function openTacticPicker(slot) {
+  if (!canManage()) return; // zabezpieczenie — tylko trener/kierownik/Krzysztof Obremski
   const overlay = document.getElementById("tactic-picker-overlay");
   const title = document.getElementById("tactic-picker-title");
   const matchHint = document.getElementById("tactic-picker-match-hint");
@@ -1487,10 +1635,14 @@ function initTacticButton() {
   }
   function openOverlay() {
     renderTacticBoard(board);
+    const hint = document.querySelector(".tactic-hint");
+    if (hint) hint.textContent = canManage() ? TACTIC_HINT_EDIT : TACTIC_HINT_READONLY;
+    clearAllBtn.hidden = !canManage();
     overlay.hidden = false;
   }
 
   clearAllBtn.addEventListener("click", () => {
+    if (!canManage()) return; // zabezpieczenie — przycisk i tak jest ukryty
     const isEmpty = TACTIC_SLOTS.every((s) => !state.tactic[s.id]);
     if (isEmpty) return;
     const ok = confirm("Skasować całą taktykę i zacząć od nowa? Zobaczą to wszyscy.");
@@ -1523,6 +1675,116 @@ function initTacticPickerOverlay() {
   }
 
   closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 4f. Wiadomości do wszystkich — kanał ogłoszeń trenera/kierownika, wygląda
+// jak czat (najstarsze na górze, najnowsze na dole). Wysyłać mogą tylko
+// osoby z canManage(); reszta może tylko czytać. Licznik nieprzeczytanych
+// (badge na kopercie) liczy się na tym urządzeniu — ile wiadomości z listy
+// jeszcze nie zostało obejrzanych (otwarcie okna liczy się jako przeczytanie
+// wszystkich, które w tym momencie są na liście).
+// ---------------------------------------------------------------------------
+function updateMessageBadge() {
+  const badge = document.getElementById("message-badge");
+  if (!badge) return;
+  const unread = Math.max(0, state.messages.length - state.messagesReadCount);
+  if (unread > 0) {
+    badge.textContent = String(unread);
+    badge.hidden = false;
+  } else {
+    badge.hidden = true;
+  }
+}
+
+function markMessagesRead() {
+  state.messagesReadCount = state.messages.length;
+  localStorage.setItem(MESSAGES_READ_KEY, String(state.messagesReadCount));
+  updateMessageBadge();
+}
+
+function renderMessageList() {
+  const list = document.getElementById("message-list");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (state.messages.length === 0) {
+    list.innerHTML = `<p class="muted">Brak wiadomości.</p>`;
+    return;
+  }
+
+  for (const m of state.messages) {
+    let dateObj = null;
+    if (typeof m.clientTs === "number") dateObj = new Date(m.clientTs);
+    else if (m.ts && typeof m.ts.toDate === "function") dateObj = m.ts.toDate();
+
+    const timeStr = dateObj ? `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}` : "";
+    const dateStr = dateObj ? formatDateHuman(dateObj) : "";
+
+    const item = document.createElement("div");
+    item.className = "message-item";
+    item.innerHTML = `
+      <div class="message-meta"><strong>${escapeHtml(m.author || "Ktoś z klubu")}</strong><span class="message-time">${dateStr}${dateStr ? " · " : ""}${timeStr}</span></div>
+      <div class="message-text">${escapeHtml(m.text || "")}</div>`;
+    list.appendChild(item);
+  }
+
+  list.scrollTop = list.scrollHeight; // najnowsze na dole -> przewiń w dół
+}
+
+function initMessageButton() {
+  const btn = document.getElementById("message-btn");
+  const overlay = document.getElementById("message-overlay");
+  const closeBtn = document.getElementById("message-overlay-close");
+  const compose = document.getElementById("message-compose");
+  const input = document.getElementById("message-input");
+  const sendBtn = document.getElementById("message-send-btn");
+  const readonlyHint = document.getElementById("message-readonly-hint");
+  if (!btn || !overlay || !closeBtn || !compose || !input || !sendBtn || !readonlyHint) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+  function openOverlay() {
+    renderMessageList();
+    compose.hidden = !canManage();
+    readonlyHint.hidden = canManage();
+    overlay.hidden = false;
+    markMessagesRead();
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || !canManage()) return;
+    sendBtn.disabled = true;
+    try {
+      store = store || (await getStore());
+      await store.sendMessage(currentSenderName(), text);
+      input.value = "";
+    } catch (err) {
+      console.error("Nie udało się wysłać wiadomości:", err);
+      alert("Nie udało się wysłać wiadomości. Spróbuj ponownie.");
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  btn.addEventListener("click", openOverlay);
+  closeBtn.addEventListener("click", closeOverlay);
+  sendBtn.addEventListener("click", send);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeOverlay();
   });
@@ -1582,7 +1844,10 @@ async function init() {
   initPlayerOverlay();
   initTacticButton();
   initTacticPickerOverlay();
+  initMessageButton();
   renderIdentityBar();
+  renderStaffBar();
+  updateMessageBadge();
   renderSchedule();
   renderRoster();
   renderStats();
@@ -1620,6 +1885,15 @@ async function init() {
   store.subscribeTacticSlots((data) => {
     state.tactic = data;
     refreshTacticBoardIfOpen();
+  });
+  store.subscribeMessages((data) => {
+    state.messages = data;
+    updateMessageBadge();
+    const overlay = document.getElementById("message-overlay");
+    if (overlay && !overlay.hidden) {
+      renderMessageList();
+      markMessagesRead();
+    }
   });
 }
 
