@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=27";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=27";
-import { isFirebaseConfigured } from "./firebase-config.js?v=27";
-import { getStore } from "./store.js?v=27";
+import { PLAYERS, slugify } from "./players.js?v=28";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=28";
+import { isFirebaseConfigured } from "./firebase-config.js?v=28";
+import { getStore } from "./store.js?v=28";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=27";
+} from "./league-data.js?v=28";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -257,10 +257,22 @@ export const state = {
 };
 
 // Czy ta osoba (na tym urządzeniu, z obecnie wybraną tożsamością) może
-// zmieniać taktykę i wysyłać wiadomości do wszystkich: trener, kierownik
-// albo Krzysztof Obremski (niezależnie od roli).
+// zmieniać taktykę: trener, kierownik albo Krzysztof Obremski (niezależnie
+// od roli). To samo grono może też zawsze wysyłać wiadomości — patrz
+// canSendMessages() niżej, które do niego dokłada kilku dodatkowych graczy.
 function canManage() {
   return state.role === "trener" || state.role === "kierownik" || state.identitySlug === SUPERUSER_SLUG;
+}
+
+// Dodatkowi gracze, którzy (poza trenerem/kierownikiem/Krzysztofem
+// Obremskim) mogą pisać w wiadomościach do wszystkich, ale NIE mają
+// uprawnień do zmiany taktyki.
+const EXTRA_MESSAGE_SENDER_SLUGS = new Set(
+  ["Remigiusz Dubaniewicz", "Michał Papaj"].map(slugify)
+);
+
+function canSendMessages() {
+  return canManage() || EXTRA_MESSAGE_SENDER_SLUGS.has(state.identitySlug);
 }
 
 // Nazwa wyświetlana jako autor wysłanej wiadomości.
@@ -409,15 +421,15 @@ function authorAvatarNode(authorName) {
 }
 
 // Odświeża wszystkie miejsca w UI, których zawartość zależy od canManage()
-// (uprawnienia trenera/kierownika/Krzysztofa Obremskiego) — wołane po każdej
-// zmianie roli albo tożsamości gracza.
+// albo canSendMessages() — wołane po każdej zmianie roli albo tożsamości
+// gracza.
 function refreshPermissionUI() {
   refreshTacticBoardIfOpen();
 
   const messageOverlay = document.getElementById("message-overlay");
   const compose = document.getElementById("message-compose");
   if (messageOverlay && !messageOverlay.hidden) {
-    if (compose) compose.hidden = !canManage();
+    if (compose) compose.hidden = !canSendMessages();
   }
 }
 
@@ -1456,7 +1468,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=27";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=28";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -1783,7 +1795,7 @@ function initTacticPickerOverlay() {
 // ---------------------------------------------------------------------------
 // 4f. Wiadomości do wszystkich — kanał ogłoszeń trenera/kierownika, wygląda
 // jak czat (najstarsze na górze, najnowsze na dole). Wysyłać mogą tylko
-// osoby z canManage(); reszta może tylko czytać. Licznik nieprzeczytanych
+// osoby z canSendMessages(); reszta może tylko czytać. Licznik nieprzeczytanych
 // (badge na kopercie) liczy się na tym urządzeniu — ile wiadomości z listy
 // jeszcze nie zostało obejrzanych (otwarcie okna liczy się jako przeczytanie
 // wszystkich, które w tym momencie są na liście).
@@ -1853,14 +1865,14 @@ function initMessageButton() {
   }
   function openOverlay() {
     renderMessageList();
-    compose.hidden = !canManage();
+    compose.hidden = !canSendMessages();
     overlay.hidden = false;
     markMessagesRead();
   }
 
   async function send() {
     const text = input.value.trim();
-    if (!text || !canManage()) return;
+    if (!text || !canSendMessages()) return;
     sendBtn.disabled = true;
     try {
       store = store || (await getStore());
