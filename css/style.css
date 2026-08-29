@@ -615,7 +615,7 @@ main {
 .roster-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .roster-more {
@@ -644,8 +644,8 @@ main {
   display: grid;
   grid-template-columns: 40px 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
+  gap: 11px;
+  padding: 7px 10px;
   border-radius: 10px;
 }
 .roster-row.me {
@@ -728,10 +728,7 @@ main {
 .stats-player-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
-.stats-player-cell .avatar { width: 28px; height: 28px; }
-.stats-player-cell .avatar-fallback { font-size: 0.7rem; }
 
 .site-footer {
   text-align: center;
@@ -978,7 +975,6 @@ main {
 }
 .message-send-btn:hover { background: rgba(63, 182, 240, 0.28); }
 .message-send-btn:disabled { opacity: 0.6; cursor: default; }
-.message-readonly-hint[hidden] { display: none; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {

@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=25";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=25";
-import { isFirebaseConfigured } from "./firebase-config.js?v=25";
-import { getStore } from "./store.js?v=25";
+import { PLAYERS, slugify } from "./players.js?v=27";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=27";
+import { isFirebaseConfigured } from "./firebase-config.js?v=27";
+import { getStore } from "./store.js?v=27";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,7 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=25";
+} from "./league-data.js?v=27";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -83,7 +83,7 @@ function toDateStr(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-const EVENTS_TO_SHOW = 6;
+const EVENTS_TO_SHOW = 3;
 const SEARCH_DAYS_AHEAD = 60; // wystarczająco daleko, żeby zawsze znaleźć 6 wydarzeń
 
 export function buildUpcomingEvents() {
@@ -416,10 +416,8 @@ function refreshPermissionUI() {
 
   const messageOverlay = document.getElementById("message-overlay");
   const compose = document.getElementById("message-compose");
-  const readonlyHint = document.getElementById("message-readonly-hint");
   if (messageOverlay && !messageOverlay.hidden) {
     if (compose) compose.hidden = !canManage();
-    if (readonlyHint) readonlyHint.hidden = canManage();
   }
 }
 
@@ -734,7 +732,6 @@ function buildStatsTable(players, stats) {
     const tr = document.createElement("tr");
     const tdPlayer = document.createElement("td");
     tdPlayer.className = "stats-player-cell";
-    tdPlayer.appendChild(avatarNode(player));
     const nameSpan = document.createElement("span");
     nameSpan.textContent = player.name;
     makeNameClickable(nameSpan, player);
@@ -763,7 +760,14 @@ function renderStats() {
   const stats = computeAttendanceStats(); // pełna historia (bez zamrożenia) - do wyświetlenia liczb
   const { visible, hidden } = getOrderedPlayerGroups();
 
-  container.appendChild(buildStatsTable(visible, stats));
+  // Ta tabela sortuje się zawsze po NOMINALNEJ liczbie "Tak" na treningach
+  // (nie po procencie) — inaczej niż kolejność na liście zapisów wyżej, gdzie
+  // liczy się % z zamrożonego okresu (patrz sortScore/getOrderedPlayerGroups).
+  function byTrainingCount(list) {
+    return [...list].sort((a, b) => (stats[b.slug]?.trening.tak || 0) - (stats[a.slug]?.trening.tak || 0));
+  }
+
+  container.appendChild(buildStatsTable(byTrainingCount(visible), stats));
 
   if (hidden.length > 0) {
     const details = document.createElement("details");
@@ -771,7 +775,7 @@ function renderStats() {
     const summary = document.createElement("summary");
     summary.textContent = `Pokaż więcej (${hidden.length})`;
     details.appendChild(summary);
-    details.appendChild(buildStatsTable(hidden, stats));
+    details.appendChild(buildStatsTable(byTrainingCount(hidden), stats));
     container.appendChild(details);
   }
 }
@@ -1452,7 +1456,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=25";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=27";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -1842,8 +1846,7 @@ function initMessageButton() {
   const compose = document.getElementById("message-compose");
   const input = document.getElementById("message-input");
   const sendBtn = document.getElementById("message-send-btn");
-  const readonlyHint = document.getElementById("message-readonly-hint");
-  if (!btn || !overlay || !closeBtn || !compose || !input || !sendBtn || !readonlyHint) return;
+  if (!btn || !overlay || !closeBtn || !compose || !input || !sendBtn) return;
 
   function closeOverlay() {
     overlay.hidden = true;
@@ -1851,7 +1854,6 @@ function initMessageButton() {
   function openOverlay() {
     renderMessageList();
     compose.hidden = !canManage();
-    readonlyHint.hidden = canManage();
     overlay.hidden = false;
     markMessagesRead();
   }
