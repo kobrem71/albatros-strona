@@ -871,8 +871,10 @@ function initBackground() {
 // ---------------------------------------------------------------------------
 // 4b. Przycisk "Losowy gif" — pełnoekranowe odtworzenie, potem powrót.
 // Za KAŻDYM pierwszym kliknięciem (od wejścia na stronę) zamiast filmiku
-// wyskakuje "gracz meczu" (patrz sekcja 4b-bis); przy kolejnych kliknięciach
-// jest to losowe — raz filmik, raz gracz meczu.
+// wyskakuje "gracz meczu" (patrz sekcja 4b-bis); DRUGIE kliknięcie zawsze
+// jest zwykłym filmikiem (żeby nie wypadło dwa razy pod rząd zaraz na
+// start); od trzeciego kliknięcia jest już w pełni losowo — raz filmik, raz
+// gracz meczu.
 // ---------------------------------------------------------------------------
 function initRandomGifButton() {
   const btn = document.getElementById("random-gif-btn");
@@ -882,7 +884,7 @@ function initRandomGifButton() {
   const closeBtn = document.getElementById("gif-overlay-close");
   if (!btn || !overlay || !video || !potmEl || !closeBtn) return;
 
-  let hasOpenedOnce = false;
+  let openCount = 0;
 
   function closeOverlay() {
     overlay.hidden = true;
@@ -913,10 +915,15 @@ function initRandomGifButton() {
   }
 
   btn.addEventListener("click", () => {
-    // Pierwsze kliknięcie w tej wizycie zawsze pokazuje "gracza meczu";
-    // później losowo — filmik albo gracz meczu (50/50).
-    const showPotm = !hasOpenedOnce || Math.random() < 0.5;
-    hasOpenedOnce = true;
+    openCount++;
+    // 1. kliknięcie: zawsze gracz meczu. 2. kliknięcie: zawsze zwykły
+    // filmik (żeby nie wypadł dwa razy z rzędu na samym początku). Od
+    // 3. kliknięcia: w pełni losowo (50/50).
+    let showPotm;
+    if (openCount === 1) showPotm = true;
+    else if (openCount === 2) showPotm = false;
+    else showPotm = Math.random() < 0.5;
+
     if (showPotm) openPotmOverlay();
     else openVideoOverlay();
   });
@@ -1004,23 +1011,29 @@ function runPotmSequence(container, onDone) {
     return;
   }
   const winner = pickPotmWinner();
-  const candidatePhotos = MATCH_MVPS.map((mvp) => potmPhotoSrc(mvp.playerName));
+  // Podczas kręcenia bębna pokazujemy losowo zdjęcia CAŁEJ kadry (żeby było
+  // jak w prawdziwej maszynie losującej) — dopiero na koniec ląduje na
+  // faktycznym zwycięzcy z MATCH_MVPS. Kilku graczy nie ma jeszcze swojego
+  // zdjęcia (patrz README, sekcja 5) — dla nich każde losowe trafienie i tak
+  // ładnie spada na wspólny placeholder dzięki onerror niżej.
+  const spinPhotos = PLAYERS.map((p) => `${p.photoBase}.png`);
 
   container.hidden = false;
   container.innerHTML = `
     <span class="potm-label">🏆 GRACZ MECZU 🏆</span>
     <div class="potm-reel-wrap is-spinning">
-      <img class="potm-reel-img" src="${candidatePhotos[0]}" alt="" />
+      <img class="potm-reel-img" src="${spinPhotos[Math.floor(Math.random() * spinPhotos.length)]}" alt="" />
       <div class="potm-sparks"></div>
     </div>
   `;
 
   const reelWrap = container.querySelector(".potm-reel-wrap");
   const reelImg = container.querySelector(".potm-reel-img");
-  let tick = 0;
+  reelImg.onerror = () => {
+    reelImg.src = PLAYER_PLACEHOLDER_SRC;
+  };
   const spinTimer = setInterval(() => {
-    tick++;
-    reelImg.src = candidatePhotos[tick % candidatePhotos.length];
+    reelImg.src = spinPhotos[Math.floor(Math.random() * spinPhotos.length)];
   }, 130);
   potmTimers.push(spinTimer);
 
@@ -1246,7 +1259,7 @@ const NICKNAMES = {
   "Kamil Felsztyński": "FELU",
   "Maciej Gdaniec": "MACIEK",
   "Bartosz Gresiuk": "B.GRESIUK",
-  "Mateusz Gresiuk": "M.GRESIUK",
+  "Mateusz Gresiuk": "MATI",
   "Maksym Hlibichuk": "MAKSIU",
   "Rafał Kanasiuk": "R.KANASIUK",
   "Oleksandr Kolvakh": "SASZA",
@@ -1260,13 +1273,13 @@ const NICKNAMES = {
   "Mateusz Styrcz": "STYRCZU",
   "Marcin Świtoń": "MARCIN",
   "Gabriel Świerbutowicz": "GABRYŚ",
-  "Bartłomiej Taczyński": "B.TACZYŃSKI",
+  "Bartłomiej Taczyński": "BARTEK",
   "Krzysztof Taczyński": "K.TACZYŃSKI",
   "Marek Taczyński": "M.TACZYŃSKI",
   "Stanisław Taczyński": "STASIU",
   "Mateusz Taraciński": "TARA",
   "Janusz Tkacz": "JANUSZ",
-  "Patryk Wątroba": "P.WĄTROBA",
+  "Patryk Wątroba": "PATRYK",
   "Jonatan Wyporkiewicz": "JOOONEK",
   "Hubert Zdziech": "HUBERT",
   "Konrad Zębacki": "KONDZIO",
