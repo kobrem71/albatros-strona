@@ -18,24 +18,24 @@
 
 export const LEAGUE_NAME = 'Klasa B "Keeza", grupa Legnica III';
 export const LEAGUE_SOURCE_URL = "https://www.90minut.pl/liga/1/liga14844.html";
-export const LEAGUE_UPDATED = "2026-08-28"; // data ostatniego pobrania danych
+export const LEAGUE_UPDATED = "2026-08-30"; // data ostatniego pobrania danych
 
-// Pełna tabela grupy (kolumna "RAZEM" z 90minut.pl).
+// Pełna tabela grupy (kolumna "RAZEM" z 90minut.pl), po kolejce 3.
 // pts = punkty, w/d/l = zwycięstwa/remisy/porażki, gf/ga = bramki zdobyte/stracone.
 export const LEAGUE_TABLE = [
-  { pos: 1, name: "Victoria Orzeszków", m: 2, pts: 6, w: 2, d: 0, l: 0, gf: 8, ga: 0 },
-  { pos: 2, name: "Konfeks II Legnica", m: 2, pts: 6, w: 2, d: 0, l: 0, gf: 9, ga: 2 },
-  { pos: 3, name: "Korona Kawice", m: 2, pts: 6, w: 2, d: 0, l: 0, gf: 8, ga: 5 },
-  { pos: 4, name: "Miedź III Legnica", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 23, ga: 3 },
-  { pos: 5, name: "Unia Rosochata", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 3, ga: 3 },
-  { pos: 6, name: "KS Mierzowice", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 2, ga: 5 },
-  { pos: 7, name: "Kolejarz Miłkowice", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 4, ga: 5 },
-  { pos: 8, name: "Dąb Stowarzyszenie II Siedliska", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 17, ga: 4 },
-  { pos: 9, name: "Albatros Jaśkowice", m: 2, pts: 3, w: 1, d: 0, l: 1, gf: 5, ga: 25 },
-  { pos: 10, name: "Błękitni II Kościelec", m: 1, pts: 0, w: 0, d: 0, l: 1, gf: 2, ga: 3 },
-  { pos: 11, name: "Rycerz II Legnickie Pole", m: 1, pts: 0, w: 0, d: 0, l: 1, gf: 2, ga: 5 },
-  { pos: 12, name: "Huzar Raszówka", m: 2, pts: 0, w: 0, d: 0, l: 2, gf: 4, ga: 9 },
-  { pos: 13, name: "Kaczawa II Bieniowice", m: 2, pts: 0, w: 0, d: 0, l: 2, gf: 1, ga: 19 },
+  { pos: 1, name: "Victoria Orzeszków", m: 3, pts: 9, w: 3, d: 0, l: 0, gf: 15, ga: 0 },
+  { pos: 2, name: "Unia Rosochata", m: 3, pts: 6, w: 2, d: 0, l: 1, gf: 10, ga: 3 },
+  { pos: 3, name: "Kolejarz Miłkowice", m: 3, pts: 6, w: 2, d: 0, l: 1, gf: 8, ga: 6 },
+  { pos: 4, name: "Korona Kawice", m: 2, pts: 6, w: 2, d: 0, l: 0, gf: 8, ga: 5 },
+  { pos: 5, name: "Miedź III Legnica", m: 3, pts: 6, w: 2, d: 0, l: 1, gf: 38, ga: 3 },
+  { pos: 6, name: "Konfeks II Legnica", m: 3, pts: 6, w: 2, d: 0, l: 1, gf: 10, ga: 6 },
+  { pos: 7, name: "Albatros Jaśkowice", m: 3, pts: 4, w: 1, d: 1, l: 1, gf: 7, ga: 27 },
+  { pos: 8, name: "Dąb Stowarzyszenie II Siedliska", m: 3, pts: 3, w: 1, d: 0, l: 2, gf: 17, ga: 11 },
+  { pos: 9, name: "Huzar Raszówka", m: 3, pts: 3, w: 1, d: 0, l: 2, gf: 11, ga: 9 },
+  { pos: 10, name: "KS Mierzowice", m: 3, pts: 3, w: 1, d: 0, l: 2, gf: 2, ga: 20 },
+  { pos: 11, name: "Błękitni II Kościelec", m: 2, pts: 1, w: 0, d: 1, l: 1, gf: 4, ga: 5 },
+  { pos: 12, name: "Rycerz II Legnickie Pole", m: 2, pts: 0, w: 0, d: 0, l: 2, gf: 2, ga: 12 },
+  { pos: 13, name: "Kaczawa II Bieniowice", m: 3, pts: 0, w: 0, d: 0, l: 3, gf: 1, ga: 26 },
 ];
 
 export const ALBATROS_TEAM_NAME = "Albatros Jaśkowice";
@@ -47,15 +47,17 @@ export const ALBATROS_TEAM_NAME = "Albatros Jaśkowice";
 export const ALBATROS_FIXTURES = [
   { round: 1, status: "played", date: "2026-08-16", home: false, opponent: "Miedź III Legnica", score: "0-23" },
   { round: 2, status: "played", date: "2026-08-23", home: true, opponent: "Rycerz II Legnickie Pole", score: "5-2" },
-  { round: 3, status: "scheduled", date: "2026-08-30", time: "11:00", home: false, opponent: "Błękitni II Kościelec" },
+  // Kolejka 3: 90minut.pl zna ten klub jako "Błękitni II Kościelec", ale
+  // oficjalny system PZPN (laczynaspilka.pl) prowadzi go pod nazwą "Legsad II
+  // Kościelec" — to ta sama drużyna, dwie różne nazwy w dwóch źródłach.
+  { round: 3, status: "played", date: "2026-08-30", home: false, opponent: "Błękitni II Kościelec", score: "2-2" },
   { round: 4, status: "scheduled", date: "2026-09-06", time: "11:00", home: true, opponent: "Korona Kawice" },
   { round: 5, status: "bye" },
-  // Kolejka 6: termin jeszcze NIE jest oficjalnie potwierdzony (laczynaspilka.pl
-  // pokazuje "-"), tylko przedział "19-20 września" z 90minut.pl. Wpisana
-  // niedziela 20.09 to szacunek (wszystkie dotąd potwierdzone mecze wypadały
-  // w niedzielę) — do zweryfikowania bliżej terminu.
-  { round: 6, status: "tbd", estimatedDate: "2026-09-20", home: false, opponent: "Huzar Raszówka" },
-  { round: 7, status: "scheduled", date: "2026-09-27", time: "11:00", home: true, opponent: "Unia Rosochata" },
+  // Kolejka 6: termin potwierdzony przez Krzysztofa (2026-08-30) — godzina
+  // 11:00 na razie orientacyjna (jak reszta domyślnych godzin), do poprawy,
+  // jeśli się zmieni.
+  { round: 6, status: "scheduled", date: "2026-09-20", time: "11:00", home: false, opponent: "Huzar Raszówka" },
+  { round: 7, status: "scheduled", date: "2026-09-27", time: "14:00", home: true, opponent: "Unia Rosochata" },
   { round: 8, status: "scheduled", date: "2026-10-04", time: "17:15", home: false, opponent: "KS Mierzowice" },
   { round: 9, status: "scheduled", date: "2026-10-11", time: "11:00", home: true, opponent: "Dąb Stowarzyszenie II Siedliska" },
   { round: 10, status: "scheduled", date: "2026-10-18", time: "14:30", home: false, opponent: "Konfeks II Legnica" },
@@ -88,10 +90,15 @@ export const ALBATROS_FIXTURES = [
 // Zawodnicy z "matches: 0" nie mieli jeszcze zgłoszonego występu w meczu
 // ligowym w tym sezonie (albo dopiero dołączyli, albo nie grali).
 //
+// "assists" — w odróżnieniu od reszty kolumn NIE pochodzi z laczynaspilka.pl
+// (ten serwis nie pokazuje asyst w statystykach drużyny) — to ręczna,
+// klubowa notatka "kto komu podał", prowadzona na bieżąco. Dopisuj po
+// każdym meczu, razem z ewentualnym wpisem w matchLog (patrz niżej).
+//
 // matchLog: lista rozegranych meczów tego zawodnika (do karty zawodnika po
 // kliknięciu w nazwisko) — data, przeciwnik, czy u siebie, wynik (z
 // perspektywy Albatrosa), minuty na boisku, minuty goli i kartek (osobno
-// żółte/czerwone).
+// żółte/czerwone) oraz liczba asyst w tym meczu.
 //
 // Uwzględnia też jeden mecz Pucharu Polski "Strefa Legnica" (09.08.2026,
 // runda wstępna, Albatros odpadł 1:5 z Błękitnymi Koskowice) — więcej
@@ -105,6 +112,9 @@ export const PLAYER_STATS_UPDATED = "2026-08-28";
 // to nie liga (żeby nie zaśmiecać typowego przypadku).
 const M1 = { date: "2026-08-16", opponent: "Miedź III Legnica", home: false, score: "0:23" };
 const M2 = { date: "2026-08-23", opponent: "Rycerz II Legnickie Pole", home: true, score: "5:2" };
+// Kolejka 3 — jak w ALBATROS_FIXTURES: 90minut.pl nazywa ten klub "Błękitni II
+// Kościelec", laczynaspilka.pl (PZPN) prowadzi go jako "Legsad II Kościelec".
+const M3 = { date: "2026-08-30", opponent: "Błękitni II Kościelec", home: false, score: "2:2" };
 const CUP1 = {
   date: "2026-08-09",
   opponent: "Błękitni Koskowice",
@@ -112,51 +122,65 @@ const CUP1 = {
   score: "1:5",
   competition: "Puchar Polski",
 };
-function m(matchInfo, minutes, goalMinutes = [], yellowMinutes = [], redMinutes = []) {
-  return { ...matchInfo, minutes, goalMinutes, yellowMinutes, redMinutes };
+function m(matchInfo, minutes, goalMinutes = [], yellowMinutes = [], redMinutes = [], assists = 0) {
+  return { ...matchInfo, minutes, goalMinutes, yellowMinutes, redMinutes, assists };
 }
 
 export const PLAYER_STATS = [
-  { name: "Maksym Dobryvoda", matches: 3, minutes: 195, goals: 3, yellowCards: 0, redCards: 0, matchLog: [m(M2, 74, ["30'", "35'", "55'"]), m(M1, 60), m(CUP1, 61)] },
-  { name: "Vladyslav Didenko", matches: 2, minutes: 106, goals: 0, yellowCards: 2, redCards: 1, matchLog: [m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
-  { name: "Dominik Duchnicki", matches: 2, minutes: 112, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 83), m(CUP1, 29)] },
-  { name: "Remigiusz Dubaniewicz", matches: 1, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 0)] },
-  { name: "Bartosz Fudali", matches: 3, minutes: 60, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 13), m(M1, 24), m(CUP1, 23)] },
-  { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Maciej Gdaniec", matches: 3, minutes: 202, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 40), m(CUP1, 72)] },
-  { name: "Bartosz Gresiuk", matches: 2, minutes: 145, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 66), m(CUP1, 79)] },
-  { name: "Mateusz Gresiuk", matches: 3, minutes: 270, goals: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
-  { name: "Maksym Hlibichuk", matches: 1, minutes: 90, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90)] },
-  { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
-  { name: "Kacper Malinowski", matches: 3, minutes: 28, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 7), m(M1, 10), m(CUP1, 11)] },
-  { name: "Krzysztof Obremski", matches: 2, minutes: 20, goals: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 20, [], ["83'"]), m(CUP1, 0)] },
-  { name: "Damian Pachołek", matches: 1, minutes: 60, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(CUP1, 60)] },
-  { name: "Michał Papaj", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Paweł Pęczkowski", matches: 1, minutes: 70, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 70)] },
-  { name: "Marcin Rozpędowski", matches: 2, minutes: 75, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 45), m(CUP1, 30)] },
-  { name: "Filip Siwak", matches: 3, minutes: 93, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45), m(M1, 30), m(CUP1, 18)] },
-  { name: "Mateusz Styrcz", matches: 3, minutes: 223, goals: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 66, ["38'"]), m(M1, 90), m(CUP1, 67)] },
-  { name: "Marcin Świtoń", matches: 2, minutes: 24, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 24), m(M1, 0)] },
-  { name: "Gabriel Świerbutowicz", matches: 3, minutes: 16, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 16), m(M1, 0), m(CUP1, 0)] },
-  { name: "Bartłomiej Taczyński", matches: 2, minutes: 135, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45), m(CUP1, 90)] },
-  { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 0)] },
-  { name: "Stanisław Taczyński", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Mateusz Taraciński", matches: 1, minutes: 77, goals: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 77, ["42'"])] },
-  { name: "Janusz Tkacz", matches: 2, minutes: 150, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 60), m(CUP1, 90)] },
-  { name: "Patryk Wątroba", matches: 2, minutes: 170, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 80)] },
-  { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Konrad Zębacki", matches: 1, minutes: 90, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
-  { name: "Yevhen Borblik", matches: 2, minutes: 180, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90), m(CUP1, 90)] },
-  { name: "Artur Borysenko", matches: 3, minutes: 135, goals: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 0), m(M1, 45, [], ["65'"]), m(CUP1, 90)] },
-  { name: "Dawid Bubień", matches: 3, minutes: 120, goals: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 30), m(CUP1, 0)] },
+  { name: "Maksym Dobryvoda", matches: 3, minutes: 195, goals: 3, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 74, ["30'", "35'", "55'"], [], [], 1), m(M1, 60), m(CUP1, 61)] },
+  { name: "Vladyslav Didenko", matches: 2, minutes: 106, goals: 0, assists: 0, yellowCards: 2, redCards: 1, matchLog: [m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
+  { name: "Dominik Duchnicki", matches: 2, minutes: 112, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
+  { name: "Remigiusz Dubaniewicz", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 0)] },
+  { name: "Bartosz Fudali", matches: 3, minutes: 60, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 13), m(M1, 24), m(CUP1, 23)] },
+  { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Maciej Gdaniec", matches: 3, minutes: 202, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 40), m(CUP1, 72)] },
+  { name: "Bartosz Gresiuk", matches: 2, minutes: 145, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 66), m(CUP1, 79)] },
+  { name: "Mateusz Gresiuk", matches: 3, minutes: 270, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
+  // 2 asysty w meczu z Legsadem II Kościelec (kolejka 3, M3) — dopisane
+  // ręcznie od razu po meczu; jego mecze/minuty za kolejkę 3 (i pełny wpis w
+  // matchLog dla M3) doczekają najbliższej pełnej aktualizacji statystyk.
+  { name: "Maksym Hlibichuk", matches: 1, minutes: 90, goals: 0, assists: 2, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90)] },
+  { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
+  { name: "Kacper Malinowski", matches: 3, minutes: 28, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 7), m(M1, 10), m(CUP1, 11)] },
+  { name: "Krzysztof Obremski", matches: 2, minutes: 20, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 20, [], ["83'"]), m(CUP1, 0)] },
+  { name: "Damian Pachołek", matches: 1, minutes: 60, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(CUP1, 60)] },
+  { name: "Michał Papaj", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Paweł Pęczkowski", matches: 1, minutes: 70, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 70)] },
+  { name: "Marcin Rozpędowski", matches: 2, minutes: 75, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 45), m(CUP1, 30)] },
+  { name: "Filip Siwak", matches: 3, minutes: 93, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45), m(M1, 30), m(CUP1, 18)] },
+  { name: "Mateusz Styrcz", matches: 3, minutes: 223, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 66, ["38'"]), m(M1, 90), m(CUP1, 67)] },
+  { name: "Marcin Świtoń", matches: 2, minutes: 24, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 24), m(M1, 0)] },
+  { name: "Gabriel Świerbutowicz", matches: 3, minutes: 16, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 16), m(M1, 0), m(CUP1, 0)] },
+  { name: "Bartłomiej Taczyński", matches: 2, minutes: 135, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45, [], [], [], 1), m(CUP1, 90)] },
+  { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 0)] },
+  { name: "Stanisław Taczyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Mateusz Taraciński", matches: 1, minutes: 77, goals: 1, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 77, ["42'"], [], [], 1)] },
+  { name: "Janusz Tkacz", matches: 2, minutes: 150, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 60), m(CUP1, 90)] },
+  { name: "Patryk Wątroba", matches: 2, minutes: 170, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 80)] },
+  { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Konrad Zębacki", matches: 1, minutes: 90, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
+  { name: "Yevhen Borblik", matches: 2, minutes: 180, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90), m(CUP1, 90)] },
+  { name: "Artur Borysenko", matches: 3, minutes: 135, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 0), m(M1, 45, [], ["65'"]), m(CUP1, 90)] },
+  { name: "Dawid Bubień", matches: 3, minutes: 120, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 30), m(CUP1, 0)] },
   // Poniżsi nie mieli jeszcze zgłoszonego profilu/występu w kadrze meczowej
   // na laczynaspilka.pl w tym sezonie (być może dopiero dołączyli do klubu):
-  { name: "Filip Kubiak", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Jakub Cofór", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Alan Lichman", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Brajan Kwiatkowski", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Jakub Behrendt", matches: 0, minutes: 0, goals: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Filip Kubiak", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Jakub Cofór", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Alan Lichman", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Brajan Kwiatkowski", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Jakub Behrendt", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+];
+
+// "Gracz meczu" wybrany klubowo (nieoficjalnie) dla rozegranych dotąd meczów
+// — wykorzystywane przez losową mini-animację w tle strony ("gracz meczu" z
+// kręcącymi się zdjęciami i fajerwerkami). Nazwa przeciwnika ujednolicona z
+// ALBATROS_FIXTURES/LEAGUE_TABLE (90minut.pl); zdjęcie brane po slug-u z
+// assets/img/players/. Dopisuj kolejne wpisy po każdym meczu.
+export const MATCH_MVPS = [
+  { opponent: "Miedź III Legnica", playerName: "Dawid Bubień" },
+  { opponent: "Rycerz II Legnickie Pole", playerName: "Maksym Dobryvoda" },
+  { opponent: "Błękitni II Kościelec", playerName: "Maksym Hlibichuk" },
 ];

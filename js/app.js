@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=28";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=28";
-import { isFirebaseConfigured } from "./firebase-config.js?v=28";
-import { getStore } from "./store.js?v=28";
+import { PLAYERS, slugify } from "./players.js?v=29";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=29";
+import { isFirebaseConfigured } from "./firebase-config.js?v=29";
+import { getStore } from "./store.js?v=29";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -20,7 +20,8 @@ import {
   ALBATROS_FIXTURES,
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
-} from "./league-data.js?v=28";
+  MATCH_MVPS,
+} from "./league-data.js?v=29";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -868,30 +869,57 @@ function initBackground() {
 }
 
 // ---------------------------------------------------------------------------
-// 4b. Przycisk "Losowy gif" — pełnoekranowe odtworzenie, potem powrót
+// 4b. Przycisk "Losowy gif" — pełnoekranowe odtworzenie, potem powrót.
+// Za KAŻDYM pierwszym kliknięciem (od wejścia na stronę) zamiast filmiku
+// wyskakuje "gracz meczu" (patrz sekcja 4b-bis); przy kolejnych kliknięciach
+// jest to losowe — raz filmik, raz gracz meczu.
 // ---------------------------------------------------------------------------
 function initRandomGifButton() {
   const btn = document.getElementById("random-gif-btn");
   const overlay = document.getElementById("gif-overlay");
   const video = document.getElementById("gif-overlay-video");
+  const potmEl = document.getElementById("gif-overlay-potm");
   const closeBtn = document.getElementById("gif-overlay-close");
-  if (!btn || !overlay || !video || !closeBtn) return;
+  if (!btn || !overlay || !video || !potmEl || !closeBtn) return;
+
+  let hasOpenedOnce = false;
 
   function closeOverlay() {
     overlay.hidden = true;
     video.pause();
     video.removeAttribute("src");
     video.load();
+    video.hidden = false;
+    potmEl.hidden = true;
+    potmEl.innerHTML = "";
+    clearPotmTimers();
   }
 
-  function openOverlay() {
+  function openVideoOverlay() {
+    potmEl.hidden = true;
+    potmEl.innerHTML = "";
+    video.hidden = false;
     video.src = randomVideoSrc();
     overlay.hidden = false;
     video.currentTime = 0;
     video.play().catch(() => {});
   }
 
-  btn.addEventListener("click", openOverlay);
+  function openPotmOverlay() {
+    video.hidden = true;
+    video.pause();
+    overlay.hidden = false;
+    runPotmSequence(potmEl, closeOverlay);
+  }
+
+  btn.addEventListener("click", () => {
+    // Pierwsze kliknięcie w tej wizycie zawsze pokazuje "gracza meczu";
+    // później losowo — filmik albo gracz meczu (50/50).
+    const showPotm = !hasOpenedOnce || Math.random() < 0.5;
+    hasOpenedOnce = true;
+    if (showPotm) openPotmOverlay();
+    else openVideoOverlay();
+  });
   closeBtn.addEventListener("click", closeOverlay);
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeOverlay(); // klik w tło poza filmikiem
@@ -900,6 +928,127 @@ function initRandomGifButton() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !overlay.hidden) closeOverlay();
   });
+}
+
+// ---------------------------------------------------------------------------
+// 4b-bis. "Gracz meczu" — wariant "Losowego gifa": zamiast filmiku pokazuje
+// się mini-animacja jak w maszynie losującej — napis "GRACZ MECZU", zdjęcia
+// kandydatów kręcące się jak bębny, a na koniec zdjęcie wylosowanego
+// zawodnika z fajerwerkami dookoła. Losowany jest jeden z wpisów MATCH_MVPS
+// (patrz js/league-data.js — tam dopisuje się kolejne mecze po każdym
+// meczu), z pilnowaniem, żeby ten sam zawodnik nie wypadł zbyt często pod
+// rząd (patrz pickPotmWinner niżej).
+// ---------------------------------------------------------------------------
+const POTM_SPIN_MS = 2000; // jak długo "kręcą się" zdjęcia przed wylosowaniem
+const POTM_REVEAL_HOLD_MS = 4500; // jak długo trzyma się już wylosowane zdjęcie, zanim się samo zamknie
+
+// Zdjęcia kandydatów na "gracza meczu" mają dziś wszystkie rozszerzenie
+// .png (sprawdzone w assets/img/players/) — jeśli kiedyś ktoś podmieni jedno
+// z nich na .jpg/.webp, wystarczy poprawić tu (albo dorobić próbowanie po
+// kolei rozszerzeń, tak jak w playerPhotoNode powyżej).
+function potmPhotoSrc(playerName) {
+  return `assets/img/players/${slugify(playerName)}.png`;
+}
+
+// Historia ostatnio wylosowanych zawodników — nie pozwalamy wypaść temu
+// samemu dwa razy pod rząd ani dwa razy w ciągu ostatnich 4 losowań. Przy
+// puli tylko 3 kandydatów oznacza to w praktyce: nigdy nie powtórz ostatnich
+// dwóch wyników (zostaje zawsze dokładnie jeden ważny kandydat) — to
+// maksimum, jakie da się osiągnąć przy 3 osobach; gdyby pula urosła, okno
+// само się rozciągnie do pełnych 4 poprzednich losowań.
+const POTM_NO_REPEAT_WINDOW = 3;
+let potmRecentWinners = [];
+
+function pickPotmWinner() {
+  const excludeCount = Math.min(potmRecentWinners.length, MATCH_MVPS.length - 1);
+  const excluded = new Set(potmRecentWinners.slice(potmRecentWinners.length - excludeCount));
+  const candidates = MATCH_MVPS.filter((m) => !excluded.has(m.playerName));
+  const pool = candidates.length > 0 ? candidates : MATCH_MVPS;
+  const winner = pool[Math.floor(Math.random() * pool.length)];
+  potmRecentWinners.push(winner.playerName);
+  if (potmRecentWinners.length > POTM_NO_REPEAT_WINDOW) potmRecentWinners.shift();
+  return winner;
+}
+
+function buildFireworksBurst(container, count = 18) {
+  const colors = ["#e0b23a", "#3fb6f0", "#9b7bf5", "#ffffff", "#e0653f"];
+  for (let i = 0; i < count; i++) {
+    const spark = document.createElement("span");
+    spark.className = "potm-spark";
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+    const dist = 90 + Math.random() * 90;
+    spark.style.setProperty("--spark-x", `${Math.cos(angle) * dist}px`);
+    spark.style.setProperty("--spark-y", `${Math.sin(angle) * dist}px`);
+    spark.style.setProperty("--spark-color", colors[i % colors.length]);
+    spark.style.setProperty("--spark-delay", `${(Math.random() * 0.2).toFixed(2)}s`);
+    container.appendChild(spark);
+  }
+}
+
+let potmTimers = [];
+function clearPotmTimers() {
+  potmTimers.forEach((t) => {
+    clearInterval(t);
+    clearTimeout(t);
+  });
+  potmTimers = [];
+}
+
+// Buduje i odpala sekwencję "losowania gracza meczu" wewnątrz podanego
+// kontenera (pusty <div>, np. #gif-overlay-potm) — napis, kręcące się
+// zdjęcia, wylosowany zwycięzca z fajerwerkami, a po chwili wywołuje
+// `onDone` (np. zamknięcie całego pełnoekranowego okienka).
+function runPotmSequence(container, onDone) {
+  if (MATCH_MVPS.length === 0) {
+    onDone();
+    return;
+  }
+  const winner = pickPotmWinner();
+  const candidatePhotos = MATCH_MVPS.map((mvp) => potmPhotoSrc(mvp.playerName));
+
+  container.hidden = false;
+  container.innerHTML = `
+    <span class="potm-label">🏆 GRACZ MECZU 🏆</span>
+    <div class="potm-reel-wrap is-spinning">
+      <img class="potm-reel-img" src="${candidatePhotos[0]}" alt="" />
+      <div class="potm-sparks"></div>
+    </div>
+  `;
+
+  const reelWrap = container.querySelector(".potm-reel-wrap");
+  const reelImg = container.querySelector(".potm-reel-img");
+  let tick = 0;
+  const spinTimer = setInterval(() => {
+    tick++;
+    reelImg.src = candidatePhotos[tick % candidatePhotos.length];
+  }, 130);
+  potmTimers.push(spinTimer);
+
+  const revealTimer = setTimeout(() => {
+    clearInterval(spinTimer);
+    reelWrap.classList.remove("is-spinning");
+    reelWrap.classList.add("is-landed");
+    reelImg.onerror = () => {
+      reelImg.onerror = null;
+      reelImg.src = PLAYER_PLACEHOLDER_SRC;
+    };
+    reelImg.src = potmPhotoSrc(winner.playerName);
+    buildFireworksBurst(container.querySelector(".potm-sparks"));
+
+    const nameEl = document.createElement("p");
+    nameEl.className = "potm-name";
+    nameEl.innerHTML = `<strong>${escapeHtml(winner.playerName)}</strong> „${escapeHtml(nicknameFor(winner.playerName))}”`;
+    container.appendChild(nameEl);
+
+    const vsEl = document.createElement("p");
+    vsEl.className = "potm-vs";
+    vsEl.textContent = `mecz z: ${winner.opponent}`;
+    container.appendChild(vsEl);
+  }, POTM_SPIN_MS);
+  potmTimers.push(revealTimer);
+
+  const closeTimer = setTimeout(onDone, POTM_SPIN_MS + POTM_REVEAL_HOLD_MS);
+  potmTimers.push(closeTimer);
 }
 
 // ---------------------------------------------------------------------------
@@ -994,6 +1143,7 @@ const STATS_COLUMNS = [
   { key: "matches", label: "M" },
   { key: "minutes", label: "Min" },
   { key: "goals", label: "Gole" },
+  { key: "assists", label: "Asysty" },
   { key: "yellowCards", label: "ŻK" },
   { key: "redCards", label: "CK" },
 ];
@@ -1018,6 +1168,7 @@ function renderPlayerStats(tableEl, benchEl) {
         <td>${p.matches}</td>
         <td>${p.minutes}'</td>
         <td>${p.goals}</td>
+        <td>${p.assists}</td>
         <td>${p.yellowCards}</td>
         <td>${p.redCards}</td>
       </tr>`).join("");
@@ -1401,7 +1552,7 @@ function openPlayerCard(player) {
   summary.className = "player-card-summary";
   summary.innerHTML =
     stats && stats.matches > 0
-      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
+      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.assists}</strong> asyst · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
       : `Brak jeszcze występu w tym sezonie (wg laczynaspilka.pl).`;
   head.appendChild(summary);
 
@@ -1419,6 +1570,7 @@ function openPlayerCard(player) {
         : `${match.opponent} – Albatros Jaśkowice`;
       const events = [
         ...match.goalMinutes.map((t) => `⚽ ${t}`),
+        ...(match.assists ? [`🅰️${match.assists > 1 ? "×" + match.assists : ""}`] : []),
         ...match.yellowMinutes.map((t) => `🟨 ${t}`),
         ...match.redMinutes.map((t) => `🟥 ${t}`),
       ].join(" ");
@@ -1468,7 +1620,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=28";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=29";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
