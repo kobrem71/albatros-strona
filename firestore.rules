@@ -53,6 +53,16 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Licznik wizyt per gracz (dokument = slug gracza), rosnący przy każdym
+    // otwarciu apki. W UI widoczny tylko dla Krzysztofa Obremskiego, ale —
+    // tak jak reszta kolekcji, bez prawdziwego logowania Firebase — same
+    // reguły nie potrafią tego odróżnić po stronie serwera.
+    match /visits/{slug} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

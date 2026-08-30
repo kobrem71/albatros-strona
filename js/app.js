@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=29";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=29";
-import { isFirebaseConfigured } from "./firebase-config.js?v=29";
-import { getStore } from "./store.js?v=29";
+import { PLAYERS, slugify } from "./players.js?v=30";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=30";
+import { isFirebaseConfigured } from "./firebase-config.js?v=30";
+import { getStore } from "./store.js?v=30";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,7 +21,7 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=29";
+} from "./league-data.js?v=30";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -255,6 +255,10 @@ export const state = {
   // Ile wiadomości z powyższej listy już przeczytano NA TYM urządzeniu —
   // różnica długości daje liczbę nieprzeczytanych (badge na kopercie).
   messagesReadCount: parseInt(localStorage.getItem(MESSAGES_READ_KEY) || "0", 10) || 0,
+  // Licznik wizyt per gracz — { [slug]: { name, count, ... } } — wspólny dla
+  // wszystkich (zapisany w bazie), ale widoczny w UI tylko dla Krzysztofa
+  // Obremskiego (patrz sekcja "Statystyki wizyt" niżej).
+  visitCounts: {},
 };
 
 // Czy ta osoba (na tym urządzeniu, z obecnie wybraną tożsamością) może
@@ -426,6 +430,7 @@ function authorAvatarNode(authorName) {
 // gracza.
 function refreshPermissionUI() {
   refreshTacticBoardIfOpen();
+  refreshVisitsButtonVisibility();
 
   const messageOverlay = document.getElementById("message-overlay");
   const compose = document.getElementById("message-compose");
@@ -1633,7 +1638,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=29";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=30";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2110,6 +2115,83 @@ function initLeagueButton() {
 }
 
 // ---------------------------------------------------------------------------
+// 4g. Statystyki wizyt — widoczne WYŁĄCZNIE dla Krzysztofa Obremskiego
+// (identitySlug === SUPERUSER_SLUG; nie dla trenera/kierownika). Każde
+// otwarcie apki (patrz recordCurrentVisit, wołane raz w init()) z wybraną
+// tożsamością gracza liczy się jako jedna wizyta tego gracza — wspólny,
+// rosnący licznik w bazie (albo w localStorage w trybie demo).
+// ---------------------------------------------------------------------------
+function refreshVisitsButtonVisibility() {
+  const btn = document.getElementById("visits-btn");
+  if (btn) btn.hidden = state.identitySlug !== SUPERUSER_SLUG;
+}
+
+function renderVisitsTable(tableEl) {
+  const rows = PLAYERS.map((p) => ({ player: p, count: state.visitCounts[p.slug]?.count || 0 }))
+    .sort((a, b) => b.count - a.count)
+    .map(
+      ({ player, count }) => `
+        <tr>
+          <td class="league-stats-name">${escapeHtml(player.name)}</td>
+          <td>${count}</td>
+        </tr>`
+    )
+    .join("");
+
+  tableEl.innerHTML = `
+    <thead><tr><th>Gracz</th><th>Wizyty</th></tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+
+function refreshVisitsPanelIfOpen() {
+  const overlay = document.getElementById("visits-overlay");
+  const table = document.getElementById("visits-table");
+  if (overlay && !overlay.hidden && table) renderVisitsTable(table);
+}
+
+function initVisitsButton() {
+  const btn = document.getElementById("visits-btn");
+  const overlay = document.getElementById("visits-overlay");
+  const closeBtn = document.getElementById("visits-overlay-close");
+  const table = document.getElementById("visits-table");
+  if (!btn || !overlay || !closeBtn || !table) return;
+
+  function closeOverlay() {
+    overlay.hidden = true;
+  }
+  function openOverlay() {
+    if (state.identitySlug !== SUPERUSER_SLUG) return; // zabezpieczenie — przycisk i tak jest ukryty dla reszty
+    renderVisitsTable(table);
+    overlay.hidden = false;
+  }
+
+  btn.addEventListener("click", openOverlay);
+  closeBtn.addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
+
+  refreshVisitsButtonVisibility();
+}
+
+// Zapisuje jedną wizytę bieżącego gracza (jeśli ktoś ma wybraną tożsamość na
+// tym urządzeniu) — wołane raz przy każdym otwarciu apki, patrz init().
+async function recordCurrentVisit() {
+  if (!state.identitySlug) return; // nikt nie wybrał "Kim jesteś?" — nie ma kogo zliczyć
+  const player = PLAYERS.find((p) => p.slug === state.identitySlug);
+  if (!player) return;
+  try {
+    store = store || (await getStore());
+    await store.recordVisit(player.slug, player.name);
+  } catch (err) {
+    console.error("Nie udało się zapisać wizyty:", err);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 5. Start
 // ---------------------------------------------------------------------------
 async function init() {
@@ -2121,6 +2203,7 @@ async function init() {
   initTacticButton();
   initTacticPickerOverlay();
   initMessageButton();
+  initVisitsButton();
   renderIdentityBar();
   updateMessageBadge();
   renderSchedule();
@@ -2135,6 +2218,11 @@ async function init() {
   }
 
   store = await getStore();
+  recordCurrentVisit();
+  store.subscribeVisitCounts((data) => {
+    state.visitCounts = data;
+    refreshVisitsPanelIfOpen();
+  });
   store.subscribeSignups((data) => {
     state.signups = data;
     renderSchedule();

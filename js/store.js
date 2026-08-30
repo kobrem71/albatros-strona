@@ -1,13 +1,14 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=29";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=30";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
 const DEMO_PLAYER_CARD_STATS_KEY = "albatros_demo_player_card_stats_v1";
 const DEMO_TACTIC_KEY = "albatros_demo_tactic_v1";
 const DEMO_MESSAGES_KEY = "albatros_demo_messages_v1";
+const DEMO_VISITS_KEY = "albatros_demo_visits_v1";
 
 function readLocal(key) {
   try {
@@ -31,6 +32,7 @@ function createLocalStore() {
   const playerCardStatsListeners = new Set();
   const tacticListeners = new Set();
   const messageListeners = new Set();
+  const visitListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -53,6 +55,10 @@ function createLocalStore() {
     const list = Array.isArray(data.list) ? data.list : [];
     messageListeners.forEach((cb) => cb(list));
   }
+  function notifyVisits() {
+    const data = readLocal(DEMO_VISITS_KEY);
+    visitListeners.forEach((cb) => cb(data));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
@@ -60,6 +66,7 @@ function createLocalStore() {
     if (e.key === DEMO_PLAYER_CARD_STATS_KEY) notifyPlayerCardStats();
     if (e.key === DEMO_TACTIC_KEY) notifyTactic();
     if (e.key === DEMO_MESSAGES_KEY) notifyMessages();
+    if (e.key === DEMO_VISITS_KEY) notifyVisits();
   });
 
   return {
@@ -145,6 +152,19 @@ function createLocalStore() {
       writeLocal(DEMO_MESSAGES_KEY, { list });
       notifyMessages();
     },
+    subscribeVisitCounts(cb) {
+      cb(readLocal(DEMO_VISITS_KEY));
+      visitListeners.add(cb);
+      return () => visitListeners.delete(cb);
+    },
+    // Zlicza jedną wizytę danego gracza — rosnący licznik, nigdy nie resetowany.
+    async recordVisit(slug, name) {
+      const data = readLocal(DEMO_VISITS_KEY);
+      const prevCount = data[slug]?.count || 0;
+      data[slug] = { name, count: prevCount + 1, lastVisit: Date.now() };
+      writeLocal(DEMO_VISITS_KEY, data);
+      notifyVisits();
+    },
   };
 }
 
@@ -164,6 +184,7 @@ async function createFirebaseStore() {
     query,
     orderBy,
     serverTimestamp,
+    increment,
   } = await import(
     "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
   );
@@ -249,6 +270,23 @@ async function createFirebaseStore() {
         clientTs: Date.now(),
         ts: serverTimestamp(),
       });
+    },
+    subscribeVisitCounts(cb) {
+      return onSnapshot(collection(db, "visits"), (snap) => {
+        const data = {};
+        snap.forEach((d) => (data[d.id] = d.data()));
+        cb(data);
+      });
+    },
+    // Zlicza jedną wizytę danego gracza — increment() jest atomowy po stronie
+    // serwera, więc wielu graczy odświeżających stronę naraz nie "zjada"
+    // sobie nawzajem zliczeń.
+    async recordVisit(slug, name) {
+      await setDoc(
+        doc(db, "visits", slug),
+        { name, count: increment(1), lastVisit: serverTimestamp() },
+        { merge: true }
+      );
     },
   };
 }

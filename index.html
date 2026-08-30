@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=29" />
+<link rel="stylesheet" href="css/style.css?v=30" />
 </head>
 <body>
 
@@ -50,6 +50,10 @@
     <button id="message-btn" class="random-gif-btn message-btn" type="button" title="Wiadomości">
       ✉️ <span>Wiadomości</span>
       <span id="message-badge" class="message-badge" hidden>0</span>
+    </button>
+    <!-- Widoczny wyłącznie dla Krzysztofa Obremskiego — patrz refreshVisitsButtonVisibility() w app.js -->
+    <button id="visits-btn" class="random-gif-btn" type="button" title="Statystyki wizyt" hidden>
+      👣 <span>Wizyty</span>
     </button>
   </div>
 </header>
@@ -113,6 +117,18 @@
   </div>
 </div>
 
+<!-- Widoczne wyłącznie dla Krzysztofa Obremskiego (przycisk "👣 Wizyty" powyżej jest ukryty dla reszty) -->
+<div id="visits-overlay" class="league-overlay" hidden>
+  <div class="league-panel">
+    <button id="visits-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h2>Statystyki wizyt</h2>
+    <p class="muted">Widoczne tylko dla Ciebie. Każde otwarcie apki po wybraniu tożsamości ("Kim jesteś?") liczy się jako jedna wizyta tego gracza.</p>
+    <div class="league-table-wrap">
+      <table id="visits-table" class="league-table"></table>
+    </div>
+  </div>
+</div>
+
 <div id="tactic-picker-overlay" class="league-overlay tactic-picker-overlay" hidden>
   <div class="league-panel tactic-picker-panel">
     <button id="tactic-picker-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
@@ -152,7 +168,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=29"></script>
+<script type="module" src="js/app.js?v=30"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
