@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=30";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=30";
-import { isFirebaseConfigured } from "./firebase-config.js?v=30";
-import { getStore } from "./store.js?v=30";
+import { PLAYERS, slugify } from "./players.js?v=31";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=31";
+import { isFirebaseConfigured } from "./firebase-config.js?v=31";
+import { getStore } from "./store.js?v=31";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,7 +21,7 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=30";
+} from "./league-data.js?v=31";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1638,7 +1638,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=30";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=31";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2126,13 +2126,28 @@ function refreshVisitsButtonVisibility() {
   if (btn) btn.hidden = state.identitySlug !== SUPERUSER_SLUG;
 }
 
+// Klucz w state.visitCounts dla trenera/kierownika (odróżniony od slugów
+// graczy prefiksem "staff:") — patrz recordCurrentVisit niżej.
+function staffVisitKey(roleKey) {
+  return `staff:${roleKey}`;
+}
+
 function renderVisitsTable(tableEl) {
-  const rows = PLAYERS.map((p) => ({ player: p, count: state.visitCounts[p.slug]?.count || 0 }))
+  const staffEntries = Object.keys(STAFF).map((roleKey) => ({
+    name: `${STAFF[roleKey].name} (${roleKey})`,
+    count: state.visitCounts[staffVisitKey(roleKey)]?.count || 0,
+  }));
+  const playerEntries = PLAYERS.map((p) => ({
+    name: p.name,
+    count: state.visitCounts[p.slug]?.count || 0,
+  }));
+
+  const rows = [...staffEntries, ...playerEntries]
     .sort((a, b) => b.count - a.count)
     .map(
-      ({ player, count }) => `
+      ({ name, count }) => `
         <tr>
-          <td class="league-stats-name">${escapeHtml(player.name)}</td>
+          <td class="league-stats-name">${escapeHtml(name)}</td>
           <td>${count}</td>
         </tr>`
     )
@@ -2177,9 +2192,20 @@ function initVisitsButton() {
   refreshVisitsButtonVisibility();
 }
 
-// Zapisuje jedną wizytę bieżącego gracza (jeśli ktoś ma wybraną tożsamość na
-// tym urządzeniu) — wołane raz przy każdym otwarciu apki, patrz init().
+// Zapisuje jedną wizytę bieżącej tożsamości na tym urządzeniu — gracza ALBO
+// trenera/kierownika (jeśli ktoś jest akurat zalogowany jako personel, liczy
+// się to jako wizyta personelu, tak jak w pasku "Kim jesteś?" na górze —
+// patrz renderIdentityBar) — wołane raz przy każdym otwarciu apki, w init().
 async function recordCurrentVisit() {
+  if (state.role && STAFF[state.role]) {
+    try {
+      store = store || (await getStore());
+      await store.recordVisit(staffVisitKey(state.role), STAFF[state.role].name);
+    } catch (err) {
+      console.error("Nie udało się zapisać wizyty:", err);
+    }
+    return;
+  }
   if (!state.identitySlug) return; // nikt nie wybrał "Kim jesteś?" — nie ma kogo zliczyć
   const player = PLAYERS.find((p) => p.slug === state.identitySlug);
   if (!player) return;
