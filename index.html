@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=33" />
+<link rel="stylesheet" href="css/style.css?v=34" />
 </head>
 <body>
 
@@ -54,6 +54,10 @@
     <!-- Widoczny wyłącznie dla Krzysztofa Obremskiego — patrz refreshVisitsButtonVisibility() w app.js -->
     <button id="visits-btn" class="random-gif-btn" type="button" title="Statystyki wizyt" hidden>
       👣 <span>Wizyty</span>
+    </button>
+    <!-- Widoczny wyłącznie dla Krzysztofa Obremskiego — patrz refreshGabryssimButtonVisibility() w js/gabryssim.js -->
+    <button id="gabryssim-btn" class="random-gif-btn" type="button" title="Symulator Gabrysia" hidden>
+      ⚽ <span>Symulator Gabrysia</span>
     </button>
   </div>
 </header>
@@ -133,6 +137,51 @@
   </div>
 </div>
 
+<!-- Gra "Symulator Gabrysia" — widoczna wyłącznie dla Krzysztofa Obremskiego
+     (przycisk "⚽ Symulator Gabrysia" powyżej jest ukryty dla reszty). Cała
+     logika w js/gabryssim.js. Cztery "ekrany" w środku, tylko jeden na raz
+     bez atrybutu hidden: menu / gra / wynik / statystyki. -->
+<div id="gabryssim-overlay" class="gabryssim-overlay" hidden>
+
+  <div id="gabryssim-menu" class="gabryssim-screen gabryssim-photo-screen">
+    <button id="gabryssim-menu-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <nav class="gabryssim-topmenu">
+      <button id="gabryssim-play-btn" class="gabryssim-menu-btn" type="button">Strzel se wolnego</button>
+      <button id="gabryssim-stats-btn" class="gabryssim-menu-btn" type="button">Sprawdź statystyki</button>
+      <button id="gabryssim-exit-btn" class="gabryssim-menu-btn" type="button">Wyjdź z gry</button>
+    </nav>
+  </div>
+
+  <div id="gabryssim-game" class="gabryssim-screen gabryssim-photo-screen" hidden>
+    <button id="gabryssim-game-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <button id="gabryssim-ball" class="gabryssim-ball" type="button" aria-label="Przytrzymaj i puść"></button>
+    <div class="gabryssim-bar-panel">
+      <p class="gabryssim-hint">Przytrzymaj piłkę i puść dokładnie w środku paska</p>
+      <div class="gabryssim-bar-track">
+        <div id="gabryssim-bar-fill" class="gabryssim-bar-fill"></div>
+        <div class="gabryssim-bar-center"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gabryssim-result" class="gabryssim-screen gabryssim-result-screen" hidden>
+    <button id="gabryssim-result-close" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <img id="gabryssim-result-img" class="gabryssim-result-media" alt="" hidden />
+    <video id="gabryssim-result-video" class="gabryssim-result-media" playsinline muted hidden></video>
+    <div id="gabryssim-result-caption" class="gabryssim-result-caption" hidden></div>
+  </div>
+
+  <div id="gabryssim-stats" class="gabryssim-screen gabryssim-stats-screen" hidden>
+    <button id="gabryssim-stats-close" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <div class="league-panel gabryssim-stats-panel">
+      <h2>Statystyki wolnych — Symulator Gabrysia</h2>
+      <div id="gabryssim-stats-body" class="gabryssim-stats-body"></div>
+      <button id="gabryssim-stats-back" class="gabryssim-menu-btn gabryssim-stats-back-btn" type="button">← Menu gry</button>
+    </div>
+  </div>
+
+</div>
+
 <div id="tactic-picker-overlay" class="league-overlay tactic-picker-overlay" hidden>
   <div class="league-panel tactic-picker-panel">
     <button id="tactic-picker-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
@@ -172,7 +221,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=33"></script>
+<script type="module" src="js/app.js?v=34"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

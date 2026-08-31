@@ -1098,3 +1098,194 @@ main {
   .status-group { grid-column: 1 / -1; margin-top: 6px; }
   .avatar { width: 32px; height: 32px; }
 }
+
+/* ---------- Symulator Gabrysia (gra, widoczna tylko dla Krzysztofa
+   Obremskiego — patrz gabryssim-btn w index.html i js/gabryssim.js) ---------- */
+.gabryssim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #05070f;
+  overflow: hidden;
+}
+.gabryssim-overlay[hidden] { display: none; }
+
+.gabryssim-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gabryssim-screen[hidden] { display: none; }
+
+/* Ekrany "menu" i "gra": zdjęcie tła w stałej proporcji 3:2 (taka jak
+   "1 wolny.png", 1536x1024), żeby piłka-przycisk i pasek mocy dało się
+   ustawić procentowo dokładnie na piłce ze zdjęcia, niezależnie od
+   rozmiaru ekranu — patrz komentarz przy .gabryssim-ball. */
+.gabryssim-photo-screen {
+  position: relative;
+  width: min(100vw, 150vh);
+  height: min(66.67vw, 100vh);
+  background-image: url("../assets/gabryssim/1%20wolny.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.gabryssim-x {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(5, 8, 20, 0.55);
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.gabryssim-x:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Menu na górze zdjęcia startowego: STRZEL SE WOLNEGO / SPRAWDŹ STATYSTYKI /
+   WYJDŹ Z GRY. */
+.gabryssim-topmenu {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(78%, 360px);
+}
+.gabryssim-menu-btn {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(5, 8, 20, 0.72);
+  color: var(--ink);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.gabryssim-menu-btn:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.22); }
+
+/* Piłka-przycisk: umieszczona procentowo dokładnie na piłce widocznej na
+   "1 wolny.png" (środek ~41% szerokości / 85% wysokości zdjęcia, zmierzone
+   na oryginalnym pliku). Wysokość = szerokość * 1.5, bo stage ma proporcję
+   3:2 (1536x1024) — patrz .gabryssim-photo-screen — więc taki przelicznik
+   utrzymuje kółko (a nie owal) niezależnie od rozmiaru ekranu. */
+.gabryssim-ball {
+  position: absolute;
+  left: 41%;
+  top: 85%;
+  width: 10%;
+  height: 15%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  background: rgba(63, 182, 240, 0.16);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gabryssim-ball:hover,
+.gabryssim-ball:active { background: rgba(63, 182, 240, 0.32); border-color: var(--blue); }
+.gabryssim-ball.is-holding { background: rgba(224, 178, 58, 0.32); border-color: var(--gold); }
+
+/* Pasek mocy: HUD u góry zdjęcia, nad menu (ekran "gra" nie ma menu, więc
+   nie kolidują). */
+.gabryssim-bar-panel {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(84%, 480px);
+  text-align: center;
+}
+.gabryssim-hint {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+}
+.gabryssim-bar-track {
+  position: relative;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(5, 8, 20, 0.6);
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+.gabryssim-bar-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--blue), var(--gold));
+}
+.gabryssim-bar-center {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  background: white;
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
+}
+/* ---------- Ekran wyniku (gol / brak gola) ---------- */
+.gabryssim-result-screen {
+  background: rgba(5, 8, 20, 0.96);
+  flex-direction: column;
+  gap: 18px;
+}
+.gabryssim-result-media {
+  max-width: min(92vw, 720px);
+  max-height: 72vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.gabryssim-result-media[hidden] { display: none; }
+.gabryssim-result-caption {
+  max-width: min(90vw, 560px);
+  text-align: center;
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 800;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(224, 178, 58, 0.7), 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+.gabryssim-result-caption[hidden] { display: none; }
+
+/* ---------- Ekran statystyk ---------- */
+.gabryssim-stats-screen { padding: 16px; }
+.gabryssim-stats-panel { max-width: 420px; text-align: center; }
+.gabryssim-stats-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+.gabryssim-stat-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 14px 6px;
+}
+.gabryssim-stat-value { display: block; font-size: 1.6rem; font-weight: 800; color: var(--blue); }
+.gabryssim-stat-label { display: block; margin-top: 4px; font-size: 0.78rem; color: var(--muted); }
+.gabryssim-stats-back-btn { width: 100%; text-transform: none; }
+
+@media (max-width: 600px) {
+  .gabryssim-menu-btn { font-size: 0.88rem; padding: 10px 14px; }
+  .gabryssim-hint { font-size: 0.75rem; }
+}

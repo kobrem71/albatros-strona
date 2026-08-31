@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=33";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=33";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=33";
-import { getStore } from "./store.js?v=33";
+import { PLAYERS, slugify } from "./players.js?v=34";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=34";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=34";
+import { getStore } from "./store.js?v=34";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,7 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=33";
+} from "./league-data.js?v=34";
+import { initGabryssim, refreshGabryssimButtonVisibility } from "./gabryssim.js?v=34";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -431,6 +432,7 @@ function authorAvatarNode(authorName) {
 function refreshPermissionUI() {
   refreshTacticBoardIfOpen();
   refreshVisitsButtonVisibility();
+  refreshGabryssimButtonVisibility();
 
   const messageOverlay = document.getElementById("message-overlay");
   const compose = document.getElementById("message-compose");
@@ -1638,7 +1640,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=33";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=34";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2304,6 +2306,7 @@ async function init() {
   initTacticPickerOverlay();
   initMessageButton();
   initVisitsButton();
+  initGabryssim(state, SUPERUSER_SLUG);
   initPushOptIn();
   renderIdentityBar();
   updateMessageBadge();

@@ -73,6 +73,15 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Statystyki gry "Symulator Gabrysia" (jeden dokument "stats": liczba
+    // strzałów i goli). Widoczna w UI tylko dla Krzysztofa Obremskiego, tak
+    // jak /visits powyżej.
+    match /gabryssim/{docId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

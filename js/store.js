@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=33";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=34";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
@@ -9,6 +9,7 @@ const DEMO_PLAYER_CARD_STATS_KEY = "albatros_demo_player_card_stats_v1";
 const DEMO_TACTIC_KEY = "albatros_demo_tactic_v1";
 const DEMO_MESSAGES_KEY = "albatros_demo_messages_v1";
 const DEMO_VISITS_KEY = "albatros_demo_visits_v1";
+const DEMO_GABRYSSIM_KEY = "albatros_demo_gabryssim_v1";
 
 function readLocal(key) {
   try {
@@ -33,6 +34,7 @@ function createLocalStore() {
   const tacticListeners = new Set();
   const messageListeners = new Set();
   const visitListeners = new Set();
+  const gabryssimListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -59,6 +61,10 @@ function createLocalStore() {
     const data = readLocal(DEMO_VISITS_KEY);
     visitListeners.forEach((cb) => cb(data));
   }
+  function notifyGabryssim() {
+    const data = readLocal(DEMO_GABRYSSIM_KEY);
+    gabryssimListeners.forEach((cb) => cb({ attempts: data.attempts || 0, goals: data.goals || 0 }));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
@@ -67,6 +73,7 @@ function createLocalStore() {
     if (e.key === DEMO_TACTIC_KEY) notifyTactic();
     if (e.key === DEMO_MESSAGES_KEY) notifyMessages();
     if (e.key === DEMO_VISITS_KEY) notifyVisits();
+    if (e.key === DEMO_GABRYSSIM_KEY) notifyGabryssim();
   });
 
   return {
@@ -164,6 +171,21 @@ function createLocalStore() {
       data[slug] = { name, count: prevCount + 1, lastVisit: Date.now() };
       writeLocal(DEMO_VISITS_KEY, data);
       notifyVisits();
+    },
+    subscribeGabryssimStats(cb) {
+      const data = readLocal(DEMO_GABRYSSIM_KEY);
+      cb({ attempts: data.attempts || 0, goals: data.goals || 0 });
+      gabryssimListeners.add(cb);
+      return () => gabryssimListeners.delete(cb);
+    },
+    // Zlicza jeden strzał w "Symulatorze Gabrysia" — rosnące liczniki, nigdy
+    // nie resetowane (patrz recordGabryssimShot w js/gabryssim.js).
+    async recordGabryssimShot(isGoal) {
+      const data = readLocal(DEMO_GABRYSSIM_KEY);
+      const attempts = (data.attempts || 0) + 1;
+      const goals = (data.goals || 0) + (isGoal ? 1 : 0);
+      writeLocal(DEMO_GABRYSSIM_KEY, { attempts, goals });
+      notifyGabryssim();
     },
     // Powiadomienia push wymagają prawdziwego Firebase (wysyłka idzie przez
     // Firebase Console — patrz README) — w trybie demo nie ma czego włączać.
@@ -293,6 +315,21 @@ async function createFirebaseStore() {
       await setDoc(
         doc(db, "visits", slug),
         { name, count: increment(1), lastVisit: serverTimestamp() },
+        { merge: true }
+      );
+    },
+    // Statystyki "Symulatora Gabrysia" — jeden wspólny dokument, liczniki
+    // rosną atomowo (increment()), tak jak wizyty powyżej.
+    subscribeGabryssimStats(cb) {
+      return onSnapshot(doc(db, "gabryssim", "stats"), (snap) => {
+        const d = snap.exists() ? snap.data() : {};
+        cb({ attempts: d.attempts || 0, goals: d.goals || 0 });
+      });
+    },
+    async recordGabryssimShot(isGoal) {
+      await setDoc(
+        doc(db, "gabryssim", "stats"),
+        { attempts: increment(1), goals: increment(isGoal ? 1 : 0), lastShot: serverTimestamp() },
         { merge: true }
       );
     },
