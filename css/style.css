@@ -89,16 +89,19 @@ body {
   font-size: 0.95rem;
 }
 
-/* Siatka 2x3 na przyciski w nagłówku (2 rzędy po 3: tabela/taktyka/gify,
-   wiadomości/wizyty/Symulator Gabrysia) — zamiast jednego rzędu, który przy
-   kilku przyciskach zaczynał się poziomo przewijać na węższych ekranach.
-   "Wizyty" mają dodatkowo swój własny hidden atrybut (patrz
-   refreshVisitsButtonVisibility() w app.js) — widoczne tylko dla Krzysztofa
-   Obremskiego, więc dla reszty siatka ma 5 przycisków zamiast 6. */
+/* Siatka 3x2 na przyciski w nagłówku (3 rzędy po 2: tabela/taktyka,
+   gify/wiadomości, wizyty/Symulator Gabrysia) — zamiast jednego rzędu, który
+   przy kilku przyciskach zaczynał się poziomo przewijać na węższych
+   ekranach. Kolumny na "1fr" (a nie "auto"), żeby oba przyciski w rzędzie
+   miały zawsze tę samą szerokość i siatka się nie "rozjeżdżała" przy
+   różnej długości tekstu. "Wizyty" mają dodatkowo swój własny hidden
+   atrybut (patrz refreshVisitsButtonVisibility() w app.js) — widoczne tylko
+   dla Krzysztofa Obremskiego, więc dla reszty siatka ma 5 przycisków
+   zamiast 6. */
 .header-actions {
   margin-left: auto;
   display: grid;
-  grid-template-columns: repeat(3, auto);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   flex-shrink: 0;
 }
