@@ -105,7 +105,7 @@ export const ALBATROS_FIXTURES = [
 // meczów pucharowych w tym sezonie już nie będzie (drużyna odpadła w 1.
 // rundzie), więc przy kolejnych aktualizacjach statystyk wystarczy sprawdzać
 // tylko ligę (Klasa B) na laczynaspilka.pl, bez zakładki Puchar Polski.
-export const PLAYER_STATS_UPDATED = "2026-08-28";
+export const PLAYER_STATS_UPDATED = "2026-08-31";
 
 // Rozegrane dotąd mecze — wspólne dane, żeby nie powtarzać ich przy każdym
 // zawodniku. "competition" pokazuje się na karcie zawodnika tylko wtedy, gdy
@@ -127,44 +127,43 @@ function m(matchInfo, minutes, goalMinutes = [], yellowMinutes = [], redMinutes 
 }
 
 export const PLAYER_STATS = [
-  { name: "Maksym Dobryvoda", matches: 3, minutes: 195, goals: 3, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 74, ["30'", "35'", "55'"], [], [], 1), m(M1, 60), m(CUP1, 61)] },
-  { name: "Vladyslav Didenko", matches: 2, minutes: 106, goals: 0, assists: 0, yellowCards: 2, redCards: 1, matchLog: [m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
-  { name: "Dominik Duchnicki", matches: 2, minutes: 112, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
-  { name: "Remigiusz Dubaniewicz", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 0)] },
-  { name: "Bartosz Fudali", matches: 3, minutes: 60, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 13), m(M1, 24), m(CUP1, 23)] },
+  { name: "Maksym Dobryvoda", matches: 4, minutes: 239, goals: 3, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M3, 44), m(M2, 74, ["30'", "35'", "55'"], [], [], 1), m(M1, 60), m(CUP1, 61)] },
+  { name: "Vladyslav Didenko", matches: 3, minutes: 106, goals: 0, assists: 0, yellowCards: 2, redCards: 1, matchLog: [m(M3, 0), m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
+  { name: "Dominik Duchnicki", matches: 3, minutes: 158, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M3, 46), m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
+  { name: "Remigiusz Dubaniewicz", matches: 2, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 0), m(M1, 0)] },
+  { name: "Bartosz Fudali", matches: 4, minutes: 106, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 46), m(M2, 13), m(M1, 24), m(CUP1, 23)] },
   { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Maciej Gdaniec", matches: 3, minutes: 202, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 40), m(CUP1, 72)] },
+  { name: "Maciej Gdaniec", matches: 4, minutes: 292, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 90), m(M1, 40), m(CUP1, 72)] },
   { name: "Bartosz Gresiuk", matches: 2, minutes: 145, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 66), m(CUP1, 79)] },
-  { name: "Mateusz Gresiuk", matches: 3, minutes: 270, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
+  { name: "Mateusz Gresiuk", matches: 4, minutes: 360, goals: 2, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
   // 2 asysty w meczu z Legsadem II Kościelec (kolejka 3, M3) — dopisane
-  // ręcznie od razu po meczu; jego mecze/minuty za kolejkę 3 (i pełny wpis w
-  // matchLog dla M3) doczekają najbliższej pełnej aktualizacji statystyk.
-  { name: "Maksym Hlibichuk", matches: 1, minutes: 90, goals: 0, assists: 2, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90)] },
+  // ręcznie od razu po meczu (laczynaspilka.pl nie pokazuje asyst).
+  { name: "Maksym Hlibichuk", matches: 2, minutes: 180, goals: 0, assists: 2, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 90)] },
   { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
-  { name: "Kacper Malinowski", matches: 3, minutes: 28, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 7), m(M1, 10), m(CUP1, 11)] },
-  { name: "Krzysztof Obremski", matches: 2, minutes: 20, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 20, [], ["83'"]), m(CUP1, 0)] },
+  { name: "Kacper Malinowski", matches: 4, minutes: 55, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 27), m(M2, 7), m(M1, 10), m(CUP1, 11)] },
+  { name: "Krzysztof Obremski", matches: 3, minutes: 20, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M3, 0), m(M2, 20, [], ["83'"]), m(CUP1, 0)] },
   { name: "Damian Pachołek", matches: 1, minutes: 60, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(CUP1, 60)] },
-  { name: "Michał Papaj", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
+  { name: "Michał Papaj", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 0)] },
   { name: "Paweł Pęczkowski", matches: 1, minutes: 70, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 70)] },
-  { name: "Marcin Rozpędowski", matches: 2, minutes: 75, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 45), m(CUP1, 30)] },
-  { name: "Filip Siwak", matches: 3, minutes: 93, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45), m(M1, 30), m(CUP1, 18)] },
+  { name: "Marcin Rozpędowski", matches: 3, minutes: 119, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 44), m(M1, 45), m(CUP1, 30)] },
+  { name: "Filip Siwak", matches: 4, minutes: 137, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 44, ["70'"]), m(M2, 45), m(M1, 30), m(CUP1, 18)] },
   { name: "Mateusz Styrcz", matches: 3, minutes: 223, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 66, ["38'"]), m(M1, 90), m(CUP1, 67)] },
-  { name: "Marcin Świtoń", matches: 2, minutes: 24, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 24), m(M1, 0)] },
-  { name: "Gabriel Świerbutowicz", matches: 3, minutes: 16, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 16), m(M1, 0), m(CUP1, 0)] },
-  { name: "Bartłomiej Taczyński", matches: 2, minutes: 135, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 45, [], [], [], 1), m(CUP1, 90)] },
+  { name: "Marcin Świtoń", matches: 3, minutes: 114, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 24), m(M1, 0)] },
+  { name: "Gabriel Świerbutowicz", matches: 4, minutes: 16, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 0), m(M2, 16), m(M1, 0), m(CUP1, 0)] },
+  { name: "Bartłomiej Taczyński", matches: 3, minutes: 225, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 45, [], [], [], 1), m(CUP1, 90)] },
   { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 0)] },
   { name: "Stanisław Taczyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
-  { name: "Mateusz Taraciński", matches: 1, minutes: 77, goals: 1, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M2, 77, ["42'"], [], [], 1)] },
+  { name: "Mateusz Taraciński", matches: 2, minutes: 167, goals: 1, assists: 1, yellowCards: 1, redCards: 0, matchLog: [m(M3, 90, [], ["80'"]), m(M2, 77, ["42'"], [], [], 1)] },
   { name: "Janusz Tkacz", matches: 2, minutes: 150, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 60), m(CUP1, 90)] },
-  { name: "Patryk Wątroba", matches: 2, minutes: 170, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 80)] },
+  { name: "Patryk Wątroba", matches: 3, minutes: 233, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 63), m(M2, 90), m(M1, 80)] },
   { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Konrad Zębacki", matches: 1, minutes: 90, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
-  { name: "Yevhen Borblik", matches: 2, minutes: 180, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90), m(CUP1, 90)] },
+  { name: "Yevhen Borblik", matches: 3, minutes: 226, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 46), m(M1, 90), m(CUP1, 90)] },
   { name: "Artur Borysenko", matches: 3, minutes: 135, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M2, 0), m(M1, 45, [], ["65'"]), m(CUP1, 90)] },
-  { name: "Dawid Bubień", matches: 3, minutes: 120, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 90), m(M1, 30), m(CUP1, 0)] },
+  { name: "Dawid Bubień", matches: 4, minutes: 210, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 90), m(M1, 30), m(CUP1, 0)] },
   // Poniżsi nie mieli jeszcze zgłoszonego profilu/występu w kadrze meczowej
   // na laczynaspilka.pl w tym sezonie (być może dopiero dołączyli do klubu):
   { name: "Filip Kubiak", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
