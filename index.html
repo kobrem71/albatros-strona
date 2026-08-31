@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=36" />
+<link rel="stylesheet" href="css/style.css?v=37" />
 </head>
 <body>
 
@@ -143,13 +143,20 @@
      bez atrybutu hidden: menu / gra / wynik / statystyki. -->
 <div id="gabryssim-overlay" class="gabryssim-overlay" hidden>
 
-  <div id="gabryssim-menu" class="gabryssim-screen gabryssim-photo-screen">
-    <button id="gabryssim-menu-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
-    <nav class="gabryssim-topmenu">
-      <button id="gabryssim-play-btn" class="gabryssim-menu-btn" type="button">Strzel se wolnego</button>
-      <button id="gabryssim-stats-btn" class="gabryssim-menu-btn" type="button">Sprawdź statystyki</button>
-      <button id="gabryssim-exit-btn" class="gabryssim-menu-btn" type="button">Wyjdź z gry</button>
-    </nav>
+  <!-- Uwaga: "stage" (zdjęcie 3:2) jest DZIECKIEM ekranu, nie samym ekranem —
+       ekran (.gabryssim-screen) wypełnia cały viewport i przez display:flex
+       centruje w sobie ten mniejszy "stage", niezależnie od proporcji
+       urządzenia (telefon pionowo / przeglądarka poziomo). Piłka, pasek i
+       menu są w środku "stage", bo ich pozycje % są liczone względem NIEGO. -->
+  <div id="gabryssim-menu" class="gabryssim-screen">
+    <div class="gabryssim-stage">
+      <button id="gabryssim-menu-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+      <nav class="gabryssim-topmenu">
+        <button id="gabryssim-play-btn" class="gabryssim-menu-btn" type="button">Strzel se wolnego</button>
+        <button id="gabryssim-stats-btn" class="gabryssim-menu-btn" type="button">Sprawdź statystyki</button>
+        <button id="gabryssim-exit-btn" class="gabryssim-menu-btn" type="button">Wyjdź z gry</button>
+      </nav>
+    </div>
   </div>
 
   <!-- Ekran ładowania — pokazywany od razu po "Strzel se wolnego", zanim
@@ -174,24 +181,28 @@
   <!-- Wybór rodzaju strzału (mnożnik szansy na gola) — pokazywany po
        doładowaniu, przed przytrzymaniem piłki. Przyciski z data-shot="…" są
        wiązane z SHOT_TYPES w js/gabryssim.js. -->
-  <div id="gabryssim-shottype" class="gabryssim-screen gabryssim-photo-screen" hidden>
-    <button id="gabryssim-shottype-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
-    <nav class="gabryssim-topmenu gabryssim-shottype-menu">
-      <button class="gabryssim-menu-btn" type="button" data-shot="petarda">Petarda (x0,8)</button>
-      <button class="gabryssim-menu-btn" type="button" data-shot="techniczny">Technicznie (x0,5)</button>
-      <button class="gabryssim-menu-btn" type="button" data-shot="podcinka">Podcinka (x0,3)</button>
-      <button class="gabryssim-menu-btn" type="button" data-shot="prawa-noga">Prawa noga (x0)</button>
-    </nav>
+  <div id="gabryssim-shottype" class="gabryssim-screen" hidden>
+    <div class="gabryssim-stage">
+      <button id="gabryssim-shottype-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+      <nav class="gabryssim-topmenu gabryssim-shottype-menu">
+        <button class="gabryssim-menu-btn" type="button" data-shot="petarda">Petarda (x0,8)</button>
+        <button class="gabryssim-menu-btn" type="button" data-shot="techniczny">Technicznie (x0,5)</button>
+        <button class="gabryssim-menu-btn" type="button" data-shot="podcinka">Podcinka (x0,3)</button>
+        <button class="gabryssim-menu-btn" type="button" data-shot="prawa-noga">Prawa noga (x0)</button>
+      </nav>
+    </div>
   </div>
 
-  <div id="gabryssim-game" class="gabryssim-screen gabryssim-photo-screen" hidden>
-    <button id="gabryssim-game-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
-    <button id="gabryssim-ball" class="gabryssim-ball" type="button" aria-label="Przytrzymaj i puść"></button>
-    <div class="gabryssim-bar-panel">
-      <p id="gabryssim-hint" class="gabryssim-hint">Przytrzymaj piłkę i puść dokładnie w środku paska</p>
-      <div class="gabryssim-bar-track">
-        <div id="gabryssim-bar-fill" class="gabryssim-bar-fill"></div>
-        <div class="gabryssim-bar-center"></div>
+  <div id="gabryssim-game" class="gabryssim-screen" hidden>
+    <div class="gabryssim-stage">
+      <button id="gabryssim-game-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+      <button id="gabryssim-ball" class="gabryssim-ball" type="button" aria-label="Przytrzymaj i puść"></button>
+      <div class="gabryssim-bar-panel">
+        <p id="gabryssim-hint" class="gabryssim-hint">Przytrzymaj piłkę i puść dokładnie w środku paska</p>
+        <div class="gabryssim-bar-track">
+          <div id="gabryssim-bar-fill" class="gabryssim-bar-fill"></div>
+          <div class="gabryssim-bar-center"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -253,7 +264,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=36"></script>
+<script type="module" src="js/app.js?v=37"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

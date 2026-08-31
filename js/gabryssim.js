@@ -12,7 +12,7 @@
 // strzału. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a
 // każdy strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
 // js/store.js).
-import { getStore } from "./store.js?v=36";
+import { getStore } from "./store.js?v=37";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia
@@ -42,9 +42,9 @@ const LOADING_GRID_COLUMNS = 4;
 const LOADING_GRID_ROWS = 3;
 
 const NO_GOAL_CAPTION = "Zabłotny broni - Kolejarz wygrywa";
-const NO_GOAL_CAPTION_DELAY_MS = 1000; // ile MINIMUM pokazujemy "no goal.gif" zanim wejdzie plansza z napisem
+const NO_GOAL_CAPTION_DELAY_MS = 2000; // ile MINIMUM pokazujemy "no goal.gif" zanim wejdzie plansza z napisem
 const NO_GOAL_AUTO_RETURN_MS = 5000; // ile plansza z napisem stoi, zanim sama wróci do menu
-const GOAL_CHEER_DELAY_MS = 1000; // ile MINIMUM pokazujemy "goal gif.gif" zanim wejdzie wideo z celebracją
+const GOAL_CHEER_DELAY_MS = 2000; // ile MINIMUM pokazujemy "goal gif.gif" zanim wejdzie wideo z celebracją
 const MEDIA_READY_TIMEOUT_MS = 8000; // maks. czas czekania na doładowanie się pojedynczego gifa/wideo, zanim przejdziemy dalej mimo wszystko (żeby nigdy nie zostać na czarnym ekranie w nieskończoność)
 
 // Moduł trzyma swój własny mały stan (nie wchodzi do wspólnego state w

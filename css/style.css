@@ -1119,14 +1119,25 @@ main {
 }
 .gabryssim-screen[hidden] { display: none; }
 
-/* Ekrany "menu" i "gra": zdjęcie tła w stałej proporcji 3:2 (taka jak
-   "1 wolny.png", 1536x1024), żeby piłka-przycisk i pasek mocy dało się
-   ustawić procentowo dokładnie na piłce ze zdjęcia, niezależnie od
-   rozmiaru ekranu — patrz komentarz przy .gabryssim-ball. */
-.gabryssim-photo-screen {
+/* "Stage" wewnątrz ekranów menu/wybór strzału/gra: zdjęcie tła w stałej
+   proporcji 3:2 (taka jak "1 wolny.png", 1536x1024), żeby piłka-przycisk i
+   pasek mocy dało się ustawić procentowo dokładnie na piłce ze zdjęcia,
+   niezależnie od rozmiaru/proporcji ekranu — patrz komentarz przy
+   .gabryssim-ball. To musi być ODDZIELNY element od .gabryssim-screen (a
+   NIE te same klasy na jednym divie, jak było wcześniej) — inaczej explicit
+   width/height tutaj nadpisuje position:absolute z .gabryssim-screen (ta
+   sama specyficzność, ta reguła jest niżej w pliku) i "stage" wypada z
+   wypełniania-viewportu, więc .gabryssim-screen nie ma już jak go
+   wyśrodkować — zamiast na środku, zdjęcie lądowało przyklejone do lewego
+   górnego rogu (i na telefonie, i w przeglądarce). Teraz .gabryssim-screen
+   zostaje pełnoekranowym flex-kontenerem, a .gabryssim-stage jest jego
+   zwykłym, wyśrodkowanym dzieckiem. */
+.gabryssim-stage {
   position: relative;
   width: min(100vw, 150vh);
   height: min(66.67vw, 100vh);
+  max-width: 100%;
+  max-height: 100%;
   background-image: url("../assets/gabryssim/1%20wolny.png");
   background-size: cover;
   background-position: center;
@@ -1186,7 +1197,12 @@ main {
 /* ---------- Ekran ładowania (mozaika wideo jak na stronie głównej + realny
    pasek postępu) ---------- */
 .gabryssim-loading-screen { background: #0a1330; }
-.gabryssim-loading-grid { gap: 3px; }
+/* .bg-grid ustawia position:absolute;inset:0, ale wewnątrz flex-kontenera
+   (.gabryssim-screen) samo inset:0 czasem nie daje wierszom siatki (fr)
+   policzalnej wysokości — stąd jawne width/height 100% obok, żeby siatka
+   filmików na pewno miała rozmiar (bez tego komórki .bg-cell potrafiły
+   wychodzić 0x0 i cały mozaikowy background po prostu nie był widoczny). */
+.gabryssim-loading-grid { width: 100%; height: 100%; gap: 3px; }
 .gabryssim-loading-overlay {
   position: absolute;
   inset: 0;
@@ -1216,7 +1232,7 @@ main {
 /* Piłka-przycisk: umieszczona procentowo dokładnie na piłce widocznej na
    "1 wolny.png" (środek ~41% szerokości / 85% wysokości zdjęcia, zmierzone
    na oryginalnym pliku). Wysokość = szerokość * 1.5, bo stage ma proporcję
-   3:2 (1536x1024) — patrz .gabryssim-photo-screen — więc taki przelicznik
+   3:2 (1536x1024) — patrz .gabryssim-stage — więc taki przelicznik
    utrzymuje kółko (a nie owal) niezależnie od rozmiaru ekranu. */
 .gabryssim-ball {
   position: absolute;
