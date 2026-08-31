@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=31";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=33";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
@@ -165,6 +165,14 @@ function createLocalStore() {
       writeLocal(DEMO_VISITS_KEY, data);
       notifyVisits();
     },
+    // Powiadomienia push wymagają prawdziwego Firebase (wysyłka idzie przez
+    // Firebase Console — patrz README) — w trybie demo nie ma czego włączać.
+    async getMessagingToken() {
+      return null;
+    },
+    async savePushToken() {
+      /* no-op w trybie demo */
+    },
   };
 }
 
@@ -287,6 +295,21 @@ async function createFirebaseStore() {
         { name, count: increment(1), lastVisit: serverTimestamp() },
         { merge: true }
       );
+    },
+    // Rejestruje TO urządzenie do odbierania powiadomień push — zwraca token
+    // FCM (albo null, jeśli przeglądarka odmówiła/nie wspiera). Samo
+    // wysyłanie push jest RĘCZNE, z poziomu Firebase Console (patrz README),
+    // więc ten token zapisujemy tylko do wglądu/debugowania (savePushToken
+    // niżej) — Firebase Console sam wie, do jakich urządzeń wysyłać "wszystkim".
+    async getMessagingToken(vapidKey, swRegistration) {
+      const { getMessaging, getToken } = await import(
+        "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js"
+      );
+      const messaging = getMessaging(app);
+      return getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
+    },
+    async savePushToken(token, info) {
+      await setDoc(doc(db, "pushTokens", token), { ...info, updatedAt: serverTimestamp() }, { merge: true });
     },
   };
 }

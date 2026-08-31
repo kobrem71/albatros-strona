@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=31" />
+<link rel="stylesheet" href="css/style.css?v=33" />
 </head>
 <body>
 
@@ -109,6 +109,10 @@
     <button id="message-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
     <h2>Wiadomości do wszystkich</h2>
     <p class="muted">OGŁOSZENIA PARAFIALNE</p>
+    <div class="push-optin-row">
+      <button id="push-optin-btn" class="link-btn" type="button">🔔 Włącz powiadomienia push na tym urządzeniu</button>
+      <span id="push-optin-status" class="muted push-optin-status"></span>
+    </div>
     <div id="message-list" class="message-list"></div>
     <div id="message-compose" class="message-compose" hidden>
       <textarea id="message-input" class="message-input" placeholder="Napisz wiadomość do wszystkich…" rows="2"></textarea>
@@ -168,7 +172,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=31"></script>
+<script type="module" src="js/app.js?v=33"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

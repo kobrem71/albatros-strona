@@ -151,6 +151,53 @@ Jeśli chcesz zmienić ikonę (np. inny wariant logo), podmień pliki w
 `assets/img/icons/` (te same nazwy, te same wymiary) — nic więcej nie trzeba
 przestawiać.
 
+## 7. Powiadomienia push (opcjonalne, ręczne)
+
+Strona potrafi wysyłać powiadomienia push (te systemowe, jak z prawdziwej
+apki) — np. gdy nikt się nie zapisuje na trening albo mecz i trzeba kogoś
+zmobilizować. Wysyłka jest celowo **ręczna** — apka sama niczego nie wysyła
+(ani automatycznie, ani gdy ktoś doda wiadomość w "Wiadomości do
+wszystkich") — bo bezpieczna, automatyczna wysyłka wymagałaby prawdziwego
+backendu (Cloud Functions + płatny plan Firebase). Ty wysyłasz ręcznie z
+poziomu Firebase Console, kiedy akurat chcesz.
+
+### Jednorazowa konfiguracja (ok. 2 minuty)
+
+1. Firebase Console → koło zębate (u góry po lewej) → **Project settings** →
+   zakładka **Cloud Messaging**.
+2. Sekcja "Web configuration" → **Web Push certificates** → **Generate key
+   pair** (jeśli jeszcze nie ma klucza).
+3. Skopiuj wygenerowany klucz i wklej go jako `FIREBASE_VAPID_KEY` w pliku
+   **`js/firebase-config.js`** (na końcu pliku, sekcja "POWIADOMIENIA PUSH").
+4. Zapisz, `git add . && git commit -m "Klucz push" && git push`.
+
+Jeśli chcesz wysyłać do **wszystkich** urządzeń na raz jednym kliknięciem
+(zamiast wklejać pojedyncze tokeny w "Send test message"), włącz też Google
+Analytics dla projektu Firebase (Project settings → Integrations →
+Google Analytics → Enable) — dzięki temu w kreatorze kampanii (patrz niżej)
+pojawi się opcja wysłania do wszystkich użytkowników aplikacji. To też jest
+darmowe i nie wymaga karty płatniczej.
+
+### Jak wysłać powiadomienie
+
+1. Każdy, kto ma dostać powiadomienia, musi raz kliknąć **"🔔 Włącz
+   powiadomienia push na tym urządzeniu"** w oknie "Wiadomości do
+   wszystkich" i zgodzić się w przeglądarce. (Na iPhonie działa to tylko po
+   dodaniu strony do ekranu głównego, iOS 16.4+ — w zwykłej przeglądarce
+   Safari nie zadziała; na Androidzie/Chrome działa bez instalowania.)
+2. Wejdź na https://console.firebase.google.com → wybierz projekt → w menu
+   z lewej **Messaging** (sekcja "Engage" / "DevOps & Engagement") → **New
+   campaign** → **Notifications**.
+3. Wpisz treść, w kroku "Target" wybierz swoją aplikację webową (i, jeśli
+   skonfigurowałeś Analytics jak wyżej, zakres "wszyscy użytkownicy") →
+   **Review** → **Publish**.
+
+Wysyłanie wiadomości w samej apce (przycisk "Wyślij" w oknie "Wiadomości do
+wszystkich") i wysyłanie push to dwa **osobne** kroki — apka o tym celowo nie
+przypomina automatycznie, ale możesz robić jedno po drugim: najpierw
+napisać ogłoszenie na czacie, potem (jeśli sprawa jest pilna) wysłać do tego
+jeszcze push z Firebase Console.
+
 ## Jak działają zapisy (Tak / Nie / HGW)
 
 Przy pierwszej wizycie gracz wybiera swoje imię i nazwisko z listy u góry
@@ -166,7 +213,7 @@ index.html              strona główna
 css/style.css            wygląd
 js/players.js             lista graczy
 js/schedule.js            plan zajęć (edytuj co tydzień)
-js/firebase-config.js     dane Twojego projektu Firebase
+js/firebase-config.js     dane Twojego projektu Firebase + klucz VAPID (push)
 js/store.js               logika zapisu (Firebase albo tryb demo)
 js/app.js                 cała logika strony
 assets/img/logo.png       logo klubu
@@ -174,6 +221,6 @@ assets/img/players/       zdjęcia graczy (dorzucasz sam)
 assets/img/icons/         ikony aplikacji (PWA, ekran główny telefonu)
 assets/gifs/*.mp4         filmiki tła (losowane)
 manifest.json             konfiguracja PWA (nazwa, ikony, kolory)
-sw.js                     Service Worker (wymagany do instalacji jako appka)
+sw.js                     Service Worker (instalacja jako appka + odbiór push)
 firestore.rules           reguły bezpieczeństwa bazy (wklej w Firebase)
 ```

@@ -32,3 +32,25 @@ export const FIREBASE_CONFIG = {
 export function isFirebaseConfigured() {
   return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 }
+
+// ============================================================================
+//  POWIADOMIENIA PUSH (opcjonalne, RĘCZNE — patrz README, sekcja
+//  "Powiadomienia push") — klucz publiczny "Web Push certificate", NIE jest
+//  tajny (tak jak apiKey powyżej), bezpiecznie widoczny w kodzie strony.
+//
+// Jak uzupełnić (jednorazowo, ok. 2 minuty):
+//   1. Firebase Console → koło zębate → Project settings → zakładka
+//      "Cloud Messaging".
+//   2. Sekcja "Web configuration" → "Web Push certificates" → "Generate key
+//      pair" (jeśli jeszcze nie ma klucza).
+//   3. Skopiuj wygenerowany klucz i wklej poniżej.
+//   4. WAŻNE: te same wartości (apiKey/projectId/messagingSenderId/appId
+//      z FIREBASE_CONFIG powyżej) trzeba też ręcznie wkleić do `sw.js`
+//      (sekcja "POWIADOMIENIA PUSH" na górze tego pliku) — Service Worker to
+//      osobny, "klasyczny" skrypt i nie może zaimportować tego pliku.
+// ============================================================================
+export const FIREBASE_VAPID_KEY = "";
+
+export function isPushConfigured() {
+  return Boolean(FIREBASE_VAPID_KEY) && isFirebaseConfigured();
+}

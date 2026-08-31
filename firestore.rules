@@ -63,6 +63,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Tokeny urządzeń zarejestrowanych do powiadomień push (dokument = token
+    // FCM). Sama wysyłka push jest ręczna, z Firebase Console (patrz
+    // README) — ta kolekcja służy tylko do zapisania/podglądu, kto włączył
+    // powiadomienia na swoim urządzeniu.
+    match /pushTokens/{token} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

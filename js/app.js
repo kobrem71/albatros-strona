@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=31";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=31";
-import { isFirebaseConfigured } from "./firebase-config.js?v=31";
-import { getStore } from "./store.js?v=31";
+import { PLAYERS, slugify } from "./players.js?v=33";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=33";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=33";
+import { getStore } from "./store.js?v=33";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,7 +21,7 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=31";
+} from "./league-data.js?v=33";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1638,7 +1638,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=31";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=33";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2132,29 +2132,41 @@ function staffVisitKey(roleKey) {
   return `staff:${roleKey}`;
 }
 
+// "lastVisit" jest różnego typu w zależności od trybu: w Firebase to obiekt
+// Firestore Timestamp (ma metodę toDate()), w trybie demo to zwykły numer z
+// Date.now(). Tuż po zapisie (zanim Firestore potwierdzi serverTimestamp())
+// bywa też chwilowo puste — wtedy pokazujemy "—".
+function formatVisitTimestamp(ts) {
+  if (!ts) return "—";
+  const date = typeof ts.toDate === "function" ? ts.toDate() : new Date(ts);
+  if (Number.isNaN(date.getTime())) return "—";
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function renderVisitsTable(tableEl) {
-  const staffEntries = Object.keys(STAFF).map((roleKey) => ({
-    name: `${STAFF[roleKey].name} (${roleKey})`,
-    count: state.visitCounts[staffVisitKey(roleKey)]?.count || 0,
-  }));
-  const playerEntries = PLAYERS.map((p) => ({
-    name: p.name,
-    count: state.visitCounts[p.slug]?.count || 0,
-  }));
+  const staffEntries = Object.keys(STAFF).map((roleKey) => {
+    const v = state.visitCounts[staffVisitKey(roleKey)];
+    return { name: `${STAFF[roleKey].name} (${roleKey})`, count: v?.count || 0, lastVisit: v?.lastVisit };
+  });
+  const playerEntries = PLAYERS.map((p) => {
+    const v = state.visitCounts[p.slug];
+    return { name: p.name, count: v?.count || 0, lastVisit: v?.lastVisit };
+  });
 
   const rows = [...staffEntries, ...playerEntries]
     .sort((a, b) => b.count - a.count)
     .map(
-      ({ name, count }) => `
+      ({ name, count, lastVisit }) => `
         <tr>
           <td class="league-stats-name">${escapeHtml(name)}</td>
           <td>${count}</td>
+          <td>${formatVisitTimestamp(lastVisit)}</td>
         </tr>`
     )
     .join("");
 
   tableEl.innerHTML = `
-    <thead><tr><th>Gracz</th><th>Wizyty</th></tr></thead>
+    <thead><tr><th>Gracz</th><th>Wizyty</th><th>Ostatnia wizyta</th></tr></thead>
     <tbody>${rows}</tbody>`;
 }
 
@@ -2218,6 +2230,68 @@ async function recordCurrentVisit() {
 }
 
 // ---------------------------------------------------------------------------
+// 4h. Powiadomienia push (opcjonalne, RĘCZNE) — przycisk w oknie
+// "Wiadomości do wszystkich" tylko REJESTRUJE to urządzenie do odbierania
+// push (prosi o zgodę przeglądarki + zapisuje token w bazie do wglądu).
+// Samą wysyłkę robi Krzysztof ręcznie z Firebase Console (Messaging -> New
+// campaign -> wszyscy użytkownicy aplikacji) — patrz README, sekcja
+// "Powiadomienia push". Wysyłanie wiadomości na czacie w apce (sendMessage)
+// NIE wywołuje push automatycznie — to są celowo dwa osobne kroki.
+// ---------------------------------------------------------------------------
+const PUSH_ENABLED_KEY = "albatros_push_enabled_v1";
+
+function pushSupported() {
+  return "Notification" in window && "serviceWorker" in navigator && isPushConfigured();
+}
+
+async function enablePushNotifications(statusEl) {
+  if (!pushSupported()) return;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      if (statusEl) statusEl.textContent = "Nie zgodzono się na powiadomienia w przeglądarce.";
+      return;
+    }
+    const swRegistration = await navigator.serviceWorker.ready;
+    store = store || (await getStore());
+    const token = await store.getMessagingToken(FIREBASE_VAPID_KEY, swRegistration);
+    if (!token) {
+      if (statusEl) statusEl.textContent = "Nie udało się włączyć powiadomień — spróbuj ponownie.";
+      return;
+    }
+    const player = PLAYERS.find((p) => p.slug === state.identitySlug);
+    const name = state.role && STAFF[state.role] ? STAFF[state.role].name : player ? player.name : "";
+    await store.savePushToken(token, { name, slug: state.identitySlug || null, role: state.role || null });
+    localStorage.setItem(PUSH_ENABLED_KEY, "1");
+    if (statusEl) statusEl.textContent = "✅ Powiadomienia włączone na tym urządzeniu.";
+  } catch (err) {
+    console.error("Nie udało się włączyć powiadomień push:", err);
+    if (statusEl) statusEl.textContent = "Nie udało się włączyć powiadomień (szczegóły w konsoli).";
+  }
+}
+
+function initPushOptIn() {
+  const btn = document.getElementById("push-optin-btn");
+  const statusEl = document.getElementById("push-optin-status");
+  if (!btn) return;
+
+  if (!pushSupported()) {
+    // Firebase bez skonfigurowanego klucza VAPID (patrz firebase-config.js)
+    // albo przeglądarka bez wsparcia dla powiadomień — nie ma co proponować.
+    btn.hidden = true;
+    return;
+  }
+
+  if (Notification.permission === "granted" && localStorage.getItem(PUSH_ENABLED_KEY)) {
+    if (statusEl) statusEl.textContent = "✅ Powiadomienia włączone na tym urządzeniu.";
+  } else if (Notification.permission === "denied") {
+    if (statusEl) statusEl.textContent = "Zablokowane w ustawieniach przeglądarki — odblokuj ręcznie, żeby włączyć.";
+  }
+
+  btn.addEventListener("click", () => enablePushNotifications(statusEl));
+}
+
+// ---------------------------------------------------------------------------
 // 5. Start
 // ---------------------------------------------------------------------------
 async function init() {
@@ -2230,6 +2304,7 @@ async function init() {
   initTacticPickerOverlay();
   initMessageButton();
   initVisitsButton();
+  initPushOptIn();
   renderIdentityBar();
   updateMessageBadge();
   renderSchedule();

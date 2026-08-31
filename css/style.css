@@ -1005,6 +1005,14 @@ main {
   box-shadow: 0 0 0 2px #0a1330;
 }
 .message-panel { max-width: 560px; display: flex; flex-direction: column; }
+.push-optin-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 4px;
+}
+.push-optin-status { font-size: 0.82rem; }
 .message-list {
   display: flex;
   flex-direction: column;
