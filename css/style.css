@@ -1183,6 +1183,36 @@ main {
 .gabryssim-shottype-menu { gap: 8px; }
 .gabryssim-shottype-menu .gabryssim-menu-btn { padding: 10px 16px; font-size: 0.92rem; }
 
+/* ---------- Ekran ładowania (mozaika wideo jak na stronie głównej + realny
+   pasek postępu) ---------- */
+.gabryssim-loading-screen { background: #0a1330; }
+.gabryssim-loading-grid { gap: 3px; }
+.gabryssim-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 15, 40, 0.82) 0%, rgba(20, 15, 55, 0.68) 45%, rgba(8, 12, 32, 0.88) 100%);
+}
+.gabryssim-loading-panel {
+  position: relative;
+  z-index: 2;
+  width: min(80%, 380px);
+  text-align: center;
+}
+.gabryssim-loading-label {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+.gabryssim-loading-panel .gabryssim-bar-track { height: 16px; border-radius: 8px; }
+.gabryssim-loading-skip {
+  display: inline-block;
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+.gabryssim-loading-skip:hover { color: var(--ink); }
+
 /* Piłka-przycisk: umieszczona procentowo dokładnie na piłce widocznej na
    "1 wolny.png" (środek ~41% szerokości / 85% wysokości zdjęcia, zmierzone
    na oryginalnym pliku). Wysokość = szerokość * 1.5, bo stage ma proporcję

@@ -12,7 +12,7 @@
 // strzału. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a
 // każdy strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
 // js/store.js).
-import { getStore } from "./store.js?v=35";
+import { getStore } from "./store.js?v=36";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia
@@ -34,11 +34,18 @@ const GOAL_GIF = ASSET_BASE + "goal%20gif.gif";
 const NO_GOAL_GIF = ASSET_BASE + "no%20goal.gif";
 const CHEER_VIDEO = ASSET_BASE + "cheering%20after%20goal.mp4";
 
+// Te same filmiki co w mozaice tła na stronie głównej (patrz BG_VIDEOS w
+// js/app.js) — puszczone też na ekranie ładowania Symulatora Gabrysia, żeby
+// czekanie na duże gify/wideo wyniku nie wyglądało na zawieszenie strony.
+const LOADING_BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => `assets/gifs/gif${n}.mp4`);
+const LOADING_GRID_COLUMNS = 4;
+const LOADING_GRID_ROWS = 3;
+
 const NO_GOAL_CAPTION = "Zabłotny broni - Kolejarz wygrywa";
 const NO_GOAL_CAPTION_DELAY_MS = 1000; // ile MINIMUM pokazujemy "no goal.gif" zanim wejdzie plansza z napisem
 const NO_GOAL_AUTO_RETURN_MS = 5000; // ile plansza z napisem stoi, zanim sama wróci do menu
 const GOAL_CHEER_DELAY_MS = 1000; // ile MINIMUM pokazujemy "goal gif.gif" zanim wejdzie wideo z celebracją
-const MEDIA_READY_TIMEOUT_MS = 6000; // maks. czas czekania na doładowanie się gifa/wideo, zanim przejdziemy dalej mimo wszystko (żeby nigdy nie zostać na czarnym ekranie w nieskończoność)
+const MEDIA_READY_TIMEOUT_MS = 8000; // maks. czas czekania na doładowanie się pojedynczego gifa/wideo, zanim przejdziemy dalej mimo wszystko (żeby nigdy nie zostać na czarnym ekranie w nieskończoność)
 
 // Moduł trzyma swój własny mały stan (nie wchodzi do wspólnego state w
 // app.js — statystyki wolnych i tak przychodzą osobno, z bazy).
@@ -47,12 +54,20 @@ let superuserSlug = "";
 let store = null;
 let stats = { attempts: 0, goals: 0 };
 let selectedShotType = SHOT_TYPES[0];
-let assetsPreloaded = false;
+
+// Preload assetów wyniku — trzymane w zmiennych modułu (NIE lokalnie w
+// funkcji!), bo anonimowy `new Image()`/`document.createElement("video")`
+// bez żadnej referencji bywa w niektórych przeglądarkach wcześniej
+// odśmiecany przez GC w trakcie ładowania, co po cichu przerywa pobieranie —
+// to był realny powód, dla którego gif/wideo czasem w ogóle się nie
+// pojawiały. Patrz ensurePreloadStarted() niżej.
+let preload = null; // { goalImg, noGoalImg, video, goalP, noGoalP, videoP }
 
 let holdStartTs = 0;
 let isHolding = false;
 let autoReturnTimer = null; // timer "po 5 sekundach wróć do menu" (i jego ewentualne anulowanie przy X)
 let resultTransitionTimer = null; // timer "minimalny czas pokazania gifa" przed próbą przejścia dalej
+let loadingAdvanceTimer = null; // timer "mały poślizg po dopełnieniu paska ładowania", żeby zdążyło się to zobaczyć na 100%
 let resultToken = 0; // rośnie przy każdym showMenu/closeOverlay/startGame/showResult — pozwala ignorować "spóźnione" async-callbacki z poprzedniego strzału (np. gdy ktoś kliknie X w trakcie ładowania wideo)
 
 function el(id) {
@@ -83,10 +98,14 @@ function clearTimers() {
     clearTimeout(resultTransitionTimer);
     resultTransitionTimer = null;
   }
+  if (loadingAdvanceTimer) {
+    clearTimeout(loadingAdvanceTimer);
+    loadingAdvanceTimer = null;
+  }
 }
 
 function showScreen(id) {
-  ["gabryssim-menu", "gabryssim-shottype", "gabryssim-game", "gabryssim-result", "gabryssim-stats"].forEach(
+  ["gabryssim-menu", "gabryssim-loading", "gabryssim-shottype", "gabryssim-game", "gabryssim-result", "gabryssim-stats"].forEach(
     (screenId) => {
       const screen = el(screenId);
       if (screen) screen.hidden = screenId !== id;
@@ -119,24 +138,141 @@ function showMenu() {
   showScreen("gabryssim-menu");
 }
 
-// Zaczyna w tle ściągać gify/wideo wyniku, żeby były już w cache'u
-// przeglądarki, zanim gracz w ogóle odda pierwszy strzał — bez tego duże
-// pliki (1-2 MB) czasem nie zdążyły się załadować w te ustawione 1 s przed
-// przełączeniem ekranu, przez co ekran wyniku bywał czarny/pusty.
-function preloadResultAssets() {
-  if (assetsPreloaded) return;
-  assetsPreloaded = true;
+// --------------------------------------------------------------------------
+// Preload gifów/wideo wyniku — zaczyna się od razu po otwarciu gry (patrz
+// openOverlay), a ekran ładowania (showLoadingScreen) czeka aż się skończy
+// (albo upłynie MEDIA_READY_TIMEOUT_MS na sztukę), zanim odblokuje wybór
+// strzału. Referencje do img/video trzymamy w module (`preload`), żeby
+// przeglądarka nie ubiła pobierania przez GC w trakcie ładowania.
+// --------------------------------------------------------------------------
+function makeImageReadyPromise(url) {
+  const img = new Image();
+  const promise = new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+    img.addEventListener("load", finish, { once: true });
+    img.addEventListener("error", finish, { once: true });
+    setTimeout(finish, MEDIA_READY_TIMEOUT_MS);
+  });
+  img.src = url;
+  return { el: img, promise };
+}
+
+function makeVideoReadyPromise(url) {
+  const video = document.createElement("video");
+  video.preload = "auto";
+  video.muted = true;
+  video.playsInline = true;
+  const promise = new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+    video.addEventListener("canplay", finish, { once: true });
+    video.addEventListener("error", finish, { once: true });
+    setTimeout(finish, MEDIA_READY_TIMEOUT_MS);
+  });
+  video.src = url;
+  video.load();
+  return { el: video, promise };
+}
+
+function ensurePreloadStarted() {
+  if (preload) return preload;
   try {
-    new Image().src = GOAL_GIF;
-    new Image().src = NO_GOAL_GIF;
-    const video = document.createElement("video");
-    video.preload = "auto";
-    video.muted = true;
-    video.src = CHEER_VIDEO;
-    video.load();
+    const goal = makeImageReadyPromise(GOAL_GIF);
+    const noGoal = makeImageReadyPromise(NO_GOAL_GIF);
+    const video = makeVideoReadyPromise(CHEER_VIDEO);
+    preload = {
+      goalImg: goal.el,
+      noGoalImg: noGoal.el,
+      video: video.el,
+      goalP: goal.promise,
+      noGoalP: noGoal.promise,
+      videoP: video.promise,
+    };
   } catch (err) {
     console.error("Nie udało się podgrzać cache'u assetów Symulatora Gabrysia:", err);
+    preload = {
+      goalImg: null,
+      noGoalImg: null,
+      video: null,
+      goalP: Promise.resolve(),
+      noGoalP: Promise.resolve(),
+      videoP: Promise.resolve(),
+    };
   }
+  return preload;
+}
+
+// Buduje raz mozaikę wideo w tle ekranu ładowania — te same pliki co na
+// stronie głównej (patrz LOADING_BG_VIDEOS), losowo porozstawiane w siatce.
+function buildLoadingGrid() {
+  const grid = el("gabryssim-loading-grid");
+  if (!grid || grid.childElementCount > 0) return;
+  grid.style.gridTemplateColumns = `repeat(${LOADING_GRID_COLUMNS}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${LOADING_GRID_ROWS}, 1fr)`;
+  for (let i = 0; i < LOADING_GRID_COLUMNS * LOADING_GRID_ROWS; i++) {
+    const cell = document.createElement("div");
+    cell.className = "bg-cell";
+    const video = document.createElement("video");
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.src = LOADING_BG_VIDEOS[Math.floor(Math.random() * LOADING_BG_VIDEOS.length)];
+    video.play().catch(() => {});
+    cell.appendChild(video);
+    grid.appendChild(cell);
+  }
+}
+
+// Ekran ładowania — pokazywany po kliknięciu "Strzel se wolnego", zanim
+// odblokuje się wybór rodzaju strzału. Pasek pokazuje realny postęp (0/3 ->
+// 3/3 gotowych assetów), nie animację na niby — jeśli assety są już gotowe
+// z wcześniejszego preloadu, pasek po prostu od razu skacze w okolice 100%.
+function showLoadingScreen() {
+  resultToken++;
+  clearTimers();
+  showScreen("gabryssim-loading");
+  buildLoadingGrid();
+
+  const fill = el("gabryssim-loading-fill");
+  if (fill) {
+    fill.style.transition = "none";
+    fill.style.width = "0%";
+  }
+
+  const p = ensurePreloadStarted();
+  const myToken = resultToken;
+  let readyCount = 0;
+  const bump = () => {
+    if (myToken !== resultToken) return; // gracz zdążył wyjść/pominąć — nie dotykaj już niczego
+    readyCount++;
+    if (fill) {
+      fill.style.transition = "width 300ms ease-out";
+      fill.style.width = `${Math.round((readyCount / 3) * 100)}%`;
+    }
+  };
+  p.goalP.then(bump);
+  p.noGoalP.then(bump);
+  p.videoP.then(bump);
+
+  Promise.all([p.goalP, p.noGoalP, p.videoP]).then(() => {
+    if (myToken !== resultToken) return;
+    // Mała pauza, żeby pasek zdążył wizualnie dojechać do 100%, zanim
+    // przełączymy ekran.
+    loadingAdvanceTimer = setTimeout(() => {
+      if (myToken !== resultToken) return;
+      showShotTypeScreen();
+    }, 250);
+  });
 }
 
 function openOverlay() {
@@ -144,7 +280,7 @@ function openOverlay() {
   const overlay = el("gabryssim-overlay");
   if (!overlay) return;
   overlay.hidden = false;
-  preloadResultAssets();
+  ensurePreloadStarted(); // zacznij ładować już teraz, żeby ekran ładowania miał jak najmniej do czekania
   showMenu();
 }
 
@@ -419,7 +555,9 @@ export function initGabryssim(appState, superuserSlugArg) {
 
   el("gabryssim-menu-exit")?.addEventListener("click", closeOverlay);
   el("gabryssim-exit-btn")?.addEventListener("click", closeOverlay);
-  el("gabryssim-play-btn")?.addEventListener("click", showShotTypeScreen);
+  el("gabryssim-play-btn")?.addEventListener("click", showLoadingScreen);
+  el("gabryssim-loading-exit")?.addEventListener("click", closeOverlay);
+  el("gabryssim-loading-skip")?.addEventListener("click", showShotTypeScreen);
   el("gabryssim-shottype-exit")?.addEventListener("click", closeOverlay);
   el("gabryssim-stats-btn")?.addEventListener("click", openStats);
   el("gabryssim-stats-close")?.addEventListener("click", showMenu);

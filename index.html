@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=35" />
+<link rel="stylesheet" href="css/style.css?v=36" />
 </head>
 <body>
 
@@ -152,9 +152,28 @@
     </nav>
   </div>
 
+  <!-- Ekran ładowania — pokazywany od razu po "Strzel se wolnego", zanim
+       gify/wideo wyniku (goal gif / no goal gif / cheering wideo) zdążą się
+       w pełni zbuforować. Tło: taka sama mozaika wideo jak na stronie
+       głównej (.bg-grid/.bg-cell), budowana w js/gabryssim.js. Pasek u góry
+       pokazuje realny postęp ładowania (0/3 -> 3/3 assetów), nie animację na
+       niby. -->
+  <div id="gabryssim-loading" class="gabryssim-screen gabryssim-loading-screen" hidden>
+    <div id="gabryssim-loading-grid" class="bg-grid gabryssim-loading-grid"></div>
+    <div class="gabryssim-loading-overlay"></div>
+    <button id="gabryssim-loading-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <div class="gabryssim-loading-panel">
+      <p class="gabryssim-loading-label">Ładowanie…</p>
+      <div class="gabryssim-bar-track">
+        <div id="gabryssim-loading-fill" class="gabryssim-bar-fill"></div>
+      </div>
+      <button id="gabryssim-loading-skip" class="link-btn gabryssim-loading-skip" type="button">Pomiń</button>
+    </div>
+  </div>
+
   <!-- Wybór rodzaju strzału (mnożnik szansy na gola) — pokazywany po
-       "Strzel se wolnego", przed przytrzymaniem piłki. Przyciski z
-       data-shot="…" są wiązane z SHOT_TYPES w js/gabryssim.js. -->
+       doładowaniu, przed przytrzymaniem piłki. Przyciski z data-shot="…" są
+       wiązane z SHOT_TYPES w js/gabryssim.js. -->
   <div id="gabryssim-shottype" class="gabryssim-screen gabryssim-photo-screen" hidden>
     <button id="gabryssim-shottype-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
     <nav class="gabryssim-topmenu gabryssim-shottype-menu">
@@ -234,7 +253,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=35"></script>
+<script type="module" src="js/app.js?v=36"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
