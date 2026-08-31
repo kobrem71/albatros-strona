@@ -327,6 +327,15 @@ body {
 .league-table tr.is-albatros { background: rgba(224, 178, 58, 0.18); }
 .league-table tr.is-albatros td:nth-child(2) { color: var(--gold); font-weight: 700; }
 
+/* Na wąskich ekranach obie tabele (liga + statystyki) mieściły się w
+   poziomie tylko z przewijaniem w bok — tu ściśnięty padding/czcionka, żeby
+   cała szerokość zmieściła się na jednym ekranie telefonu bez scrollowania. */
+@media (max-width: 600px) {
+  .league-overlay { padding: 24px 8px; }
+  .league-panel { padding: 16px 10px; }
+  .league-table th, .league-table td { padding: 5px 4px; font-size: 0.74rem; }
+}
+
 .league-fixtures { display: flex; flex-direction: column; gap: 8px; }
 .league-fixture {
   display: flex;

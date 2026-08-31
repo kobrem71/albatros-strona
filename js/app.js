@@ -70,8 +70,12 @@ const STAFF = {
 };
 // Poza trenerem i kierownikiem, ten jeden konkretny zawodnik (identyfikowany
 // przez wybór "Kim jesteś?") też ma prawa do edycji taktyki i wysyłania
-// wiadomości do wszystkich.
+// wiadomości do wszystkich. Jego panel (m.in. "Statystyki wizyt") jest
+// dodatkowo zabezpieczony hasłem — tak samo jak trener/kierownik wyżej,
+// pytane tylko raz, potem zapamiętane na tym urządzeniu na zawsze.
 const SUPERUSER_SLUG = "krzysztof-obremski";
+const SUPERUSER_PASSWORD = "jebpzpn";
+const SUPERUSER_VERIFIED_KEY = "albatros_superuser_verified_v1";
 
 const MESSAGES_READ_KEY = "albatros_messages_read_count_v1";
 
@@ -365,6 +369,10 @@ function renderIdentityBar() {
         promptStaffLogin(value.slice("staff:".length));
         return;
       }
+      if (value === SUPERUSER_SLUG && localStorage.getItem(SUPERUSER_VERIFIED_KEY) !== "1") {
+        promptSuperuserLogin(value);
+        return;
+      }
       state.identitySlug = value;
       localStorage.setItem(IDENTITY_KEY, value);
       renderIdentityBar();
@@ -404,6 +412,25 @@ function promptStaffLogin(roleKey) {
     // Złe hasło: zostaje niezalogowany albo na poprzednim swoim loginie —
     // celowo NIE dotykamy state.role/localStorage w ogóle (select już wrócił
     // do pustej opcji w renderIdentityBar, zanim otworzyło się to okno).
+    alert("Błędne hasło.");
+  }
+}
+
+// Hasło tylko przy pierwszym wyborze "Krzysztof Obremski" z listy — po
+// poprawnym wpisaniu zapamiętujemy to na zawsze w localStorage (tak jak
+// STAFF_ROLE_KEY wyżej), więc kolejne logowania na to imię na tym samym
+// urządzeniu już o nic nie pytają.
+function promptSuperuserLogin(slug) {
+  const pwd = window.prompt("Hasło — logowanie jako: Krzysztof Obremski");
+  if (pwd === null) return; // anulowano okno — nic się nie zmienia
+  if (pwd === SUPERUSER_PASSWORD) {
+    localStorage.setItem(SUPERUSER_VERIFIED_KEY, "1");
+    state.identitySlug = slug;
+    localStorage.setItem(IDENTITY_KEY, slug);
+    renderIdentityBar();
+    renderRoster();
+    refreshPermissionUI();
+  } else {
     alert("Błędne hasło.");
   }
 }
@@ -503,6 +530,20 @@ function escapeHtml(str) {
   const d = document.createElement("div");
   d.textContent = str;
   return d.innerHTML;
+}
+
+// Wspólne dla większości okienek (league/player/message/visits/gif): klik w
+// ciemne tło poza panelem i klawisz Escape mają zamykać okno tak samo —
+// zamiast powtarzać te same dwa nasłuchiwacze w każdym initX() osobno.
+// (Okno taktyki ma swoją, nieco inną obsługę Escape — patrz initTacticButton
+// — więc zostaje bez zmian, poza tym wzorcem.)
+function wireOverlayDismiss(overlay, closeOverlay) {
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
+  });
 }
 
 let store = null;
@@ -934,13 +975,8 @@ function initRandomGifButton() {
     else openVideoOverlay();
   });
   closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay(); // klik w tło poza filmikiem
-  });
   video.addEventListener("ended", closeOverlay); // po odtworzeniu -> wraca na główną
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -1619,12 +1655,7 @@ function initPlayerOverlay() {
   }
 
   closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -1955,12 +1986,7 @@ function initTacticPickerOverlay() {
   }
 
   closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -2067,12 +2093,7 @@ function initMessageButton() {
       send();
     }
   });
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 }
 
 function initLeagueButton() {
@@ -2107,12 +2128,7 @@ function initLeagueButton() {
 
   btn.addEventListener("click", openOverlay);
   closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -2195,12 +2211,7 @@ function initVisitsButton() {
 
   btn.addEventListener("click", openOverlay);
   closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeOverlay();
-  });
+  wireOverlayDismiss(overlay, closeOverlay);
 
   refreshVisitsButtonVisibility();
 }
