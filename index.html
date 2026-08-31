@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=38" />
+<link rel="stylesheet" href="css/style.css?v=39" />
 </head>
 <body>
 
@@ -55,8 +55,8 @@
     <button id="visits-btn" class="random-gif-btn" type="button" title="Statystyki wizyt" hidden>
       👣 <span>Wizyty</span>
     </button>
-    <!-- Widoczny wyłącznie dla Krzysztofa Obremskiego — patrz refreshGabryssimButtonVisibility() w js/gabryssim.js -->
-    <button id="gabryssim-btn" class="random-gif-btn" type="button" title="Symulator Gabrysia" hidden>
+    <!-- Widoczny dla wszystkich — patrz js/gabryssim.js -->
+    <button id="gabryssim-btn" class="random-gif-btn" type="button" title="Symulator Gabrysia">
       ⚽ <span>Symulator Gabrysia</span>
     </button>
   </div>
@@ -137,10 +137,10 @@
   </div>
 </div>
 
-<!-- Gra "Symulator Gabrysia" — widoczna wyłącznie dla Krzysztofa Obremskiego
-     (przycisk "⚽ Symulator Gabrysia" powyżej jest ukryty dla reszty). Cała
-     logika w js/gabryssim.js. Cztery "ekrany" w środku, tylko jeden na raz
-     bez atrybutu hidden: menu / gra / wynik / statystyki. -->
+<!-- Gra "Symulator Gabrysia" — dostępna dla wszystkich (przycisk "⚽ Symulator
+     Gabrysia" powyżej). Cała logika w js/gabryssim.js. Kilka "ekranów" w
+     środku, tylko jeden na raz bez atrybutu hidden: menu / ładowanie / wybór
+     strzału / gra / wynik / statystyki. -->
 <div id="gabryssim-overlay" class="gabryssim-overlay" hidden>
 
   <!-- Uwaga: "stage" (zdjęcie 3:2) jest DZIECKIEM ekranu, nie samym ekranem —
@@ -264,7 +264,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=38"></script>
+<script type="module" src="js/app.js?v=39"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

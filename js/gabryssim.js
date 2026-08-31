@@ -1,7 +1,7 @@
-// "Symulator Gabrysia" — mini-gra rzutów wolnych, widoczna wyłącznie dla
-// Krzysztofa Obremskiego (przycisk w nagłówku jest ukryty dla reszty, patrz
-// refreshGabryssimButtonVisibility niżej i canGabryssim() wołane z app.js
-// przez refreshPermissionUI()).
+// "Symulator Gabrysia" — mini-gra rzutów wolnych, dostępna dla WSZYSTKICH
+// (przycisk w nagłówku widoczny dla każdego — w odróżnieniu od "Wizyt", które
+// zostają widoczne tylko dla Krzysztofa Obremskiego, patrz refreshVisitsButtonVisibility()
+// w app.js). Statystyki (SPRAWDŹ STATYSTYKI) są wspólne dla całej drużyny.
 //
 // Zasady (jak uzgodnione): po wybraniu rodzaju strzału (patrz SHOT_TYPES —
 // każdy mnoży bazową szansę na gola) trzeba przytrzymać piłkę na tle zdjęcia
@@ -12,7 +12,7 @@
 // strzału. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a
 // każdy strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
 // js/store.js).
-import { getStore } from "./store.js?v=38";
+import { getStore } from "./store.js?v=39";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia
@@ -50,8 +50,6 @@ const MEDIA_READY_TIMEOUT_MS = 8000; // maks. czas czekania na doładowanie się
 
 // Moduł trzyma swój własny mały stan (nie wchodzi do wspólnego state w
 // app.js — statystyki wolnych i tak przychodzą osobno, z bazy).
-let state = null;
-let superuserSlug = "";
 let store = null;
 let stats = { attempts: 0, goals: 0 };
 let selectedShotType = SHOT_TYPES[0];
@@ -73,21 +71,6 @@ let resultToken = 0; // rośnie przy każdym showMenu/closeOverlay/startGame/sho
 
 function el(id) {
   return document.getElementById(id);
-}
-
-function isSuperuser() {
-  return !!state && state.identitySlug === superuserSlug;
-}
-
-// Wołane z refreshPermissionUI() w app.js po każdej zmianie tożsamości —
-// dokładnie ten sam mechanizm co przycisk "Wizyty".
-export function refreshGabryssimButtonVisibility() {
-  const btn = el("gabryssim-btn");
-  if (btn) btn.hidden = !isSuperuser();
-  // Jeśli w trakcie gry ktoś traci uprawnienia (np. zmiana tożsamości na
-  // innym urządzeniu zsynchronizowała się tutaj) — zamknij grę, żeby nie
-  // zostać w środku z ukrytym przyciskiem powrotu.
-  if (!isSuperuser()) closeOverlay();
 }
 
 function clearTimers() {
@@ -277,7 +260,6 @@ function showLoadingScreen() {
 }
 
 function openOverlay() {
-  if (!isSuperuser()) return; // zabezpieczenie — przycisk i tak jest ukryty
   const overlay = el("gabryssim-overlay");
   if (!overlay) return;
   overlay.hidden = false;
@@ -545,10 +527,7 @@ function startGame(shotType) {
   showScreen("gabryssim-game");
 }
 
-export function initGabryssim(appState, superuserSlugArg) {
-  state = appState;
-  superuserSlug = superuserSlugArg;
-
+export function initGabryssim() {
   const btn = el("gabryssim-btn");
   if (!btn) return; // strona bez tego bloku HTML (np. stara wersja z cache) — nic do zrobienia
 
@@ -607,6 +586,4 @@ export function initGabryssim(appState, superuserSlugArg) {
       });
     })
     .catch((err) => console.error("Nie udało się połączyć ze statystykami Symulatora Gabrysia:", err));
-
-  refreshGabryssimButtonVisibility();
 }
