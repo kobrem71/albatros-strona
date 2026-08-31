@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=34" />
+<link rel="stylesheet" href="css/style.css?v=35" />
 </head>
 <body>
 
@@ -152,11 +152,24 @@
     </nav>
   </div>
 
+  <!-- Wybór rodzaju strzału (mnożnik szansy na gola) — pokazywany po
+       "Strzel se wolnego", przed przytrzymaniem piłki. Przyciski z
+       data-shot="…" są wiązane z SHOT_TYPES w js/gabryssim.js. -->
+  <div id="gabryssim-shottype" class="gabryssim-screen gabryssim-photo-screen" hidden>
+    <button id="gabryssim-shottype-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+    <nav class="gabryssim-topmenu gabryssim-shottype-menu">
+      <button class="gabryssim-menu-btn" type="button" data-shot="petarda">Petarda (x0,8)</button>
+      <button class="gabryssim-menu-btn" type="button" data-shot="techniczny">Technicznie (x0,5)</button>
+      <button class="gabryssim-menu-btn" type="button" data-shot="podcinka">Podcinka (x0,3)</button>
+      <button class="gabryssim-menu-btn" type="button" data-shot="prawa-noga">Prawa noga (x0)</button>
+    </nav>
+  </div>
+
   <div id="gabryssim-game" class="gabryssim-screen gabryssim-photo-screen" hidden>
     <button id="gabryssim-game-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
     <button id="gabryssim-ball" class="gabryssim-ball" type="button" aria-label="Przytrzymaj i puść"></button>
     <div class="gabryssim-bar-panel">
-      <p class="gabryssim-hint">Przytrzymaj piłkę i puść dokładnie w środku paska</p>
+      <p id="gabryssim-hint" class="gabryssim-hint">Przytrzymaj piłkę i puść dokładnie w środku paska</p>
       <div class="gabryssim-bar-track">
         <div id="gabryssim-bar-fill" class="gabryssim-bar-fill"></div>
         <div class="gabryssim-bar-center"></div>
@@ -221,7 +234,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=34"></script>
+<script type="module" src="js/app.js?v=35"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

@@ -3,18 +3,31 @@
 // refreshGabryssimButtonVisibility niżej i canGabryssim() wołane z app.js
 // przez refreshPermissionUI()).
 //
-// Zasady (jak uzgodnione): na tle zdjęcia "1 wolny.png" trzeba przytrzymać
-// piłkę — pasek mocy napełnia się w całości w 2000 ms. Im bliżej ŚRODKA
-// paska (czyli ~1000 ms trzymania) tym większa szansa na gola: 100% dokładnie
-// na środku, -3 punkty procentowe za każdy milisekund odchylenia w lewo albo
-// w prawo. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a każdy
-// strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
+// Zasady (jak uzgodnione): po wybraniu rodzaju strzału (patrz SHOT_TYPES —
+// każdy mnoży bazową szansę na gola) trzeba przytrzymać piłkę na tle zdjęcia
+// "1 wolny.png" — pasek mocy napełnia się w całości w 2000 ms. Im bliżej
+// ŚRODKA paska (czyli ~1000 ms trzymania) tym większa BAZOWA szansa na gola:
+// 100% dokładnie na środku, -3 punkty procentowe za każdy milisekund
+// odchylenia w lewo albo w prawo — tę bazową szansę mnoży wybrany rodzaj
+// strzału. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a
+// każdy strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
 // js/store.js).
-import { getStore } from "./store.js?v=34";
+import { getStore } from "./store.js?v=35";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia
-const PENALTY_PER_MS = 3; // -3% szansy na gola za każdy ms odchylenia od środka
+const PENALTY_PER_MS = 3; // -3% bazowej szansy na gola za każdy ms odchylenia od środka
+
+// Rodzaje strzału do wyboru przed przytrzymaniem piłki — każdy mnoży bazową
+// szansę na gola (wyliczoną z celności trzymania paska) przez swój mnożnik.
+// "Prawa noga" ma mnożnik 0 — Gabryś nią nie trafia nigdy, niezależnie od
+// tego, jak idealnie trzymało się pasek.
+const SHOT_TYPES = [
+  { id: "petarda", label: "Petarda", multiplier: 0.8 },
+  { id: "techniczny", label: "Technicznie", multiplier: 0.5 },
+  { id: "podcinka", label: "Podcinka", multiplier: 0.3 },
+  { id: "prawa-noga", label: "Prawa noga", multiplier: 0 },
+];
 
 const ASSET_BASE = "assets/gabryssim/";
 const GOAL_GIF = ASSET_BASE + "goal%20gif.gif";
@@ -22,9 +35,10 @@ const NO_GOAL_GIF = ASSET_BASE + "no%20goal.gif";
 const CHEER_VIDEO = ASSET_BASE + "cheering%20after%20goal.mp4";
 
 const NO_GOAL_CAPTION = "Zabłotny broni - Kolejarz wygrywa";
-const NO_GOAL_CAPTION_DELAY_MS = 1000; // ile pokazujemy "no goal.gif" zanim wejdzie plansza z napisem
+const NO_GOAL_CAPTION_DELAY_MS = 1000; // ile MINIMUM pokazujemy "no goal.gif" zanim wejdzie plansza z napisem
 const NO_GOAL_AUTO_RETURN_MS = 5000; // ile plansza z napisem stoi, zanim sama wróci do menu
-const GOAL_CHEER_DELAY_MS = 1000; // ile pokazujemy "goal gif.gif" zanim wejdzie wideo z celebracją
+const GOAL_CHEER_DELAY_MS = 1000; // ile MINIMUM pokazujemy "goal gif.gif" zanim wejdzie wideo z celebracją
+const MEDIA_READY_TIMEOUT_MS = 6000; // maks. czas czekania na doładowanie się gifa/wideo, zanim przejdziemy dalej mimo wszystko (żeby nigdy nie zostać na czarnym ekranie w nieskończoność)
 
 // Moduł trzyma swój własny mały stan (nie wchodzi do wspólnego state w
 // app.js — statystyki wolnych i tak przychodzą osobno, z bazy).
@@ -32,12 +46,14 @@ let state = null;
 let superuserSlug = "";
 let store = null;
 let stats = { attempts: 0, goals: 0 };
+let selectedShotType = SHOT_TYPES[0];
+let assetsPreloaded = false;
 
-let holdTimer = null; // pointerdown -> pointerup timing
 let holdStartTs = 0;
 let isHolding = false;
 let autoReturnTimer = null; // timer "po 5 sekundach wróć do menu" (i jego ewentualne anulowanie przy X)
-let resultTransitionTimer = null; // timer "po 1 sekundzie pokaż celebrację/planszę"
+let resultTransitionTimer = null; // timer "minimalny czas pokazania gifa" przed próbą przejścia dalej
+let resultToken = 0; // rośnie przy każdym showMenu/closeOverlay/startGame/showResult — pozwala ignorować "spóźnione" async-callbacki z poprzedniego strzału (np. gdy ktoś kliknie X w trakcie ładowania wideo)
 
 function el(id) {
   return document.getElementById(id);
@@ -70,10 +86,12 @@ function clearTimers() {
 }
 
 function showScreen(id) {
-  ["gabryssim-menu", "gabryssim-game", "gabryssim-result", "gabryssim-stats"].forEach((screenId) => {
-    const screen = el(screenId);
-    if (screen) screen.hidden = screenId !== id;
-  });
+  ["gabryssim-menu", "gabryssim-shottype", "gabryssim-game", "gabryssim-result", "gabryssim-stats"].forEach(
+    (screenId) => {
+      const screen = el(screenId);
+      if (screen) screen.hidden = screenId !== id;
+    }
+  );
 }
 
 function stopResultMedia() {
@@ -94,10 +112,31 @@ function stopResultMedia() {
 }
 
 function showMenu() {
+  resultToken++; // unieważnij ewentualne oczekujące promisy z poprzedniego strzału
   clearTimers();
   stopResultMedia();
   resetBar();
   showScreen("gabryssim-menu");
+}
+
+// Zaczyna w tle ściągać gify/wideo wyniku, żeby były już w cache'u
+// przeglądarki, zanim gracz w ogóle odda pierwszy strzał — bez tego duże
+// pliki (1-2 MB) czasem nie zdążyły się załadować w te ustawione 1 s przed
+// przełączeniem ekranu, przez co ekran wyniku bywał czarny/pusty.
+function preloadResultAssets() {
+  if (assetsPreloaded) return;
+  assetsPreloaded = true;
+  try {
+    new Image().src = GOAL_GIF;
+    new Image().src = NO_GOAL_GIF;
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.src = CHEER_VIDEO;
+    video.load();
+  } catch (err) {
+    console.error("Nie udało się podgrzać cache'u assetów Symulatora Gabrysia:", err);
+  }
 }
 
 function openOverlay() {
@@ -105,16 +144,28 @@ function openOverlay() {
   const overlay = el("gabryssim-overlay");
   if (!overlay) return;
   overlay.hidden = false;
+  preloadResultAssets();
   showMenu();
 }
 
 function closeOverlay() {
   const overlay = el("gabryssim-overlay");
   if (!overlay || overlay.hidden) return;
+  resultToken++;
   clearTimers();
   cancelShotInProgress();
   stopResultMedia();
   overlay.hidden = true;
+}
+
+// --------------------------------------------------------------------------
+// Ekran wyboru rodzaju strzału (przed przytrzymaniem piłki) — patrz
+// SHOT_TYPES na górze pliku.
+// --------------------------------------------------------------------------
+function showShotTypeScreen() {
+  resultToken++;
+  clearTimers();
+  showScreen("gabryssim-shottype");
 }
 
 // --------------------------------------------------------------------------
@@ -179,7 +230,8 @@ function releaseHold() {
 
 function resolveShot(elapsedMs) {
   const deviationMs = Math.abs(elapsedMs - CENTER_MS);
-  const chance = Math.max(0, 100 - PENALTY_PER_MS * deviationMs);
+  const baseChance = Math.max(0, 100 - PENALTY_PER_MS * deviationMs);
+  const chance = Math.max(0, Math.min(100, baseChance * selectedShotType.multiplier));
   const isGoal = Math.random() * 100 < chance;
 
   recordShot(isGoal);
@@ -196,12 +248,62 @@ async function recordShot(isGoal) {
 }
 
 // --------------------------------------------------------------------------
-// Ekran wyniku: gol -> "goal gif.gif", po 1 s wideo z celebracją (w pętli,
-// bo nie ma automatycznego powrotu — wraca się przez X). Brak gola ->
-// "no goal.gif", po 1 s plansza z napisem, która sama wraca do menu po 5 s
-// (albo wcześniej, jeśli kliknięto X).
+// Pomocnicze: poczekaj aż obrazek/wideo faktycznie ma co pokazać (albo
+// upłynie timeout) — zamiast na sztywno przełączać ekran po stałym czasie
+// niezależnie od tego, czy duży plik zdążył się już załadować.
 // --------------------------------------------------------------------------
-function showResult(isGoal) {
+function waitForImageReady(img, timeoutMs) {
+  if (!img) return Promise.resolve();
+  if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      img.removeEventListener("load", finish);
+      img.removeEventListener("error", finish);
+      resolve();
+    };
+    img.addEventListener("load", finish, { once: true });
+    img.addEventListener("error", finish, { once: true });
+    setTimeout(finish, timeoutMs);
+  });
+}
+
+function waitForVideoReady(video, timeoutMs) {
+  if (!video) return Promise.resolve();
+  if (video.readyState >= 2) return Promise.resolve(); // HAVE_CURRENT_DATA — jest co narysować
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      video.removeEventListener("canplay", finish);
+      video.removeEventListener("error", finish);
+      resolve();
+    };
+    video.addEventListener("canplay", finish, { once: true });
+    video.addEventListener("error", finish, { once: true });
+    setTimeout(finish, timeoutMs);
+  });
+}
+
+function minDelay(ms) {
+  return new Promise((resolve) => {
+    resultTransitionTimer = setTimeout(resolve, ms);
+  });
+}
+
+// --------------------------------------------------------------------------
+// Ekran wyniku: gol -> "goal gif.gif", po (co najmniej) 1 s wideo z
+// celebracją (w pętli, bo nie ma automatycznego powrotu — wraca się przez
+// X). Brak gola -> "no goal.gif", po (co najmniej) 1 s plansza z napisem,
+// która sama wraca do menu po 5 s (albo wcześniej, jeśli kliknięto X).
+// "Co najmniej" — jeśli duży plik jeszcze się ładuje, czekamy na niego (do
+// MEDIA_READY_TIMEOUT_MS), żeby nigdy nie zostać na czarnym/pustym ekranie.
+// --------------------------------------------------------------------------
+async function showResult(isGoal) {
+  const myToken = ++resultToken;
   clearTimers();
   showScreen("gabryssim-result");
 
@@ -209,6 +311,7 @@ function showResult(isGoal) {
   const video = el("gabryssim-result-video");
   const caption = el("gabryssim-result-caption");
   if (video) {
+    video.pause();
     video.hidden = true;
     video.loop = false;
   }
@@ -220,29 +323,34 @@ function showResult(isGoal) {
       img.alt = "Gol!";
       img.hidden = false;
     }
-    resultTransitionTimer = setTimeout(() => {
-      if (img) img.hidden = true;
-      if (video) {
-        video.src = CHEER_VIDEO;
-        video.loop = true; // brak automatycznego powrotu do menu, więc niech gra dalej zamiast zastygnąć na ostatniej klatce
-        video.hidden = false;
-        video.play().catch(() => {});
-      }
-    }, GOAL_CHEER_DELAY_MS);
+    if (video) {
+      video.src = CHEER_VIDEO; // zacznij ładować wideo od razu, równolegle z pokazywaniem gifa
+      video.load();
+    }
+    await Promise.all([waitForImageReady(img, MEDIA_READY_TIMEOUT_MS), minDelay(GOAL_CHEER_DELAY_MS)]);
+    if (myToken !== resultToken) return; // w międzyczasie zamknięto grę/kliknięto X/zaczęto nowy strzał
+    await waitForVideoReady(video, MEDIA_READY_TIMEOUT_MS);
+    if (myToken !== resultToken) return;
+    if (img) img.hidden = true;
+    if (video) {
+      video.loop = true; // brak automatycznego powrotu do menu, więc niech gra dalej zamiast zastygnąć na ostatniej klatce
+      video.hidden = false;
+      video.play().catch(() => {});
+    }
   } else {
     if (img) {
       img.src = NO_GOAL_GIF;
       img.alt = "Brak gola";
       img.hidden = false;
     }
-    resultTransitionTimer = setTimeout(() => {
-      if (img) img.hidden = true;
-      if (caption) {
-        caption.textContent = NO_GOAL_CAPTION;
-        caption.hidden = false;
-      }
-      autoReturnTimer = setTimeout(showMenu, NO_GOAL_AUTO_RETURN_MS);
-    }, NO_GOAL_CAPTION_DELAY_MS);
+    await Promise.all([waitForImageReady(img, MEDIA_READY_TIMEOUT_MS), minDelay(NO_GOAL_CAPTION_DELAY_MS)]);
+    if (myToken !== resultToken) return;
+    if (img) img.hidden = true;
+    if (caption) {
+      caption.textContent = NO_GOAL_CAPTION;
+      caption.hidden = false;
+    }
+    autoReturnTimer = setTimeout(showMenu, NO_GOAL_AUTO_RETURN_MS);
   }
 }
 
@@ -279,18 +387,24 @@ function renderStats() {
 }
 
 function openStats() {
+  resultToken++;
   clearTimers();
   showScreen("gabryssim-stats");
   renderStats();
 }
 
 // --------------------------------------------------------------------------
-// Start gry: pokaż ekran "gra" i wyzeruj pasek.
+// Start gry: pokaż ekran "gra" i wyzeruj pasek. Wołane po wybraniu rodzaju
+// strzału na ekranie gabryssim-shottype.
 // --------------------------------------------------------------------------
-function startGame() {
+function startGame(shotType) {
+  selectedShotType = shotType;
+  resultToken++;
   clearTimers();
   stopResultMedia();
   resetBar();
+  const hint = el("gabryssim-hint");
+  if (hint) hint.textContent = `${shotType.label} — przytrzymaj piłkę i puść dokładnie w środku paska`;
   showScreen("gabryssim-game");
 }
 
@@ -305,7 +419,8 @@ export function initGabryssim(appState, superuserSlugArg) {
 
   el("gabryssim-menu-exit")?.addEventListener("click", closeOverlay);
   el("gabryssim-exit-btn")?.addEventListener("click", closeOverlay);
-  el("gabryssim-play-btn")?.addEventListener("click", startGame);
+  el("gabryssim-play-btn")?.addEventListener("click", showShotTypeScreen);
+  el("gabryssim-shottype-exit")?.addEventListener("click", closeOverlay);
   el("gabryssim-stats-btn")?.addEventListener("click", openStats);
   el("gabryssim-stats-close")?.addEventListener("click", showMenu);
   el("gabryssim-stats-back")?.addEventListener("click", showMenu);
@@ -313,6 +428,13 @@ export function initGabryssim(appState, superuserSlugArg) {
   // Po strzale X wraca do menu GRY (nie zamyka całej apki) — tak uzgodnione
   // dla planszy "brak gola", ten sam przycisk robi to samo po golu.
   el("gabryssim-result-close")?.addEventListener("click", showMenu);
+
+  // Przyciski wyboru rodzaju strzału — każdy ma data-shot z id z SHOT_TYPES.
+  document.querySelectorAll("#gabryssim-shottype [data-shot]").forEach((shotBtn) => {
+    const shotType = SHOT_TYPES.find((s) => s.id === shotBtn.dataset.shot);
+    if (!shotType) return;
+    shotBtn.addEventListener("click", () => startGame(shotType));
+  });
 
   const ball = el("gabryssim-ball");
   if (ball) {
