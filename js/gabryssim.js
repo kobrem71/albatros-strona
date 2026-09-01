@@ -3,31 +3,74 @@
 // zostają widoczne tylko dla Krzysztofa Obremskiego, patrz refreshVisitsButtonVisibility()
 // w app.js). Statystyki (SPRAWDŹ STATYSTYKI) są wspólne dla całej drużyny.
 //
-// Zasady (jak uzgodnione): po wybraniu rodzaju strzału (patrz SHOT_TYPES —
-// każdy mnoży bazową szansę na gola) trzeba przytrzymać piłkę na tle zdjęcia
-// "1 wolny.png" — pasek mocy napełnia się w całości w 2000 ms. Im bliżej
-// ŚRODKA paska (czyli ~1000 ms trzymania) tym większa BAZOWA szansa na gola:
-// 100% dokładnie na środku, -3 punkty procentowe za każdy milisekund
-// odchylenia w lewo albo w prawo — tę bazową szansę mnoży wybrany rodzaj
-// strzału. Wynik losowany na tej podstawie, gif/wideo pokazuje efekt, a
-// każdy strzał liczy się do wspólnych statystyk (patrz recordGabryssimShot w
-// js/store.js).
-import { getStore } from "./store.js?v=40";
+// Zasady (jak uzgodnione): po wybraniu rodzaju strzału (patrz SHOT_TYPES)
+// gracz widzi krótki fabularny ekran "zapowiedzi" (patrz pickShotType() i
+// #gabryssim-flavor w index.html) z LOSOWĄ szansą na gola przy idealnym
+// strzale — losowaną za każdym razem od nowa w przedziale [minChance,
+// maxChance] danego rodzaju strzału. Ta wylosowana wartość podmienia
+// mnożnik na czas tej próby (selectedShotType.multiplier = wylosowany% /
+// 100). Potem trzeba przytrzymać piłkę na tle zdjęcia "1 wolny.png" — pasek
+// mocy napełnia się w całości w 2000 ms. Im bliżej ŚRODKA paska (czyli
+// ~1000 ms trzymania) tym większa BAZOWA szansa na gola: 100% dokładnie na
+// środku, -3 punkty procentowe za każdy milisekund odchylenia w lewo albo w
+// prawo — tę bazową szansę mnoży wylosowany mnożnik. Wynik losowany na tej
+// podstawie, gif/wideo pokazuje efekt, a każdy strzał liczy się do
+// wspólnych statystyk (patrz recordGabryssimShot w js/store.js).
+import { getStore } from "./store.js?v=41";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia
 const PENALTY_PER_MS = 3; // -3% bazowej szansy na gola za każdy ms odchylenia od środka
 
-// Rodzaje strzału do wyboru przed przytrzymaniem piłki — każdy mnoży bazową
-// szansę na gola (wyliczoną z celności trzymania paska) przez swój mnożnik.
-// Mnożniki celowo NIE są pokazane w przyciskach na ekranie wyboru (patrz
-// index.html) — gracz widzi tylko nazwę strzału. "Prawa noga" ma mnożnik
-// 0,01 (nie 0) — Gabryś nią prawie nigdy nie trafia, ale teoretycznie mógłby.
+// Rodzaje strzału do wyboru przed przytrzymaniem piłki. Zamiast stałego
+// mnożnika, każdy ma przedział [minChance, maxChance] (w %) — szansa na
+// gola PRZY IDEALNYM trzymaniu paska jest losowana z tego przedziału od
+// nowa przy każdym wyborze (patrz pickShotType()) i pokazana graczowi na
+// ekranie "zapowiedzi" razem z tekstem `flavor(pct)`. "Prawa noga" ma
+// przedział 1-5% (nie 0) — Gabryś nią prawie nigdy nie trafia, ale
+// teoretycznie mógłby. "Spytaj Janusza" daje najwyższą szansę (96-99%),
+// ale to tylko fabularny żart (kontuzja nie ma wpływu na mechanikę gry).
 const SHOT_TYPES = [
-  { id: "petarda", label: "Petarda", multiplier: 0.95 },
-  { id: "techniczny", label: "Technicznie", multiplier: 0.8 },
-  { id: "podcinka", label: "Podcinka", multiplier: 0.3 },
-  { id: "prawa-noga", label: "Prawa noga", multiplier: 0.01 },
+  {
+    id: "petarda",
+    label: "Petarda",
+    minChance: 70,
+    maxChance: 95,
+    flavor: (pct) =>
+      `Uderzasz w stary, sprawdzony sposób. Masz szansę na gola przy idealnym strzale: <strong>${pct}%</strong>.`,
+  },
+  {
+    id: "techniczny",
+    label: "Technicznie",
+    minChance: 55,
+    maxChance: 75,
+    flavor: (pct) =>
+      `Znów czujesz się, jakbyś miał 20 lat i 20 kg mniej. Masz szansę na gola przy idealnym strzale: <strong>${pct}%</strong>.`,
+  },
+  {
+    id: "podcinka",
+    label: "Podcinka",
+    minChance: 25,
+    maxChance: 35,
+    flavor: (pct) =>
+      `Na trybunach pojawiła się przepiękna kobita, którą chcesz zauroczyć strzałem podcinką. Niestety nie patrzy, a szansa na gola spada do <strong>${pct}%</strong>.`,
+  },
+  {
+    id: "prawa-noga",
+    label: "Prawa noga",
+    minChance: 1,
+    maxChance: 5,
+    flavor: (pct) =>
+      `Jesteś po nieprzespanej nocy i waliłeś bongo z Jonkiem. Nie doszedłeś do siebie i próbujesz strzelić prawą nogą. Szansa na gola spada do <strong>${pct}%</strong>.`,
+  },
+  {
+    id: "janusz",
+    label: "Spytaj Janusza",
+    minChance: 96,
+    maxChance: 99,
+    flavor: (pct) =>
+      `Szansa na kontuzję wzrasta do 95%, ale za to wiesz, jaki jest sens istnienia i wiesz, jak strzelić. Szansa na gola: <strong>${pct}%</strong>.`,
+  },
 ];
 
 const ASSET_BASE = "assets/gabryssim/";
@@ -52,7 +95,10 @@ const MEDIA_READY_TIMEOUT_MS = 8000; // maks. czas czekania na doładowanie się
 // app.js — statystyki wolnych i tak przychodzą osobno, z bazy).
 let store = null;
 let stats = { attempts: 0, goals: 0 };
-let selectedShotType = SHOT_TYPES[0];
+// Domyślna wartość na wypadek (nie powinno się zdarzyć), gdyby ktoś strzelił
+// bez przejścia przez ekran wyboru — realnie zawsze nadpisywane przez
+// pickShotType() z wylosowanym mnożnikiem, patrz niżej.
+let selectedShotType = { ...SHOT_TYPES[0], multiplier: 1 };
 
 // Preload assetów wyniku — trzymane w zmiennych modułu (NIE lokalnie w
 // funkcji!), bo anonimowy `new Image()`/`document.createElement("video")`
@@ -89,12 +135,18 @@ function clearTimers() {
 }
 
 function showScreen(id) {
-  ["gabryssim-menu", "gabryssim-loading", "gabryssim-shottype", "gabryssim-game", "gabryssim-result", "gabryssim-stats"].forEach(
-    (screenId) => {
-      const screen = el(screenId);
-      if (screen) screen.hidden = screenId !== id;
-    }
-  );
+  [
+    "gabryssim-menu",
+    "gabryssim-loading",
+    "gabryssim-shottype",
+    "gabryssim-flavor",
+    "gabryssim-game",
+    "gabryssim-result",
+    "gabryssim-stats",
+  ].forEach((screenId) => {
+    const screen = el(screenId);
+    if (screen) screen.hidden = screenId !== id;
+  });
 }
 
 function stopResultMedia() {
@@ -285,6 +337,31 @@ function showShotTypeScreen() {
   resultToken++;
   clearTimers();
   showScreen("gabryssim-shottype");
+}
+
+// --------------------------------------------------------------------------
+// Wybór rodzaju strzału -> losujemy szansę na gola z przedziału tego rodzaju
+// (SHOT_TYPES[].minChance..maxChance), pokazujemy ją graczowi na ekranie
+// "zapowiedzi" (razem z fabularnym tekstem) i zapisujemy jako mnożnik do
+// selectedShotType — dokładnie ta wylosowana wartość zostaje użyta w
+// resolveShot() po przytrzymaniu piłki, więc to co gracz widzi na tym
+// ekranie to naprawdę jego szansa "na idealnym środku paska".
+// --------------------------------------------------------------------------
+function rollChanceInRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function pickShotType(shotType) {
+  resultToken++;
+  clearTimers();
+  const rolledPercent = rollChanceInRange(shotType.minChance, shotType.maxChance);
+  const displayPercent = Math.round(rolledPercent);
+  selectedShotType = { ...shotType, multiplier: rolledPercent / 100, rolledPercent: displayPercent };
+
+  const textEl = el("gabryssim-flavor-text");
+  if (textEl) textEl.innerHTML = shotType.flavor(displayPercent);
+
+  showScreen("gabryssim-flavor");
 }
 
 // --------------------------------------------------------------------------
@@ -513,17 +590,18 @@ function openStats() {
 }
 
 // --------------------------------------------------------------------------
-// Start gry: pokaż ekran "gra" i wyzeruj pasek. Wołane po wybraniu rodzaju
-// strzału na ekranie gabryssim-shottype.
+// Start gry: pokaż ekran "gra" i wyzeruj pasek. Wołane po kliknięciu
+// "Strzelaj!" na ekranie zapowiedzi (gabryssim-flavor) — selectedShotType
+// jest już wtedy ustawiony przez pickShotType(), razem z wylosowanym
+// mnożnikiem.
 // --------------------------------------------------------------------------
-function startGame(shotType) {
-  selectedShotType = shotType;
+function startGame() {
   resultToken++;
   clearTimers();
   stopResultMedia();
   resetBar();
   const hint = el("gabryssim-hint");
-  if (hint) hint.textContent = `${shotType.label} — przytrzymaj piłkę i puść dokładnie w środku paska`;
+  if (hint) hint.textContent = `${selectedShotType.label} — przytrzymaj piłkę i puść dokładnie w środku paska`;
   showScreen("gabryssim-game");
 }
 
@@ -539,6 +617,8 @@ export function initGabryssim() {
   el("gabryssim-loading-exit")?.addEventListener("click", closeOverlay);
   el("gabryssim-loading-skip")?.addEventListener("click", showShotTypeScreen);
   el("gabryssim-shottype-exit")?.addEventListener("click", closeOverlay);
+  el("gabryssim-flavor-exit")?.addEventListener("click", closeOverlay);
+  el("gabryssim-flavor-continue")?.addEventListener("click", startGame);
   el("gabryssim-stats-btn")?.addEventListener("click", openStats);
   el("gabryssim-stats-close")?.addEventListener("click", showMenu);
   el("gabryssim-stats-back")?.addEventListener("click", showMenu);
@@ -548,10 +628,13 @@ export function initGabryssim() {
   el("gabryssim-result-close")?.addEventListener("click", showMenu);
 
   // Przyciski wyboru rodzaju strzału — każdy ma data-shot z id z SHOT_TYPES.
+  // Kliknięcie NIE startuje gry od razu — najpierw losuje szansę i pokazuje
+  // ekran zapowiedzi (patrz pickShotType()); gra startuje dopiero po
+  // "Strzelaj!" na tamtym ekranie.
   document.querySelectorAll("#gabryssim-shottype [data-shot]").forEach((shotBtn) => {
     const shotType = SHOT_TYPES.find((s) => s.id === shotBtn.dataset.shot);
     if (!shotType) return;
-    shotBtn.addEventListener("click", () => startGame(shotType));
+    shotBtn.addEventListener("click", () => pickShotType(shotType));
   });
 
   const ball = el("gabryssim-ball");

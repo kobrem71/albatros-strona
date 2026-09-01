@@ -1203,11 +1203,38 @@ main {
 }
 .gabryssim-menu-btn:hover { border-color: var(--blue); background: rgba(63, 182, 240, 0.22); }
 
-/* Ekran wyboru rodzaju strzału (4 przyciski zamiast 3 w głównym menu) —
-   trochę mniejszy odstęp i padding, żeby cztery opcje zmieściły się równie
-   swobodnie nad piłką. */
+/* Ekran wyboru rodzaju strzału (5 przycisków zamiast 3 w głównym menu) —
+   trochę mniejszy odstęp i padding, żeby wszystkie opcje zmieściły się
+   równie swobodnie nad piłką. */
 .gabryssim-shottype-menu { gap: 8px; }
 .gabryssim-shottype-menu .gabryssim-menu-btn { padding: 10px 16px; font-size: 0.92rem; }
+
+/* ---------- Ekran "zapowiedzi" strzału (fabularny tekst + wylosowana
+   szansa na gola) — panel wyśrodkowany na tej samej fotce co menu/wybór
+   strzału (patrz .gabryssim-stage). ---------- */
+.gabryssim-flavor-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(84%, 460px);
+  text-align: center;
+  background: rgba(5, 8, 20, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.gabryssim-flavor-text {
+  margin: 0 0 18px;
+  color: var(--ink);
+  font-size: 0.98rem;
+  line-height: 1.55;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.gabryssim-flavor-text strong { color: var(--gold); font-size: 1.2em; }
+.gabryssim-flavor-continue-btn { width: 100%; }
 
 /* ---------- Ekran ładowania (mozaika wideo jak na stronie głównej + realny
    pasek postępu) ---------- */
@@ -1355,4 +1382,5 @@ main {
 @media (max-width: 600px) {
   .gabryssim-menu-btn { font-size: 0.88rem; padding: 10px 14px; }
   .gabryssim-hint { font-size: 0.75rem; }
+  .gabryssim-flavor-text { font-size: 0.88rem; }
 }

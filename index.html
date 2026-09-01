@@ -140,7 +140,8 @@
 <!-- Gra "Symulator Gabrysia" — dostępna dla wszystkich (przycisk "⚽ Symulator
      Gabrysia" powyżej). Cała logika w js/gabryssim.js. Kilka "ekranów" w
      środku, tylko jeden na raz bez atrybutu hidden: menu / ładowanie / wybór
-     strzału / gra / wynik / statystyki. -->
+     strzału / zapowiedź strzału (losowy tekst + wylosowana szansa) / gra /
+     wynik / statystyki. -->
 <div id="gabryssim-overlay" class="gabryssim-overlay" hidden>
 
   <!-- Uwaga: "stage" (zdjęcie 3:2) jest DZIECKIEM ekranu, nie samym ekranem —
@@ -178,7 +179,7 @@
     </div>
   </div>
 
-  <!-- Wybór rodzaju strzału (mnożnik szansy na gola) — pokazywany po
+  <!-- Wybór rodzaju strzału (zakres szansy na gola) — pokazywany po
        doładowaniu, przed przytrzymaniem piłki. Przyciski z data-shot="…" są
        wiązane z SHOT_TYPES w js/gabryssim.js. -->
   <div id="gabryssim-shottype" class="gabryssim-screen" hidden>
@@ -189,7 +190,24 @@
         <button class="gabryssim-menu-btn" type="button" data-shot="techniczny">Technicznie</button>
         <button class="gabryssim-menu-btn" type="button" data-shot="podcinka">Podcinka</button>
         <button class="gabryssim-menu-btn" type="button" data-shot="prawa-noga">Prawa noga</button>
+        <button class="gabryssim-menu-btn" type="button" data-shot="janusz">Spytaj Janusza</button>
       </nav>
+    </div>
+  </div>
+
+  <!-- Ekran "zapowiedzi" strzału — krótki fabularny tekst zależny od
+       wybranego rodzaju strzału, z wylosowaną (w SHOT_TYPES.minChance..
+       maxChance) szansą na gola przy idealnym trzymaniu paska. Ta wylosowana
+       wartość PODMIENIA mnożnik danego strzału na czas tej próby (patrz
+       pickShotType() w js/gabryssim.js) — więc ten sam rodzaj strzału daje
+       za każdym razem trochę inną szansę. -->
+  <div id="gabryssim-flavor" class="gabryssim-screen" hidden>
+    <div class="gabryssim-stage">
+      <button id="gabryssim-flavor-exit" class="gabryssim-x" type="button" aria-label="Zamknij">✕</button>
+      <div class="gabryssim-flavor-panel">
+        <p id="gabryssim-flavor-text" class="gabryssim-flavor-text"></p>
+        <button id="gabryssim-flavor-continue" class="gabryssim-menu-btn gabryssim-flavor-continue-btn" type="button">Strzelaj!</button>
+      </div>
     </div>
   </div>
 
