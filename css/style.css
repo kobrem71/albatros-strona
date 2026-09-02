@@ -656,6 +656,7 @@ main {
 .event-card {
   --accent: #3fb6f0;
   --accent-soft: rgba(63, 182, 240, 0.22);
+  position: relative;
   text-align: left;
   border: 4px solid transparent;
   background: var(--accent-soft);
@@ -1384,3 +1385,198 @@ main {
   .gabryssim-hint { font-size: 0.75rem; }
   .gabryssim-flavor-text { font-size: 0.88rem; }
 }
+
+/* ---------- Transport (podwózki) ---------- */
+/* Ikonka auta w prawym górnym rogu karty wydarzenia — osobny "przycisk"
+   wewnątrz karty (klik nie zaznacza wydarzenia, tylko otwiera okno transportu). */
+.event-transport-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(10, 19, 48, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+  z-index: 2;
+}
+.event-transport-btn:hover { transform: scale(1.12); background: rgba(10, 19, 48, 0.8); }
+.event-transport-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 100px;
+  background: var(--gold);
+  color: #0a1330;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transport-panel { max-width: 560px; }
+.transport-hint { margin: 0 6px 14px; font-size: 0.85rem; }
+.transport-list { display: flex; flex-direction: column; gap: 12px; }
+.transport-empty { padding: 10px 6px; }
+
+.transport-offer {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(10, 19, 48, 0.5);
+}
+.transport-offer.mine { border-color: rgba(224, 178, 58, 0.55); }
+.transport-offer.joined { border-color: rgba(33, 163, 94, 0.6); }
+.transport-offer-head { display: flex; flex-direction: column; gap: 3px; }
+.transport-driver { font-size: 1rem; color: var(--ink); }
+.transport-driver-tag {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #0a1330;
+  background: var(--gold);
+  padding: 2px 7px;
+  border-radius: 100px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.transport-meta { color: var(--muted); font-size: 0.9rem; }
+
+.transport-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0 8px;
+}
+.seat {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+}
+.seat-driver { background: rgba(224, 178, 58, 0.22); border: 2px solid var(--gold); }
+.seat-taken { background: rgba(33, 163, 94, 0.22); border: 2px solid #21a35e; }
+.seat-free { background: rgba(255, 255, 255, 0.05); border: 2px dashed rgba(255, 255, 255, 0.35); }
+
+.transport-count { font-size: 0.85rem; color: var(--muted); }
+.transport-count .tc-free { color: #4bd08a; font-weight: 700; }
+.transport-count .tc-taken { color: var(--ink); }
+.transport-passengers { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
+
+.transport-actions { margin-top: 10px; }
+.transport-join-btn {
+  border: 1px solid var(--blue);
+  background: rgba(63, 182, 240, 0.14);
+  color: var(--ink);
+  border-radius: 100px;
+  padding: 7px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease;
+}
+.transport-join-btn:hover:not(:disabled) { background: rgba(63, 182, 240, 0.28); }
+.transport-join-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: rgba(255,255,255,0.2); }
+.transport-join-btn.leave { border-color: #d1453b; background: rgba(209, 69, 59, 0.16); }
+.transport-join-btn.leave:hover { background: rgba(209, 69, 59, 0.3); }
+.transport-remove-btn { color: #e88; }
+
+.transport-add-btn {
+  margin-top: 16px;
+  width: 100%;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.transport-add-btn:hover { background: rgba(63, 182, 240, 0.12); border-color: var(--blue); }
+
+/* ---------- Czat wewnątrz oferty transportu ---------- */
+.transport-chat {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+}
+.transport-chat-head {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+.transport-chat-msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.transport-chat-empty { margin: 0; font-size: 0.85rem; }
+.transport-chat-msg {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 9px;
+  padding: 6px 10px;
+  align-self: flex-start;
+  max-width: 85%;
+}
+.transport-chat-msg.mine {
+  align-self: flex-end;
+  background: rgba(63, 182, 240, 0.16);
+}
+.tcm-top { display: flex; align-items: baseline; gap: 8px; }
+.tcm-author { font-weight: 700; font-size: 0.82rem; color: var(--blue); }
+.transport-chat-msg.mine .tcm-author { color: var(--gold); }
+.tcm-time { font-size: 0.7rem; color: var(--muted); }
+.tcm-text { font-size: 0.9rem; color: var(--ink); word-break: break-word; white-space: pre-wrap; }
+
+.transport-chat-compose {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.transport-chat-input {
+  flex: 1;
+  border: 1px solid var(--card-border);
+  background: rgba(10, 19, 48, 0.6);
+  color: var(--ink);
+  border-radius: 100px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.transport-chat-input:focus { outline: none; border-color: var(--blue); }
+.transport-chat-send {
+  border: none;
+  background: var(--blue);
+  color: #0a1330;
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.transport-chat-send:hover { background: #5cc4f2; }

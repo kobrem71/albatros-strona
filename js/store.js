@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=41";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=43";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
@@ -10,6 +10,7 @@ const DEMO_TACTIC_KEY = "albatros_demo_tactic_v1";
 const DEMO_MESSAGES_KEY = "albatros_demo_messages_v1";
 const DEMO_VISITS_KEY = "albatros_demo_visits_v1";
 const DEMO_GABRYSSIM_KEY = "albatros_demo_gabryssim_v1";
+const DEMO_TRANSPORTS_KEY = "albatros_demo_transports_v1";
 
 function readLocal(key) {
   try {
@@ -35,6 +36,7 @@ function createLocalStore() {
   const messageListeners = new Set();
   const visitListeners = new Set();
   const gabryssimListeners = new Set();
+  const transportListeners = new Set();
 
   function notifySignups() {
     const data = readLocal(DEMO_SIGNUPS_KEY);
@@ -65,6 +67,10 @@ function createLocalStore() {
     const data = readLocal(DEMO_GABRYSSIM_KEY);
     gabryssimListeners.forEach((cb) => cb({ attempts: data.attempts || 0, goals: data.goals || 0 }));
   }
+  function notifyTransports() {
+    const data = readLocal(DEMO_TRANSPORTS_KEY);
+    transportListeners.forEach((cb) => cb(data));
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === DEMO_SIGNUPS_KEY) notifySignups();
@@ -74,6 +80,7 @@ function createLocalStore() {
     if (e.key === DEMO_MESSAGES_KEY) notifyMessages();
     if (e.key === DEMO_VISITS_KEY) notifyVisits();
     if (e.key === DEMO_GABRYSSIM_KEY) notifyGabryssim();
+    if (e.key === DEMO_TRANSPORTS_KEY) notifyTransports();
   });
 
   return {
@@ -187,6 +194,61 @@ function createLocalStore() {
       writeLocal(DEMO_GABRYSSIM_KEY, { attempts, goals });
       notifyGabryssim();
     },
+    // Transport (podwózki) na dane wydarzenie. Struktura w bazie:
+    //   transports/{eventId} -> { offers: { [offerId]: {
+    //     driverKey, driverName, time, place, seats,
+    //     passengers: { [key]: name } } } }
+    // Kierowca (driverKey) siedzi za kierownicą; passengers to chętni na wolne
+    // miejsca. Klucz (driverKey/pasażera) to slug gracza albo "staff:<rola>".
+    subscribeTransports(cb) {
+      cb(readLocal(DEMO_TRANSPORTS_KEY));
+      transportListeners.add(cb);
+      return () => transportListeners.delete(cb);
+    },
+    async addTransport(eventId, offerId, offer) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      data[eventId] = data[eventId] || {};
+      data[eventId][offerId] = {
+        ...offer,
+        passengers: offer.passengers || {},
+        chat: offer.chat || [],
+        ts: Date.now(),
+      };
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
+    // Czat wewnątrz jednej oferty transportu — pisać mogą kierowca i pasażerowie
+    // (pilnuje tego UI). Wiadomości dopisywane do tablicy chat[] w ofercie.
+    async postTransportMessage(eventId, offerId, msg) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      if (!data[eventId] || !data[eventId][offerId]) return;
+      data[eventId][offerId].chat = data[eventId][offerId].chat || [];
+      data[eventId][offerId].chat.push(msg);
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
+    async joinTransport(eventId, offerId, key, name) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      if (!data[eventId] || !data[eventId][offerId]) return;
+      data[eventId][offerId].passengers = data[eventId][offerId].passengers || {};
+      data[eventId][offerId].passengers[key] = name;
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
+    async leaveTransport(eventId, offerId, key) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      if (!data[eventId] || !data[eventId][offerId] || !data[eventId][offerId].passengers) return;
+      delete data[eventId][offerId].passengers[key];
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
+    async removeTransport(eventId, offerId) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      if (!data[eventId]) return;
+      delete data[eventId][offerId];
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
     // Powiadomienia push wymagają prawdziwego Firebase (wysyłka idzie przez
     // Firebase Console — patrz README) — w trybie demo nie ma czego włączać.
     async getMessagingToken() {
@@ -210,6 +272,9 @@ async function createFirebaseStore() {
     getDoc,
     onSnapshot,
     setDoc,
+    updateDoc,
+    deleteField,
+    arrayUnion,
     addDoc,
     query,
     orderBy,
@@ -347,6 +412,58 @@ async function createFirebaseStore() {
     },
     async savePushToken(token, info) {
       await setDoc(doc(db, "pushTokens", token), { ...info, updatedAt: serverTimestamp() }, { merge: true });
+    },
+    // Transport (podwózki) na dane wydarzenie — jeden dokument na wydarzenie
+    // (transports/{eventId}) z mapą ofert. Zapisy przez merge:true, żeby
+    // równoległe edycje różnych ofert/pasażerów nie kasowały się nawzajem;
+    // usuwanie (wypisanie pasażera / skasowanie oferty) przez deleteField().
+    subscribeTransports(cb) {
+      return onSnapshot(collection(db, "transports"), (snap) => {
+        const data = {};
+        snap.forEach((d) => (data[d.id] = d.data().offers || {}));
+        cb(data);
+      });
+    },
+    async addTransport(eventId, offerId, offer) {
+      await setDoc(
+        doc(db, "transports", eventId),
+        {
+          offers: {
+            [offerId]: {
+              ...offer,
+              passengers: offer.passengers || {},
+              chat: offer.chat || [],
+              ts: serverTimestamp(),
+            },
+          },
+        },
+        { merge: true }
+      );
+    },
+    // Czat w ofercie — arrayUnion dopina wiadomość atomowo (bez kasowania
+    // cudzych). serverTimestamp() nie działa w elemencie tablicy, więc czas
+    // bierzemy z zegara nadawcy (msg.ts, liczba) — tak jak clientTs w messages.
+    async postTransportMessage(eventId, offerId, msg) {
+      await updateDoc(doc(db, "transports", eventId), {
+        [`offers.${offerId}.chat`]: arrayUnion(msg),
+      });
+    },
+    async joinTransport(eventId, offerId, key, name) {
+      await setDoc(
+        doc(db, "transports", eventId),
+        { offers: { [offerId]: { passengers: { [key]: name } } } },
+        { merge: true }
+      );
+    },
+    async leaveTransport(eventId, offerId, key) {
+      await updateDoc(doc(db, "transports", eventId), {
+        [`offers.${offerId}.passengers.${key}`]: deleteField(),
+      });
+    },
+    async removeTransport(eventId, offerId) {
+      await updateDoc(doc(db, "transports", eventId), {
+        [`offers.${offerId}`]: deleteField(),
+      });
     },
   };
 }

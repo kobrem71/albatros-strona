@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=41" />
+<link rel="stylesheet" href="css/style.css?v=43" />
 </head>
 <body>
 
@@ -254,6 +254,17 @@
   </div>
 </div>
 
+<div id="transport-overlay" class="league-overlay" hidden>
+  <div class="league-panel transport-panel">
+    <button id="transport-overlay-close" class="league-overlay-close" type="button" aria-label="Zamknij">✕</button>
+    <h2>🚗 Transport</h2>
+    <p id="transport-event-info" class="muted"></p>
+    <p class="muted transport-hint">Oferujesz podwózkę? Dodaj ją plusikiem (godzina i miejsce odjazdu, liczba wolnych miejsc). Chcesz się zabrać? Wejdź w wybrane auto i dopisz się jako pasażer.</p>
+    <div id="transport-list" class="transport-list"></div>
+    <button id="transport-add-btn" class="transport-add-btn" type="button">＋ Dodaj swój transport</button>
+  </div>
+</div>
+
 <main>
   <section class="card identity-card">
     <div id="identity-bar" class="identity-bar"></div>
@@ -282,7 +293,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=41"></script>
+<script type="module" src="js/app.js?v=43"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

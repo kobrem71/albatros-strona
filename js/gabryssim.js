@@ -16,7 +16,7 @@
 // prawo — tę bazową szansę mnoży wylosowany mnożnik. Wynik losowany na tej
 // podstawie, gif/wideo pokazuje efekt, a każdy strzał liczy się do
 // wspólnych statystyk (patrz recordGabryssimShot w js/store.js).
-import { getStore } from "./store.js?v=41";
+import { getStore } from "./store.js?v=43";
 
 const HOLD_MS = 2000; // ile trwa pełne napełnienie paska
 const CENTER_MS = HOLD_MS / 2; // "środek" — idealny moment puszczenia

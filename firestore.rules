@@ -82,6 +82,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Transport (podwózki) na wydarzenie — jeden dokument na wydarzenie
+    // (transports/{eventId}) z mapą ofert i pasażerów. Tak jak zapisy/adresy:
+    // każdy może czytać i dopisywać (klub amatorski, bez logowania). Update
+    // pozwala też wypisać się/skasować własną ofertę (deleteField w kodzie),
+    // ale skasowanie całego dokumentu jest zablokowane.
+    match /transports/{eventId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

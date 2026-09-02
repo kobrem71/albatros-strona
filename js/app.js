@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=41";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=41";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=41";
-import { getStore } from "./store.js?v=41";
+import { PLAYERS, slugify } from "./players.js?v=43";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=43";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=43";
+import { getStore } from "./store.js?v=43";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=41";
-import { initGabryssim } from "./gabryssim.js?v=41";
+} from "./league-data.js?v=43";
+import { initGabryssim } from "./gabryssim.js?v=43";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -264,6 +264,10 @@ export const state = {
   // wszystkich (zapisany w bazie), ale widoczny w UI tylko dla Krzysztofa
   // Obremskiego (patrz sekcja "Statystyki wizyt" niżej).
   visitCounts: {},
+  // Transport (podwózki) na wydarzenia — { [eventId]: { [offerId]: {
+  //   driverKey, driverName, time, place, seats, passengers: { [key]: name } } } }
+  // Wspólne dla wszystkich (zapisane w bazie). Patrz sekcja "Transport" niżej.
+  transports: {},
 };
 
 // Czy ta osoba (na tym urządzeniu, z obecnie wybraną tożsamością) może
@@ -507,8 +511,12 @@ function renderSchedule() {
 
     const counts = statusCounts(ev);
     const address = (state.eventMeta[ev.id] && state.eventMeta[ev.id].address) || ev.defaultLocation;
+    const offerCount = Object.keys(state.transports[ev.id] || {}).length;
 
     card.innerHTML = `
+      <span class="event-transport-btn" role="button" tabindex="0" title="Transport na to wydarzenie" aria-label="Transport">🚗${
+        offerCount > 0 ? `<span class="event-transport-count">${offerCount}</span>` : ""
+      }</span>
       <span class="event-type-badge">${meta.label}</span>
       <span class="event-date">${formatDateHuman(ev.dateObj)} · ${ev.time}</span>
       ${ev.label ? `<span class="event-label">${escapeHtml(ev.label)}</span>` : ""}
@@ -522,6 +530,19 @@ function renderSchedule() {
       renderSchedule();
       renderRoster();
     };
+    // Ikonka auta w rogu — osobny "przycisk" w środku karty; klik NIE ma
+    // zaznaczać wydarzenia (stopPropagation), tylko otwierać okno transportu.
+    const transportBtn = card.querySelector(".event-transport-btn");
+    if (transportBtn) {
+      const openT = (e) => {
+        e.stopPropagation();
+        openTransport(ev.id);
+      };
+      transportBtn.addEventListener("click", openT);
+      transportBtn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") openT(e);
+      });
+    }
     wrap.appendChild(card);
   }
 }
@@ -1670,7 +1691,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=41";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=43";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2304,6 +2325,300 @@ function initPushOptIn() {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Transport (podwózki na treningi/mecze)
+// ---------------------------------------------------------------------------
+// Każde wydarzenie ma swoje okno transportu (ikonka 🚗 w rogu karty). Każdy
+// zalogowany ("Kim jesteś?") może zaproponować podwózkę (kierowca za
+// kierownicą + liczba wolnych miejsc) albo dopisać się jako pasażer do cudzej
+// oferty, aż auto się zapełni. Dane wspólne dla wszystkich — patrz
+// subscribeTransports/addTransport/... w js/store.js.
+
+// Tożsamość na potrzeby transportu: gracz -> jego slug; trener/kierownik ->
+// "staff:<rola>". null, jeśli nikt nie wybrał tożsamości.
+function currentTransportIdentity() {
+  if (state.role === "trener" || state.role === "kierownik") {
+    return { key: `staff:${state.role}`, name: STAFF[state.role].name };
+  }
+  if (state.identitySlug) {
+    const p = PLAYERS.find((pl) => pl.slug === state.identitySlug);
+    return { key: state.identitySlug, name: p ? p.name : state.identitySlug };
+  }
+  return null;
+}
+
+let transportEventId = null;
+
+function openTransport(eventId) {
+  transportEventId = eventId;
+  document.getElementById("transport-overlay").hidden = false;
+  renderTransport();
+}
+
+function closeTransport() {
+  transportEventId = null;
+  document.getElementById("transport-overlay").hidden = true;
+}
+
+function refreshTransportIfOpen() {
+  const overlay = document.getElementById("transport-overlay");
+  if (overlay && !overlay.hidden && transportEventId) renderTransport();
+}
+
+function initTransportOverlay() {
+  const overlay = document.getElementById("transport-overlay");
+  document.getElementById("transport-overlay-close").addEventListener("click", closeTransport);
+  wireOverlayDismiss(overlay, closeTransport);
+  document.getElementById("transport-add-btn").addEventListener("click", addOwnTransport);
+}
+
+async function addOwnTransport() {
+  const me = currentTransportIdentity();
+  if (!me) {
+    alert('Najpierw wybierz swoje imię u góry („Kim jesteś?"), żeby dodać transport.');
+    return;
+  }
+  const time = (prompt("Godzina odjazdu (np. 17:30):", "") || "").trim();
+  if (!time) return;
+  const place = (prompt("Miejsce odjazdu (np. Rynek w Legnicy):", "") || "").trim();
+  if (!place) return;
+  const seatsRaw = (prompt("Liczba wolnych miejsc w aucie:", "3") || "").trim();
+  const seats = parseInt(seatsRaw, 10);
+  if (!Number.isFinite(seats) || seats < 1 || seats > 20) {
+    alert("Podaj liczbę wolnych miejsc (1–20).");
+    return;
+  }
+  store = store || (await getStore());
+  const offerId = `o${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  await store.addTransport(transportEventId, offerId, {
+    driverKey: me.key,
+    driverName: me.name,
+    time,
+    place,
+    seats,
+    passengers: {},
+  });
+}
+
+async function togglePassenger(offerId, offer) {
+  const me = currentTransportIdentity();
+  if (!me) {
+    alert('Najpierw wybierz swoje imię u góry („Kim jesteś?"), żeby zabrać się z kimś.');
+    return;
+  }
+  if (me.key === offer.driverKey) return; // kierowca nie jest swoim pasażerem
+  store = store || (await getStore());
+  const passengers = offer.passengers || {};
+  if (passengers[me.key]) {
+    await store.leaveTransport(transportEventId, offerId, me.key);
+  } else {
+    if (Object.keys(passengers).length >= offer.seats) {
+      alert("Brak wolnych miejsc w tym aucie.");
+      return;
+    }
+    await store.joinTransport(transportEventId, offerId, me.key, me.name);
+  }
+}
+
+async function deleteOwnTransport(offerId) {
+  if (!confirm("Usunąć swój transport? Zniknie razem z listą chętnych.")) return;
+  store = store || (await getStore());
+  await store.removeTransport(transportEventId, offerId);
+}
+
+// ts bywa liczbą (tryb demo) albo Firestore Timestamp ({seconds}) — ta funkcja
+// wyciąga z obu porównywalną wartość do sortowania ofert wg czasu dodania.
+function offerTs(offer) {
+  const ts = offer.ts;
+  if (ts && typeof ts === "object" && typeof ts.seconds === "number") return ts.seconds * 1000;
+  return typeof ts === "number" ? ts : 0;
+}
+
+// Godzina HH:MM z timestampu wiadomości czatu (ts to zawsze liczba — Date.now()
+// nadawcy, patrz postTransportMessage w store.js).
+function formatClock(ts) {
+  if (typeof ts !== "number") return "";
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+async function postTransportChat(offerId, inputEl) {
+  const me = currentTransportIdentity();
+  if (!me) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  store = store || (await getStore());
+  await store.postTransportMessage(transportEventId, offerId, {
+    key: me.key,
+    name: me.name,
+    text,
+    ts: Date.now(),
+  });
+  inputEl.value = "";
+}
+
+function renderTransport() {
+  const ev = state.events.find((e) => e.id === transportEventId);
+  const info = document.getElementById("transport-event-info");
+  if (ev) {
+    const meta = TYPE_META[ev.type] || { label: ev.type };
+    const address = (state.eventMeta[ev.id] && state.eventMeta[ev.id].address) || ev.defaultLocation;
+    info.textContent =
+      `${meta.label} · ${formatDateHuman(ev.dateObj)} · ${ev.time}` +
+      (ev.label ? ` · ${ev.label}` : "") +
+      (address ? ` · 📍 ${address}` : "");
+  } else {
+    info.textContent = "";
+  }
+
+  const listEl = document.getElementById("transport-list");
+  listEl.innerHTML = "";
+  const offers = state.transports[transportEventId] || {};
+  const me = currentTransportIdentity();
+  const entries = Object.entries(offers).sort((a, b) => offerTs(a[1]) - offerTs(b[1]));
+
+  if (entries.length === 0) {
+    listEl.innerHTML = `<p class="muted transport-empty">Nikt jeszcze nie zaproponował transportu. Bądź pierwszy — dodaj swój plusikiem poniżej.</p>`;
+    return;
+  }
+
+  for (const [offerId, offer] of entries) {
+    const passengers = offer.passengers || {};
+    const passengerEntries = Object.entries(passengers);
+    const taken = passengerEntries.length;
+    const free = Math.max(0, (offer.seats || 0) - taken);
+    const isDriver = me && me.key === offer.driverKey;
+    const amPassenger = me && !!passengers[me.key];
+
+    const card = document.createElement("div");
+    card.className = "transport-offer" + (isDriver ? " mine" : "") + (amPassenger ? " joined" : "");
+
+    const head = document.createElement("div");
+    head.className = "transport-offer-head";
+    head.innerHTML = `
+      <div class="transport-driver">🚗 <strong>${escapeHtml(offer.driverName)}</strong> <span class="transport-driver-tag">za kierownicą</span></div>
+      <div class="transport-meta">🕒 ${escapeHtml(offer.time)} &nbsp;·&nbsp; 📍 ${escapeHtml(offer.place)}</div>
+    `;
+    card.appendChild(head);
+
+    // Wizualizacja auta: kierowca + kółka miejsc (zajęte / wolne)
+    const seatsWrap = document.createElement("div");
+    seatsWrap.className = "transport-seats";
+    const driverSeat = document.createElement("span");
+    driverSeat.className = "seat seat-driver";
+    driverSeat.title = `Kierowca: ${offer.driverName}`;
+    driverSeat.textContent = "🧑‍✈️";
+    seatsWrap.appendChild(driverSeat);
+    for (const [, pname] of passengerEntries) {
+      const s = document.createElement("span");
+      s.className = "seat seat-taken";
+      s.title = pname;
+      s.textContent = "🧑";
+      seatsWrap.appendChild(s);
+    }
+    for (let i = 0; i < free; i++) {
+      const s = document.createElement("span");
+      s.className = "seat seat-free";
+      s.title = "Wolne miejsce";
+      seatsWrap.appendChild(s);
+    }
+    card.appendChild(seatsWrap);
+
+    const countRow = document.createElement("div");
+    countRow.className = "transport-count";
+    countRow.innerHTML = `<span class="tc-free">${free} wolnych</span> &nbsp;·&nbsp; <span class="tc-taken">${taken}/${offer.seats} zajętych</span>`;
+    card.appendChild(countRow);
+
+    if (passengerEntries.length > 0) {
+      const plist = document.createElement("div");
+      plist.className = "transport-passengers";
+      plist.textContent = "Jadą: " + passengerEntries.map(([, n]) => n).join(", ");
+      card.appendChild(plist);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "transport-actions";
+    if (isDriver) {
+      const del = document.createElement("button");
+      del.className = "link-btn transport-remove-btn";
+      del.textContent = "🗑️ Usuń swój transport";
+      del.onclick = () => deleteOwnTransport(offerId);
+      actions.appendChild(del);
+    } else {
+      const joinBtn = document.createElement("button");
+      joinBtn.className = "transport-join-btn" + (amPassenger ? " leave" : "");
+      if (amPassenger) {
+        joinBtn.textContent = "− Wypisz się";
+      } else if (free > 0) {
+        joinBtn.textContent = "＋ Zabieram się";
+      } else {
+        joinBtn.textContent = "Brak miejsc";
+        joinBtn.disabled = true;
+      }
+      joinBtn.onclick = () => togglePassenger(offerId, offer);
+      actions.appendChild(joinBtn);
+    }
+    card.appendChild(actions);
+
+    // Czat auta — piszą kierowca i pasażerowie tej oferty; reszta może czytać.
+    const isMember = isDriver || amPassenger;
+    const chat = Array.isArray(offer.chat) ? offer.chat : [];
+    const chatWrap = document.createElement("div");
+    chatWrap.className = "transport-chat";
+
+    const chatHead = document.createElement("div");
+    chatHead.className = "transport-chat-head";
+    chatHead.textContent = `💬 Czat auta${chat.length ? ` (${chat.length})` : ""}`;
+    chatWrap.appendChild(chatHead);
+
+    const chatMsgs = document.createElement("div");
+    chatMsgs.className = "transport-chat-msgs";
+    if (chat.length === 0) {
+      chatMsgs.innerHTML = `<p class="muted transport-chat-empty">${
+        isMember ? "Brak wiadomości — napisz coś do współpasażerów." : "Brak wiadomości. Piszą tu kierowca i pasażerowie."
+      }</p>`;
+    } else {
+      for (const m of chat) {
+        const row = document.createElement("div");
+        row.className = "transport-chat-msg" + (me && m.key === me.key ? " mine" : "");
+        row.innerHTML = `<div class="tcm-top"><span class="tcm-author">${escapeHtml(
+          m.name || "Ktoś"
+        )}</span> <span class="tcm-time">${formatClock(m.ts)}</span></div><div class="tcm-text">${escapeHtml(
+          m.text || ""
+        )}</div>`;
+        chatMsgs.appendChild(row);
+      }
+    }
+    chatWrap.appendChild(chatMsgs);
+
+    if (isMember) {
+      const compose = document.createElement("div");
+      compose.className = "transport-chat-compose";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "transport-chat-input";
+      input.placeholder = "Napisz wiadomość…";
+      input.maxLength = 300;
+      const send = document.createElement("button");
+      send.className = "transport-chat-send";
+      send.textContent = "Wyślij";
+      send.onclick = () => postTransportChat(offerId, input);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          postTransportChat(offerId, input);
+        }
+      });
+      compose.appendChild(input);
+      compose.appendChild(send);
+      chatWrap.appendChild(compose);
+    }
+    card.appendChild(chatWrap);
+
+    listEl.appendChild(card);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 5. Start
 // ---------------------------------------------------------------------------
 async function init() {
@@ -2318,6 +2633,7 @@ async function init() {
   initVisitsButton();
   initGabryssim();
   initPushOptIn();
+  initTransportOverlay();
   renderIdentityBar();
   updateMessageBadge();
   renderSchedule();
@@ -2363,6 +2679,11 @@ async function init() {
     state.tactic = data.slots || {};
     state.tacticPublished = !!data.published;
     refreshTacticBoardIfOpen();
+  });
+  store.subscribeTransports((data) => {
+    state.transports = data;
+    renderSchedule(); // odśwież licznik ofert (🚗) na kartach
+    refreshTransportIfOpen();
   });
   store.subscribeMessages((data) => {
     state.messages = data;
