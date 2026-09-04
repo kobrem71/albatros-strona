@@ -1478,7 +1478,8 @@ main {
 .transport-count .tc-taken { color: var(--ink); }
 .transport-passengers { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
 
-.transport-actions { margin-top: 10px; }
+.transport-actions { margin-top: 10px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.transport-edit-btn { color: var(--blue); }
 .transport-join-btn {
   border: 1px solid var(--blue);
   background: rgba(63, 182, 240, 0.14);

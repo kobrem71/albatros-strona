@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=43";
-import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=43";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=43";
-import { getStore } from "./store.js?v=43";
+import { PLAYERS, slugify } from "./players.js?v=44";
+import { RECURRING_RULES, EXTRA_EVENTS, TYPE_META } from "./schedule.js?v=44";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=44";
+import { getStore } from "./store.js?v=44";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=43";
-import { initGabryssim } from "./gabryssim.js?v=43";
+} from "./league-data.js?v=44";
+import { initGabryssim } from "./gabryssim.js?v=44";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1691,7 +1691,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=43";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=44";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
@@ -2425,6 +2425,34 @@ async function deleteOwnTransport(offerId) {
   await store.removeTransport(transportEventId, offerId);
 }
 
+// Edycja własnej oferty przez kierowcę — można zmienić godzinę, miejsce i
+// łączną liczbę miejsc (w tym dodać miejsca). Nie da się zejść poniżej liczby
+// osób, które już jadą — najpierw ktoś musi się wypisać.
+async function editOwnTransport(offerId, offer) {
+  const time = (prompt("Godzina odjazdu (np. 17:30):", offer.time || "") || "").trim();
+  if (!time) return;
+  const place = (prompt("Miejsce odjazdu (np. Rynek w Legnicy):", offer.place || "") || "").trim();
+  if (!place) return;
+  const taken = Object.keys(offer.passengers || {}).length;
+  const seatsRaw = (
+    prompt(
+      `Łączna liczba miejsc dla pasażerów (min. ${taken} — tylu już jedzie):`,
+      String(offer.seats || Math.max(taken, 1))
+    ) || ""
+  ).trim();
+  const seats = parseInt(seatsRaw, 10);
+  if (!Number.isFinite(seats) || seats < 1 || seats > 20) {
+    alert("Podaj liczbę miejsc (1–20).");
+    return;
+  }
+  if (seats < taken) {
+    alert(`Nie możesz ustawić mniej miejsc (${seats}) niż liczba jadących (${taken}). Najpierw ktoś musi się wypisać.`);
+    return;
+  }
+  store = store || (await getStore());
+  await store.updateTransport(transportEventId, offerId, { time, place, seats });
+}
+
 // ts bywa liczbą (tryb demo) albo Firestore Timestamp ({seconds}) — ta funkcja
 // wyciąga z obu porównywalną wartość do sortowania ofert wg czasu dodania.
 function offerTs(offer) {
@@ -2538,6 +2566,11 @@ function renderTransport() {
     const actions = document.createElement("div");
     actions.className = "transport-actions";
     if (isDriver) {
+      const edit = document.createElement("button");
+      edit.className = "link-btn transport-edit-btn";
+      edit.textContent = "✏️ Edytuj";
+      edit.onclick = () => editOwnTransport(offerId, offer);
+      actions.appendChild(edit);
       const del = document.createElement("button");
       del.className = "link-btn transport-remove-btn";
       del.textContent = "🗑️ Usuń swój transport";

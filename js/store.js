@@ -1,7 +1,7 @@
 // Warstwa danych: jeśli Firebase jest skonfigurowany -> Firestore (wspólne dla
 // wszystkich). Jeśli nie -> localStorage (tryb demo, tylko na tym urządzeniu).
 
-import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=43";
+import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js?v=44";
 
 const DEMO_SIGNUPS_KEY = "albatros_demo_signups_v1";
 const DEMO_EVENTS_KEY = "albatros_demo_events_v1";
@@ -249,6 +249,15 @@ function createLocalStore() {
       writeLocal(DEMO_TRANSPORTS_KEY, data);
       notifyTransports();
     },
+    // Edycja własnej oferty (kierowca) — nadpisuje tylko podane pola (np.
+    // time/place/seats), pasażerowie i czat zostają nietknięci.
+    async updateTransport(eventId, offerId, fields) {
+      const data = readLocal(DEMO_TRANSPORTS_KEY);
+      if (!data[eventId] || !data[eventId][offerId]) return;
+      data[eventId][offerId] = { ...data[eventId][offerId], ...fields };
+      writeLocal(DEMO_TRANSPORTS_KEY, data);
+      notifyTransports();
+    },
     // Powiadomienia push wymagają prawdziwego Firebase (wysyłka idzie przez
     // Firebase Console — patrz README) — w trybie demo nie ma czego włączać.
     async getMessagingToken() {
@@ -464,6 +473,15 @@ async function createFirebaseStore() {
       await updateDoc(doc(db, "transports", eventId), {
         [`offers.${offerId}`]: deleteField(),
       });
+    },
+    // Edycja własnej oferty (kierowca) — merge nadpisuje tylko podane pola
+    // (time/place/seats), nie ruszając passengers ani chat.
+    async updateTransport(eventId, offerId, fields) {
+      await setDoc(
+        doc(db, "transports", eventId),
+        { offers: { [offerId]: fields } },
+        { merge: true }
+      );
     },
   };
 }
