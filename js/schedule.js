@@ -50,6 +50,12 @@ export const EXTRA_EVENTS = [
     time: "16:00",
     location: HOME_ADDRESS,
   },
+  {
+    type: "trening-bramkarski",
+    date: "2026-09-07", // poniedziałek
+    time: "18:00",
+    location: HOME_ADDRESS,
+  },
 
   // Kolejka 3
   {
