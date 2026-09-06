@@ -21,6 +21,11 @@ export const TYPE_META = {
     color: "#a879f5",
     colorSoft: "rgba(168,121,245,0.24)",
   },
+  "sparing-wewnetrzny": {
+    label: "Sparing wewnętrzny",
+    color: "#8b3ff0",
+    colorSoft: "rgba(139,63,240,0.24)",
+  },
 };
 
 // Domyślny adres domowych treningów i meczów klubu.
@@ -64,7 +69,15 @@ export const EXTRA_EVENTS = [
   },
   // Kolejka 5: PAUZA - kolejka wolna, brak meczu (wg oficjalnego terminarza
   // 90minut.pl / laczynaspilka.pl; poprzednio było tu błędnie wpisane
-  // "Krokus Kwiatkowice", drużyna spoza tej grupy)
+  // "Krokus Kwiatkowice", drużyna spoza tej grupy).
+  // W wolny weekend (kolejka 5) — sparing wewnętrzny.
+  {
+    type: "sparing-wewnetrzny",
+    date: "2026-09-13", // niedziela
+    time: "17:00",
+    location: HOME_ADDRESS,
+    label: "Sparing wewnętrzny",
+  },
 
   // Kolejka 6 — UWAGA: termin jeszcze NIE jest oficjalnie potwierdzony przez
   // ligę (na laczynaspilka.pl widnieje jako "-"), tylko przedział "19-20
