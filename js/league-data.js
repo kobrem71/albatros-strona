@@ -145,7 +145,7 @@ export const PLAYER_STATS = [
   { name: "Mateusz Gresiuk", matches: 5, minutes: 450, goals: 2, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M4, 90), m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
   // 2 asysty w meczu z Legsadem II Kościelec (kolejka 3, M3) — dopisane
   // ręcznie od razu po meczu (laczynaspilka.pl nie pokazuje asyst).
-  { name: "Maksym Hlibichuk", matches: 3, minutes: 270, goals: 0, assists: 2, yellowCards: 0, redCards: 0, matchLog: [m(M4, 90), m(M3, 90), m(M2, 90)] },
+  { name: "Maksym Hlibichuk", matches: 3, minutes: 270, goals: 0, assists: 3, yellowCards: 0, redCards: 0, matchLog: [m(M4, 90, [], [], [], 1), m(M3, 90), m(M2, 90)] },
   { name: "Rafał Kanasiuk", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Oleksandr Kolvakh", matches: 1, minutes: 90, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M1, 90)] },
   { name: "Kacper Malinowski", matches: 5, minutes: 55, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M4, 0), m(M3, 27), m(M2, 7), m(M1, 10), m(CUP1, 11)] },
