@@ -867,7 +867,7 @@ function renderStats() {
 // ---------------------------------------------------------------------------
 // 4. Tło: mozaika małych "okienek" wideo wypełniająca cały ekran
 // ---------------------------------------------------------------------------
-const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => `assets/gifs/gif${n}.mp4`);
+const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => `assets/gifs/gif${n}.mp4`);
 const BG_CELL_TARGET_W = 300; // px, orientacyjna szerokość jednego "okienka"
 const BG_CELL_ASPECT = 4 / 3; // proporcje okienka (szerokość / wysokość)
 const BG_MAX_COLUMNS = 7;
