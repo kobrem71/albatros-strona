@@ -26,6 +26,11 @@ export const TYPE_META = {
     color: "#8b3ff0",
     colorSoft: "rgba(139,63,240,0.24)",
   },
+  turniej: {
+    label: "Turniej",
+    color: "#f2d024",
+    colorSoft: "rgba(242,208,36,0.24)",
+  },
 };
 
 // Domyślny adres domowych treningów i meczów klubu.
@@ -51,6 +56,13 @@ export const CANCELLED_RECURRING = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  {
+    type: "turniej",
+    date: "2026-09-12", // sobota
+    time: "09:00",
+    location: "Tartan przy szkole na Mazowieckiej",
+    label: "Turniej o Puchar Piotra Żabki Żabickiego",
+  },
   {
     type: "trening-bramkarski",
     date: "2026-08-27", // czwartek

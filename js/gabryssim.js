@@ -81,7 +81,7 @@ const CHEER_VIDEO = ASSET_BASE + "cheering%20after%20goal.mp4";
 // Te same filmiki co w mozaice tła na stronie głównej (patrz BG_VIDEOS w
 // js/app.js) — puszczone też na ekranie ładowania Symulatora Gabrysia, żeby
 // czekanie na duże gify/wideo wyniku nie wyglądało na zawieszenie strony.
-const LOADING_BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => `assets/gifs/gif${n}.mp4`);
+const LOADING_BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => `assets/gifs/gif${n}.mp4`);
 const LOADING_GRID_COLUMNS = 4;
 const LOADING_GRID_ROWS = 3;
 
