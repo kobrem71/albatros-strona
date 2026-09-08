@@ -37,6 +37,13 @@ export const RECURRING_RULES = [
   { type: "trening", weekday: 5, time: "18:00", location: HOME_ADDRESS }, // piątek
 ];
 
+// Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
+// Wpisz tu datę, żeby jednorazowo odwołać regularny trening w danym dniu
+// (np. gdy przenosisz go na inny dzień) — cotygodniowa reguła zostaje bez zmian.
+export const CANCELLED_RECURRING = [
+  "2026-09-11", // piątek — trening przeniesiony na czwartek 10.09 17:30
+];
+
 // Wydarzenia jednorazowe: mecze wg terminarza ligi (kolejki 3-13) + inne dodatkowe zajęcia.
 //
 // Adresy wyjazdowe: dla Kwiatkowic i Mierzowic nie udało się znaleźć dokładnego
@@ -44,6 +51,13 @@ export const RECURRING_RULES = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  // Trening przeniesiony z piątku 11.09 (18:00) na czwartek 10.09 (17:30).
+  {
+    type: "trening",
+    date: "2026-09-10", // czwartek
+    time: "17:30",
+    location: HOME_ADDRESS,
+  },
   {
     type: "trening-bramkarski",
     date: "2026-08-27", // czwartek
