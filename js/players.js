@@ -43,6 +43,8 @@ export const RAW_NAMES = [
   "Alan Lichman",
   "Brajan Kwiatkowski",
   "Jakub Behrendt",
+  "Yevhenii Matiiv",
+  "Mykyta Hubin",
   "Zawodnik Testowany1",
   "Zawodnik Testowany2",
 ];
