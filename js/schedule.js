@@ -39,7 +39,7 @@ export const HOME_ADDRESS = "Jaśkowice Legnickie 45A";
 // Regularne, powtarzające się co tydzień treningi.
 export const RECURRING_RULES = [
   { type: "trening", weekday: 3, time: "18:00", location: HOME_ADDRESS }, // środa
-  { type: "trening", weekday: 4, time: "17:45", location: HOME_ADDRESS }, // czwartek
+  { type: "trening", weekday: 4, time: "17:25", location: HOME_ADDRESS }, // czwartek
 ];
 
 // Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
