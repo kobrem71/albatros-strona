@@ -2,7 +2,7 @@
 //
 // 1) REGULARNE ZAJĘCIA (co tydzień, automatycznie):
 //    weekday: 0 = niedziela, 1 = poniedziałek, ... 6 = sobota
-//    Treningi (śr/pt) powtarzają się same, co tydzień, bez potrzeby edycji.
+//    Treningi (śr/czw) powtarzają się same, co tydzień, bez potrzeby edycji.
 //
 // 2) WYDARZENIA JEDNORAZOWE (mecze wg terminarza, trening bramkarski itp.):
 //    dopisz obiekt do EXTRA_EVENTS z konkretną datą (RRRR-MM-DD).
@@ -39,7 +39,7 @@ export const HOME_ADDRESS = "Jaśkowice Legnickie 45A";
 // Regularne, powtarzające się co tydzień treningi.
 export const RECURRING_RULES = [
   { type: "trening", weekday: 3, time: "18:00", location: HOME_ADDRESS }, // środa
-  { type: "trening", weekday: 5, time: "18:00", location: HOME_ADDRESS }, // piątek
+  { type: "trening", weekday: 4, time: "17:45", location: HOME_ADDRESS }, // czwartek
 ];
 
 // Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
