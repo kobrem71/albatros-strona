@@ -157,7 +157,9 @@ export const PLAYER_STATS = [
   { name: "Filip Siwak", matches: 5, minutes: 181, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M4, 44), m(M3, 44, ["70'"]), m(M2, 45), m(M1, 30), m(CUP1, 18)] },
   { name: "Mateusz Styrcz", matches: 3, minutes: 223, goals: 1, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 66, ["38'"]), m(M1, 90), m(CUP1, 67)] },
   { name: "Marcin Świtoń", matches: 4, minutes: 204, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M4, 90), m(M3, 90), m(M2, 24), m(M1, 0)] },
-  { name: "Gabriel Świerbutowicz", matches: 5, minutes: 16, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M4, 0), m(M3, 0), m(M2, 16), m(M1, 0), m(CUP1, 0)] },
+  // Czerwona kartka z meczu z Koroną Kawice (M4) — dostał ją po końcowym
+  // gwizdku, ale figuruje w protokole meczowym, więc liczy się do statystyk.
+  { name: "Gabriel Świerbutowicz", matches: 5, minutes: 16, goals: 0, assists: 0, yellowCards: 0, redCards: 1, matchLog: [m(M4, 0, [], [], ["po meczu"]), m(M3, 0), m(M2, 16), m(M1, 0), m(CUP1, 0)] },
   { name: "Bartłomiej Taczyński", matches: 3, minutes: 225, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M3, 90), m(M2, 45, [], [], [], 1), m(CUP1, 90)] },
   { name: "Krzysztof Taczyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Marek Taczyński", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M2, 0)] },
