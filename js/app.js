@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=49";
-import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=49";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=49";
-import { getStore } from "./store.js?v=49";
+import { PLAYERS, slugify } from "./players.js?v=51";
+import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=51";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=51";
+import { getStore } from "./store.js?v=51";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=49";
-import { initGabryssim } from "./gabryssim.js?v=49";
+} from "./league-data.js?v=51";
+import { initGabryssim } from "./gabryssim.js?v=51";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -109,6 +109,10 @@ export function buildUpcomingEvents() {
     const dateStr = toDateStr(day);
     for (const rule of RECURRING_RULES) {
       if (day.getDay() === rule.weekday) {
+        // Reguła może obowiązywać tylko w zakresie dat (RRRR-MM-DD, granice
+        // włącznie) — np. gdy harmonogram treningów zmienia się w trakcie rundy.
+        if (rule.from && dateStr < rule.from) continue;
+        if (rule.until && dateStr > rule.until) continue;
         // Pomiń pojedyncze, jednorazowo odwołane wystąpienia (np. gdy trening
         // został przeniesiony na inny dzień) — reguła cotygodniowa zostaje.
         if (CANCELLED_RECURRING.includes(dateStr)) continue;
@@ -1694,7 +1698,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=49";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=51";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,

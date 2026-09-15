@@ -37,9 +37,20 @@ export const TYPE_META = {
 export const HOME_ADDRESS = "Jaśkowice Legnickie 45A";
 
 // Regularne, powtarzające się co tydzień treningi.
+//
+// Reguły można ograniczyć zakresem dat polami `from` / `until` (RRRR-MM-DD,
+// obie GRANICE WŁĄCZNIE) — obsługa w buildUpcomingEvents (js/app.js). Bez tych
+// pól reguła obowiązuje bezterminowo.
 export const RECURRING_RULES = [
-  { type: "trening", weekday: 3, time: "18:00", location: HOME_ADDRESS }, // środa
-  { type: "trening", weekday: 4, time: "17:25", location: HOME_ADDRESS }, // czwartek
+  // Do meczu z Huzarem Raszówka (kolejka 6, 2026-09-20) obowiązuje jeszcze
+  // stary harmonogram śr/czw.
+  { type: "trening", weekday: 3, time: "18:00", location: HOME_ADDRESS, until: "2026-09-20" }, // środa (do meczu z Raszówką)
+  { type: "trening", weekday: 4, time: "17:25", location: HOME_ADDRESS, until: "2026-09-20" }, // czwartek (do meczu z Raszówką)
+
+  // Od tygodnia po meczu z Raszówką do końca rundy jesiennej (ostatni mecz:
+  // kolejka 13, 2026-11-15) treningi przenoszą się na wt/czw 17:15.
+  { type: "trening", weekday: 2, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-11-15" }, // wtorek
+  { type: "trening", weekday: 4, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-11-15" }, // czwartek
 ];
 
 // Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
