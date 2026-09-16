@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=54";
-import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=54";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=54";
-import { getStore } from "./store.js?v=54";
+import { PLAYERS, slugify } from "./players.js?v=55";
+import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=55";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=55";
+import { getStore } from "./store.js?v=55";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=54";
-import { initGabryssim } from "./gabryssim.js?v=54";
+} from "./league-data.js?v=55";
+import { initGabryssim } from "./gabryssim.js?v=55";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -1754,12 +1754,14 @@ function openPlayerCard(player) {
       const label = match.home
         ? `Albatros Jaśkowice – ${match.opponent}`
         : `${match.opponent} – Albatros Jaśkowice`;
+      // Same ikonki, bez minut, w których padł gol (nieczytelne) — jedna
+      // ikonka na każdy gol / asystę / kartkę, kompaktowo, np. "74' · ⚽⚽⚽🅰️".
       const events = [
-        ...match.goalMinutes.map((t) => `⚽ ${t}`),
-        ...(match.assists ? [`🅰️${match.assists > 1 ? "×" + match.assists : ""}`] : []),
-        ...match.yellowMinutes.map((t) => `🟨 ${t}`),
-        ...match.redMinutes.map((t) => `🟥 ${t}`),
-      ].join(" ");
+        "⚽".repeat(match.goalMinutes.length),
+        "🅰️".repeat(match.assists || 0),
+        "🟨".repeat(match.yellowMinutes.length),
+        "🟥".repeat(match.redMinutes.length),
+      ].join("");
       const competitionTag = match.competition ? ` <em>(${escapeHtml(match.competition)})</em>` : "";
       return `
         <div class="league-fixture">
@@ -1801,7 +1803,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=54";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=55";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,
