@@ -1605,9 +1605,10 @@ main {
 
 .hof-title {
   margin: 0;
-  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-size: clamp(1.3rem, 5.5vw, 2.8rem);
   font-weight: 800;
   letter-spacing: 2px;
+  white-space: nowrap;
   background: linear-gradient(180deg, #fff2c2, #e0b23a 45%, #a9780f 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1777,8 +1778,29 @@ main {
   animation: hof-title-glow 2.4s ease-in-out infinite;
 }
 
+/* Na telefonie zostawiamy układ 2x2 (nie 1 kolumnę), ale wszystko zmniejszamy
+   tak, żeby cała tablica zmieściła się na jednym ekranie bez przewijania. */
 @media (max-width: 560px) {
-  .hof-grid { grid-template-columns: 1fr; gap: 10px; }
-  .hof-photo-wrap { width: 34px; height: 34px; }
-  .hof-nm { font-size: 0.82rem; }
+  .hof-content { padding: 10px; align-items: flex-start; }
+  .hof-card { gap: 10px; justify-content: center; min-height: 100%; }
+  .hof-title { letter-spacing: 0.5px; }
+  .hof-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hof-quadrant { padding: 8px 8px 10px; border-radius: 12px; }
+  .hof-q-title { margin: 0 0 7px; font-size: 0.72rem; letter-spacing: 0.5px; }
+  .hof-podium { gap: 5px; }
+  .hof-row { gap: 6px; padding: 4px 6px; border-radius: 9px; }
+  .hof-rank { width: 14px; font-size: 0.75rem; }
+  .hof-photo-wrap { width: 28px; height: 28px; padding: 1.5px; }
+  .hof-nm { font-size: 0.72rem; }
+  .hof-val { font-size: 0.8rem; }
+  .hof-caption { letter-spacing: 2.5px; margin-top: 2px; }
+}
+
+/* Bardzo niskie ekrany (telefon w poziomie / małe telefony) — jeszcze ciaśniej. */
+@media (max-width: 560px) and (max-height: 680px) {
+  .hof-title { font-size: 1.15rem; }
+  .hof-q-title { font-size: 0.66rem; margin-bottom: 5px; }
+  .hof-photo-wrap { width: 24px; height: 24px; }
+  .hof-nm { font-size: 0.66rem; }
+  .hof-caption { font-size: 1rem; }
 }
