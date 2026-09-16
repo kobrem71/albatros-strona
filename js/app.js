@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=52";
-import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=52";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=52";
-import { getStore } from "./store.js?v=52";
+import { PLAYERS, slugify } from "./players.js?v=53";
+import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=53";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=53";
+import { getStore } from "./store.js?v=53";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=52";
-import { initGabryssim } from "./gabryssim.js?v=52";
+} from "./league-data.js?v=53";
+import { initGabryssim } from "./gabryssim.js?v=53";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -956,6 +956,7 @@ function initRandomGifButton() {
   const overlay = document.getElementById("gif-overlay");
   const video = document.getElementById("gif-overlay-video");
   const potmEl = document.getElementById("gif-overlay-potm");
+  const hofEl = document.getElementById("gif-overlay-hof");
   const closeBtn = document.getElementById("gif-overlay-close");
   if (!btn || !overlay || !video || !potmEl || !closeBtn) return;
 
@@ -969,7 +970,20 @@ function initRandomGifButton() {
     video.hidden = false;
     potmEl.hidden = true;
     potmEl.innerHTML = "";
+    if (hofEl) {
+      hofEl.hidden = true;
+      hofEl.innerHTML = "";
+    }
     clearPotmTimers();
+  }
+
+  function openHofOverlay() {
+    video.hidden = true;
+    video.pause();
+    potmEl.hidden = true;
+    potmEl.innerHTML = "";
+    overlay.hidden = false;
+    runHofSequence(hofEl, closeOverlay);
   }
 
   function openVideoOverlay() {
@@ -991,12 +1005,17 @@ function initRandomGifButton() {
 
   btn.addEventListener("click", () => {
     openCount++;
-    // 1. kliknięcie: zawsze gracz meczu. 2. kliknięcie: zawsze zwykły
-    // filmik (żeby nie wypadł dwa razy z rzędu na samym początku). Od
-    // 3. kliknięcia: w pełni losowo (50/50).
+    // 1. kliknięcie: zawsze HALL OF FAME (Orły Albatrosa). 2. kliknięcie:
+    // zawsze gracz meczu. 3. kliknięcie: zawsze zwykły filmik (żeby nie
+    // wypadł dwa razy z rzędu na samym początku). Od 4. kliknięcia: w pełni
+    // losowo (50/50 filmik/gracz meczu).
+    if (openCount === 1 && hofEl) {
+      openHofOverlay();
+      return;
+    }
     let showPotm;
-    if (openCount === 1) showPotm = true;
-    else if (openCount === 2) showPotm = false;
+    if (openCount === 2) showPotm = true;
+    else if (openCount === 3) showPotm = false;
     else showPotm = Math.random() < 0.5;
 
     if (showPotm) openPotmOverlay();
@@ -1132,6 +1151,88 @@ function runPotmSequence(container, onDone) {
 
   const closeTimer = setTimeout(onDone, POTM_SPIN_MS + POTM_REVEAL_HOLD_MS);
   potmTimers.push(closeTimer);
+}
+
+// ---------------------------------------------------------------------------
+// 4b-ter. "HALL OF FAME" — wariant "Losowego gifa" wyświetlany jako PIERWSZY
+// (za pierwszym kliknięciem od wejścia na stronę). Okno podzielone na cztery
+// ćwiartki: TOP3 bramki, TOP3 asysty, TOP3 minuty, TOP3 obecności na
+// treningach. W każdej ćwiartce pierwsze miejsce jest złote, drugie srebrne,
+// trzecie brązowe, przy każdym malutkie zdjęcie zawodnika. Na dole podpis:
+// ORŁY ALBATROSA. Ćwiartki zapalają się kolejno (efekt "rozświetlenia").
+// ---------------------------------------------------------------------------
+const HOF_HOLD_MS = 12000; // jak długo trzyma się tablica, zanim sama się zamknie
+
+// Zwraca posortowaną malejąco listę TOP-N wg podanej wartości. `entries` to
+// tablica { name, value }. Gdy `dropZero` = true, pomijamy zawodników z
+// wartością 0 (nie ma sensu pokazywać "króla strzelców" z zerem goli).
+function topN(entries, n, dropZero) {
+  let list = entries.slice();
+  if (dropZero) list = list.filter((e) => e.value > 0);
+  list.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, "pl"));
+  return list.slice(0, n);
+}
+
+// Buduje HTML jednej ćwiartki (podium 1-2-3) Hall of Fame.
+function buildHofQuadrant(icon, title, unit, entries) {
+  const medals = ["gold", "silver", "bronze"];
+  const rows = entries
+    .map((e, i) => {
+      const rank = i + 1;
+      const cls = medals[i] || "";
+      const photo = potmPhotoSrc(e.name);
+      const valueLabel = unit ? `${e.value}${unit}` : `${e.value}`;
+      return `
+      <li class="hof-row hof-${cls}" style="--hof-i:${i}">
+        <span class="hof-rank">${rank}</span>
+        <span class="hof-photo-wrap">
+          <img class="hof-photo" src="${photo}" alt=""
+               onerror="this.onerror=null;this.src='${PLAYER_PLACEHOLDER_SRC}'" />
+        </span>
+        <span class="hof-nm">${escapeHtml(e.name)}</span>
+        <span class="hof-val">${valueLabel}</span>
+      </li>`;
+    })
+    .join("");
+  return `
+    <div class="hof-quadrant">
+      <h3 class="hof-q-title">${icon} ${title}</h3>
+      <ol class="hof-podium">${rows}</ol>
+    </div>`;
+}
+
+// Buduje i pokazuje całą tablicę Hall of Fame w podanym kontenerze, po czym
+// po HOF_HOLD_MS wywołuje `onDone` (zamknięcie pełnoekranowego okienka).
+function runHofSequence(container, onDone) {
+  // Dane do czterech ćwiartek.
+  const goals = PLAYER_STATS.map((p) => ({ name: p.name, value: p.goals || 0 }));
+  const assists = PLAYER_STATS.map((p) => ({ name: p.name, value: p.assists || 0 }));
+  const minutes = PLAYER_STATS.map((p) => ({ name: p.name, value: p.minutes || 0 }));
+
+  const att = computeAttendanceStats(); // pełna historia zapisów
+  const nameBySlug = new Map(PLAYERS.map((p) => [p.slug, p.name]));
+  const training = Object.entries(att).map(([slug, s]) => ({
+    name: nameBySlug.get(slug) || slug,
+    value: s.trening ? s.trening.tak : 0,
+  }));
+
+  const quadrants = [
+    buildHofQuadrant("⚽", "Bramki", "", topN(goals, 3, true)),
+    buildHofQuadrant("🅰️", "Asysty", "", topN(assists, 3, true)),
+    buildHofQuadrant("⏱️", "Minuty", "'", topN(minutes, 3, true)),
+    buildHofQuadrant("🏃", "Treningi", "", topN(training, 3, true)),
+  ].join("");
+
+  container.hidden = false;
+  container.innerHTML = `
+    <div class="hof-card">
+      <h2 class="hof-title">🏆 HALL OF FAME 🏆</h2>
+      <div class="hof-grid">${quadrants}</div>
+      <p class="hof-caption">ORŁY ALBATROSA</p>
+    </div>`;
+
+  const closeTimer = setTimeout(onDone, HOF_HOLD_MS);
+  potmTimers.push(closeTimer); // sprzątane tym samym mechanizmem co POTM
 }
 
 // ---------------------------------------------------------------------------
@@ -1700,7 +1801,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=52";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=53";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,

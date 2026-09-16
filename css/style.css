@@ -1581,3 +1581,204 @@ main {
   font-family: inherit;
 }
 .transport-chat-send:hover { background: #5cc4f2; }
+
+/* ---------- HALL OF FAME: pierwszy wariant przycisku "Losowy gif" ---------- */
+.hof-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  overflow: auto;
+  animation: potm-overlay-fade 0.4s ease;
+}
+.hof-content[hidden] { display: none; }
+
+.hof-card {
+  width: min(960px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.hof-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #fff2c2, #e0b23a 45%, #a9780f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 26px rgba(224, 178, 58, 0.5);
+  animation: hof-title-glow 2.4s ease-in-out infinite;
+}
+@keyframes hof-title-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(224, 178, 58, 0.35)); }
+  50% { filter: drop-shadow(0 0 20px rgba(224, 178, 58, 0.85)); }
+}
+
+.hof-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.hof-quadrant {
+  background: rgba(17, 26, 51, 0.82);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 14px 14px 16px;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  animation: hof-quadrant-in 0.55s ease forwards;
+}
+/* Ćwiartki zapalają się kolejno, jedna po drugiej */
+.hof-quadrant:nth-child(1) { animation-delay: 0.15s; }
+.hof-quadrant:nth-child(2) { animation-delay: 0.40s; }
+.hof-quadrant:nth-child(3) { animation-delay: 0.65s; }
+.hof-quadrant:nth-child(4) { animation-delay: 0.90s; }
+@keyframes hof-quadrant-in {
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); box-shadow: none; }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 34px 6px rgba(224, 178, 58, 0.55);
+    border-color: rgba(224, 178, 58, 0.75);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+    border-color: var(--card-border);
+  }
+}
+
+.hof-q-title {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.hof-podium {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hof-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  animation: hof-row-in 0.45s ease forwards;
+  animation-delay: calc(1.05s + var(--hof-i, 0) * 0.18s);
+}
+@keyframes hof-row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.hof-rank {
+  flex: 0 0 auto;
+  width: 22px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.hof-photo-wrap {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.hof-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.hof-nm {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hof-val {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--gold);
+}
+
+/* --- Ozłocenie / posrebrzenie / brąz --- */
+.hof-gold {
+  background: linear-gradient(100deg, rgba(224, 178, 58, 0.32), rgba(224, 178, 58, 0.08));
+  border-color: rgba(224, 178, 58, 0.85);
+  box-shadow: 0 0 18px 2px rgba(224, 178, 58, 0.55);
+  animation: hof-row-in 0.45s ease forwards, hof-gold-pulse 2.2s ease-in-out infinite 1.6s;
+}
+.hof-gold .hof-photo-wrap { background: linear-gradient(160deg, #ffe89a, #e0b23a 55%, #a9780f); }
+.hof-gold .hof-rank { color: #ffdf7e; }
+.hof-gold .hof-nm { color: #ffe6a3; }
+@keyframes hof-gold-pulse {
+  0%, 100% { box-shadow: 0 0 16px 2px rgba(224, 178, 58, 0.45); }
+  50% { box-shadow: 0 0 30px 6px rgba(224, 178, 58, 0.85); }
+}
+
+.hof-silver {
+  background: linear-gradient(100deg, rgba(210, 218, 230, 0.28), rgba(210, 218, 230, 0.06));
+  border-color: rgba(206, 214, 226, 0.7);
+  box-shadow: 0 0 12px 1px rgba(206, 214, 226, 0.4);
+}
+.hof-silver .hof-photo-wrap { background: linear-gradient(160deg, #f4f7fb, #c3cdd9 55%, #8a94a3); }
+.hof-silver .hof-rank { color: #dfe6ef; }
+.hof-silver .hof-val { color: #dfe6ef; }
+
+.hof-bronze {
+  background: linear-gradient(100deg, rgba(205, 127, 79, 0.28), rgba(205, 127, 79, 0.06));
+  border-color: rgba(205, 127, 79, 0.7);
+  box-shadow: 0 0 12px 1px rgba(205, 127, 79, 0.38);
+}
+.hof-bronze .hof-photo-wrap { background: linear-gradient(160deg, #e6a877, #cd7f4f 55%, #8a4f2c); }
+.hof-bronze .hof-rank { color: #eeb590; }
+.hof-bronze .hof-val { color: #eeb590; }
+
+.hof-caption {
+  margin: 4px 0 0;
+  font-size: clamp(1.1rem, 3.5vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fff2c2, #e0b23a 50%, #a9780f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 22px rgba(224, 178, 58, 0.45);
+  animation: hof-title-glow 2.4s ease-in-out infinite;
+}
+
+@media (max-width: 560px) {
+  .hof-grid { grid-template-columns: 1fr; gap: 10px; }
+  .hof-photo-wrap { width: 34px; height: 34px; }
+  .hof-nm { font-size: 0.82rem; }
+}
