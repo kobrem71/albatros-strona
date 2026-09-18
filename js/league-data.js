@@ -60,7 +60,7 @@ export const ALBATROS_FIXTURES = [
   // jeśli się zmieni.
   { round: 6, status: "scheduled", date: "2026-09-20", time: "11:00", home: false, opponent: "Huzar Raszówka" },
   { round: 7, status: "scheduled", date: "2026-09-27", time: "14:00", home: true, opponent: "Unia Rosochata" },
-  { round: 8, status: "scheduled", date: "2026-10-04", time: "17:15", home: false, opponent: "KS Mierzowice" },
+  { round: 8, status: "scheduled", date: "2026-10-04", time: "15:30", home: false, opponent: "KS Mierzowice" },
   { round: 9, status: "scheduled", date: "2026-10-11", time: "11:00", home: true, opponent: "Dąb Stowarzyszenie II Siedliska" },
   { round: 10, status: "scheduled", date: "2026-10-18", time: "14:30", home: false, opponent: "Konfeks II Legnica" },
   { round: 11, status: "scheduled", date: "2026-10-25", time: "11:00", home: true, opponent: "Kaczawa II Bieniowice" },

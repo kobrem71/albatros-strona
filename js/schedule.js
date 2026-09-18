@@ -26,6 +26,11 @@ export const TYPE_META = {
     color: "#8b3ff0",
     colorSoft: "rgba(139,63,240,0.24)",
   },
+  "sparing-iskra": {
+    label: "Sparing z Iskra Kochlice U16",
+    color: "#2fd07a",
+    colorSoft: "rgba(47,208,122,0.24)",
+  },
   turniej: {
     label: "Turniej",
     color: "#f2d024",
@@ -58,6 +63,7 @@ export const RECURRING_RULES = [
 // (np. gdy przenosisz go na inny dzień) — cotygodniowa reguła zostaje bez zmian.
 export const CANCELLED_RECURRING = [
   // np. "2026-09-11" — wpisz datę, by jednorazowo odwołać regularny trening.
+  "2026-09-24", // czwartkowy trening zamieniony na sparing z Iskra Kochlice U16
 ];
 
 // Wydarzenia jednorazowe: mecze wg terminarza ligi (kolejki 3-13) + inne dodatkowe zajęcia.
@@ -67,6 +73,17 @@ export const CANCELLED_RECURRING = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  // Czwartek 24.09 — zamiast regularnego treningu sparing z Iskra Kochlice U16,
+  // ta sama godzina (17:15). `id` jest celowo przypięte do "trening-2026-09-24",
+  // żeby zapisy osób, które zapisały się jeszcze na trening, zostały zachowane.
+  {
+    type: "sparing-iskra",
+    id: "trening-2026-09-24",
+    date: "2026-09-24", // czwartek
+    time: "17:15",
+    location: HOME_ADDRESS,
+    label: "Sparing z Iskra Kochlice U16",
+  },
   {
     type: "turniej",
     date: "2026-09-12", // sobota
@@ -138,7 +155,7 @@ export const EXTRA_EVENTS = [
   {
     type: "mecz",
     date: "2026-10-04",
-    time: "17:15",
+    time: "15:30",
     location: "Mierzowice",
     label: "KS Mierzowice – Albatros Jaśkowice",
   },
