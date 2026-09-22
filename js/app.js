@@ -7,10 +7,10 @@
 // pliku jeszcze nie miała. Import specifiers muszą być stałymi literałami
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
-import { PLAYERS, slugify } from "./players.js?v=57";
-import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=57";
-import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=57";
-import { getStore } from "./store.js?v=57";
+import { PLAYERS, slugify } from "./players.js?v=58";
+import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=58";
+import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=58";
+import { getStore } from "./store.js?v=58";
 import {
   LEAGUE_NAME,
   LEAGUE_SOURCE_URL,
@@ -21,8 +21,8 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=57";
-import { initGabryssim } from "./gabryssim.js?v=57";
+} from "./league-data.js?v=58";
+import { initGabryssim } from "./gabryssim.js?v=58";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -160,6 +160,19 @@ function formatDateHuman(dateObj) {
   const day = pad(dateObj.getDate());
   const month = pad(dateObj.getMonth() + 1);
   return `${weekday}, ${day}.${month}`;
+}
+
+// Godzina zbiórki dla meczów ligowych — zawsze godzinę przed rozpoczęciem.
+// Liczona automatycznie z godziny meczu, więc nie trzeba jej wpisywać ręcznie
+// przy każdej kolejce (np. mecz 14:00 → zbiórka 13:00, mecz 11:00 → 10:00).
+// Zwraca null dla wydarzeń, które nie są meczem (treningi, sparingi, turnieje).
+function assemblyTime(ev) {
+  if (ev.type !== "mecz" || !ev.time) return null;
+  const [h, m] = ev.time.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const d = new Date(2000, 0, 1, h, m);
+  d.setHours(d.getHours() - 1);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -529,6 +542,7 @@ function renderSchedule() {
       }</span>
       <span class="event-type-badge">${meta.label}</span>
       <span class="event-date">${formatDateHuman(ev.dateObj)} · ${ev.time}</span>
+      ${assemblyTime(ev) ? `<span class="event-assembly">🕐 Zbiórka ${assemblyTime(ev)}</span>` : ""}
       ${ev.label ? `<span class="event-label">${escapeHtml(ev.label)}</span>` : ""}
       <span class="event-address">${address ? "📍 " + escapeHtml(address) : "📍 adres nieustalony"}</span>
       <span class="event-counts">
@@ -598,6 +612,7 @@ function renderRoster() {
     <div>
       <span class="event-type-badge">${meta.label}</span>
       <h3>${formatDateHuman(ev.dateObj)} · ${ev.time}</h3>
+      ${assemblyTime(ev) ? `<p class="roster-assembly">🕐 Zbiórka ${assemblyTime(ev)}</p>` : ""}
       ${ev.label ? `<p class="roster-event-label">${escapeHtml(ev.label)}</p>` : ""}
     </div>
   `;
@@ -1806,7 +1821,7 @@ function initPlayerOverlay() {
 // ?v= tu też jest potrzebne (tak jak przy css/js) — inaczej po podmianie
 // pliku assets/img/taktyka.jpg przeglądarka/GitHub Pages może dalej serwować
 // starą wersję zdjęcia spod tego samego adresu przez jakiś czas.
-const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=57";
+const TACTIC_BOARD_IMAGE = "assets/img/taktyka.jpg?v=58";
 const TACTIC_FORMATION_LABEL = "3-5-2 (pionowo)";
 // Taktyka jest teraz "niepublikowana" domyślnie: trener/kierownik/Krzysztof
 // Obremski widzą i układają skład na bieżąco, ale reszta widzi PUSTĄ planszę,

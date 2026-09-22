@@ -147,7 +147,7 @@ export const EXTRA_EVENTS = [
   {
     type: "mecz",
     date: "2026-09-27",
-    time: "11:00",
+    time: "14:00", // zbiórka automatycznie 13:00 (godzina przed meczem)
     location: HOME_ADDRESS,
     label: "Albatros Jaśkowice – Mała Unia Rosochata",
   },
