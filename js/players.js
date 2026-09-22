@@ -21,6 +21,7 @@ export const RAW_NAMES = [
   "Michał Papaj",
   "Paweł Pęczkowski",
   "Marcin Rozpędowski",
+  "Damian Róg",
   "Filip Siwak",
   "Mateusz Styrcz",
   "Marcin Świtoń",
