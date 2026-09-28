@@ -18,25 +18,25 @@
 
 export const LEAGUE_NAME = 'Klasa B "Keeza", grupa Legnica III';
 export const LEAGUE_SOURCE_URL = "https://www.90minut.pl/liga/1/liga14844.html";
-export const LEAGUE_UPDATED = "2026-09-22"; // data ostatniego pobrania danych
+export const LEAGUE_UPDATED = "2026-09-28"; // data ostatniego pobrania danych
 
-// Pełna tabela grupy, po kolejce 6. Kolejność drużyn przepisana 1:1 ze źródła
+// Pełna tabela grupy, po kolejce 7. Kolejność drużyn przepisana 1:1 ze źródła
 // (przy równej liczbie punktów decyduje bezpośredni mecz, nie różnica bramek).
 // pts = punkty, w/d/l = zwycięstwa/remisy/porażki, gf/ga = bramki zdobyte/stracone.
 export const LEAGUE_TABLE = [
-  { pos: 1, name: "Kolejarz Miłkowice", m: 6, pts: 15, w: 5, d: 0, l: 1, gf: 51, ga: 9 },
-  { pos: 2, name: "Miedź III Legnica", m: 6, pts: 15, w: 5, d: 0, l: 1, gf: 74, ga: 5 },
+  { pos: 1, name: "Miedź III Legnica", m: 7, pts: 18, w: 6, d: 0, l: 1, gf: 82, ga: 5 },
+  { pos: 2, name: "Kolejarz Miłkowice", m: 7, pts: 15, w: 5, d: 0, l: 2, gf: 51, ga: 17 },
   { pos: 3, name: "Victoria Orzeszków", m: 6, pts: 15, w: 5, d: 0, l: 1, gf: 44, ga: 9 },
-  { pos: 4, name: "Unia Rosochata", m: 5, pts: 12, w: 4, d: 0, l: 1, gf: 20, ga: 5 },
-  { pos: 5, name: "KS Mierzowice", m: 6, pts: 12, w: 4, d: 0, l: 2, gf: 21, ga: 24 },
-  { pos: 6, name: "Dąb Stowarzyszenie II Siedliska", m: 6, pts: 9, w: 3, d: 0, l: 3, gf: 40, ga: 17 },
-  { pos: 7, name: "Konfeks II Legnica", m: 6, pts: 9, w: 3, d: 0, l: 3, gf: 24, ga: 35 },
-  { pos: 8, name: "Albatros Jaśkowice", m: 5, pts: 8, w: 2, d: 2, l: 1, gf: 11, ga: 30 },
-  { pos: 9, name: "Korona Kawice", m: 5, pts: 7, w: 2, d: 1, l: 2, gf: 11, ga: 16 },
+  { pos: 4, name: "Unia Rosochata", m: 6, pts: 15, w: 5, d: 0, l: 1, gf: 24, ga: 6 },
+  { pos: 5, name: "Dąb Stowarzyszenie II Siedliska", m: 7, pts: 12, w: 4, d: 0, l: 3, gf: 47, ga: 21 },
+  { pos: 6, name: "KS Mierzowice", m: 6, pts: 12, w: 4, d: 0, l: 2, gf: 21, ga: 24 },
+  { pos: 7, name: "Konfeks II Legnica", m: 7, pts: 12, w: 4, d: 0, l: 3, gf: 28, ga: 36 },
+  { pos: 8, name: "Albatros Jaśkowice", m: 6, pts: 8, w: 2, d: 2, l: 2, gf: 12, ga: 34 },
+  { pos: 9, name: "Korona Kawice", m: 6, pts: 7, w: 2, d: 1, l: 3, gf: 15, ga: 23 },
   { pos: 10, name: "Huzar Raszówka", m: 5, pts: 3, w: 1, d: 0, l: 4, gf: 12, ga: 30 },
-  { pos: 11, name: "Błękitni II Kościelec", m: 5, pts: 1, w: 0, d: 1, l: 4, gf: 7, ga: 24 },
-  { pos: 12, name: "Rycerz II Legnickie Pole", m: 5, pts: 0, w: 0, d: 0, l: 5, gf: 9, ga: 46 },
-  { pos: 13, name: "Kaczawa II Bieniowice", m: 6, pts: 0, w: 0, d: 0, l: 6, gf: 4, ga: 78 },
+  { pos: 11, name: "Rycerz II Legnickie Pole", m: 6, pts: 3, w: 1, d: 0, l: 5, gf: 19, ga: 50 },
+  { pos: 12, name: "Błękitni II Kościelec", m: 6, pts: 1, w: 0, d: 1, l: 5, gf: 8, ga: 28 },
+  { pos: 13, name: "Kaczawa II Bieniowice", m: 7, pts: 0, w: 0, d: 0, l: 7, gf: 8, ga: 88 },
 ];
 
 export const ALBATROS_TEAM_NAME = "Albatros Jaśkowice";
@@ -57,7 +57,7 @@ export const ALBATROS_FIXTURES = [
   // Kolejka 6: wyjazd do Huzara Raszówka, wygrana 2:1 (gole: Bartosz Gresiuk 65',
   // Mateusz Gresiuk 79'; Huzar — Rudnicki 56'). Do przerwy 0:0.
   { round: 6, status: "played", date: "2026-09-20", home: false, opponent: "Huzar Raszówka", score: "2-1" },
-  { round: 7, status: "scheduled", date: "2026-09-27", time: "15:30", home: true, opponent: "Unia Rosochata" },
+  { round: 7, status: "played", date: "2026-09-27", home: true, opponent: "Unia Rosochata", score: "1-4" },
   { round: 8, status: "scheduled", date: "2026-10-04", time: "15:30", home: false, opponent: "KS Mierzowice" },
   { round: 9, status: "scheduled", date: "2026-10-11", time: "11:00", home: true, opponent: "Dąb Stowarzyszenie II Siedliska" },
   { round: 10, status: "scheduled", date: "2026-10-18", time: "14:30", home: false, opponent: "Konfeks II Legnica" },
@@ -196,4 +196,5 @@ export const MATCH_MVPS = [
   { opponent: "Błękitni II Kościelec", playerName: "Maksym Hlibichuk" },
   { opponent: "Korona Kawice", playerName: "Maciej Gdaniec" },
   { opponent: "Huzar Raszówka", playerName: "Mateusz Gresiuk" },
+  { opponent: "Unia Rosochata", playerName: "Patryk Wątroba" },
 ];
