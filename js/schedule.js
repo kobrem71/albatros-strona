@@ -64,6 +64,7 @@ export const RECURRING_RULES = [
 export const CANCELLED_RECURRING = [
   // np. "2026-09-11" — wpisz datę, by jednorazowo odwołać regularny trening.
   "2026-09-24", // czwartkowy trening zamieniony na sparing z Iskra Kochlice U16
+  "2026-10-08", // czwartkowy trening zamieniony na sparing z Iskra Kochlice U16
 ];
 
 // Wydarzenia jednorazowe: mecze wg terminarza ligi (kolejki 3-13) + inne dodatkowe zajęcia.
@@ -73,6 +74,17 @@ export const CANCELLED_RECURRING = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  // Czwartek 08.10 — zamiast regularnego treningu sparing z Iskra Kochlice U16,
+  // ta sama godzina (17:15). `id` przypięte do "trening-2026-10-08", żeby
+  // zachować dotychczasowe odpowiedzi.
+  {
+    type: "sparing-iskra",
+    id: "trening-2026-10-08",
+    date: "2026-10-08", // czwartek
+    time: "17:15",
+    location: HOME_ADDRESS,
+    label: "Sparing z Iskra Kochlice U16",
+  },
   // Czwartek 24.09 — zamiast regularnego treningu sparing z Iskra Kochlice U16,
   // ta sama godzina (17:15). `id` jest celowo przypięte do "trening-2026-09-24",
   // żeby zapisy osób, które zapisały się jeszcze na trening, zostały zachowane.
