@@ -15,6 +15,7 @@ export const RAW_NAMES = [
   "Maksym Hlibichuk",
   "Rafał Kanasiuk",
   "Oleksandr Kolvakh",
+  "Kolya Kryvoruchko",
   "Kacper Malinowski",
   "Krzysztof Obremski",
   "Damian Pachołek",

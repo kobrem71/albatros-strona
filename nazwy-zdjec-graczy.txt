@@ -23,6 +23,7 @@ Mateusz Gresiuk                     -> mateusz-gresiuk
 Maksym Hlibichuk                     -> maksym-hlibichuk
 Rafał Kanasiuk                        -> rafal-kanasiuk
 Oleksandr Kolvakh                      -> oleksandr-kolvakh
+Kolya Kryvoruchko                      -> kolya-kryvoruchko
 Kacper Malinowski                       -> kacper-malinowski
 Krzysztof Obremski                       -> krzysztof-obremski
 Damian Pachołek                           -> damian-pacholek
