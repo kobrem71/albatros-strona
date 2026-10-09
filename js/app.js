@@ -714,6 +714,8 @@ function eventTypeFromId(eventId) {
 function categoryOfType(type) {
   if (type === "mecz") return "mecz";
   if (type === "trening" || type === "trening-bramkarski") return "trening";
+  // Sparingi (wewnętrzne i z innymi drużynami) liczą się do frekwencji treningów.
+  if (type && type.startsWith("sparing")) return "trening";
   return null;
 }
 
