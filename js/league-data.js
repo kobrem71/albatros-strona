@@ -5,7 +5,7 @@
 // (kolejki 3-13) i statystyk zawodników (mecze/minuty/gole/kartki): oficjalny
 // system PZPN laczynaspilka.pl, strona drużyny — to najdokładniejsze źródło
 // godzin (90minut.pl czasem podaje tylko domyślne "11:00", a rzeczywista
-// godzina bywa inna, np. kolejka 10: 14:30) i jedyne źródło statystyk graczy.
+// godzina bywa inna, np. kolejka 10: 10:00) i jedyne źródło statystyk graczy.
 //   https://www.90minut.pl/liga/1/liga14844.html
 //   https://www.laczynaspilka.pl/rozgrywki/druzyna/5064cab8-7b3c-440a-9781-23cc71312dc6?tab=tab-zawodnicy&playDictionary=5f9440e8-3081-434b-a3f7-53ed07fb426b
 //

@@ -179,12 +179,11 @@ export const EXTRA_EVENTS = [
     location: HOME_ADDRESS,
     label: "Albatros Jaśkowice – Dąb Stow. II Siedliska",
   },
-  // Kolejka 10 — godzina 14:30 potwierdzona na stronie drużyny laczynaspilka.pl
-  // (nie domyślne 11:00, jak na 90minut.pl)
+  // Kolejka 10 — godzina zmieniona na 10:00 (zbiórka 9:00, liczona automatycznie)
   {
     type: "mecz",
     date: "2026-10-18",
-    time: "14:30",
+    time: "10:00",
     location: "ul. Władysława Grabskiego 24, Legnica",
     label: "Konfeks II Legnica – Albatros Jaśkowice",
   },
