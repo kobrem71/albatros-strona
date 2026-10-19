@@ -159,6 +159,8 @@ const M9 = { date: "2026-10-11", opponent: "Dąb Stowarzyszenie II Siedliska", h
 // Bartosz Gresiuk 1. Bez kartek po naszej stronie. Zmiany: 46' Malinowski ->
 // Borysenko, 59' Duchnicki -> Wątroba, 73' Didenko -> Obremski, 90' B. Taczyński
 // -> Fudali (na laczynaspilka 0 min, liczone 1', jak przy podobnej zmianie w M6).
+// Mateusz Gresiuk, Kamil Felsztyński i Yevhen Borblik byli w protokole jako
+// rezerwowi, ale nie przyjechali na mecz, więc nie liczymy im występu (wg klubu).
 // Składy i minuty wg match center laczynaspilka.pl.
 const M10 = { date: "2026-10-18", opponent: "Konfeks II Legnica", home: false, score: "6:4" };
 const CUP1 = {
@@ -178,10 +180,10 @@ export const PLAYER_STATS = [
   { name: "Dominik Duchnicki", matches: 6, minutes: 290, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M10, 59), m(M7, 73), m(M6, 0), m(M3, 46), m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
   { name: "Remigiusz Dubaniewicz", matches: 6, minutes: 64, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M9, 18), m(M8, 7), m(M7, 19), m(M4, 20), m(M3, 0), m(M1, 0)] },
   { name: "Bartosz Fudali", matches: 10, minutes: 170, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M10, 1), m(M9, 46), m(M8, 7), m(M7, 9), m(M6, 1), m(M4, 0), m(M3, 46), m(M2, 13), m(M1, 24), m(CUP1, 23)] },
-  { name: "Kamil Felsztyński", matches: 1, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M10, 0)] },
+  { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Maciej Gdaniec", matches: 9, minutes: 742, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M10, 90), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 90, [], ["85'"]), m(M3, 90), m(M2, 90), m(M1, 40), m(CUP1, 72)] },
   { name: "Bartosz Gresiuk", matches: 7, minutes: 586, goals: 5, assists: 2, yellowCards: 0, redCards: 0, matchLog: [m(M10, 90, ["5'", "41'", "60'"], [], [], 1), m(M9, 90, [], [], [], 1), m(M8, 90, ["34'"]), m(M7, 81), m(M6, 90, ["65'"]), m(M1, 66), m(CUP1, 79)] },
-  { name: "Mateusz Gresiuk", matches: 7, minutes: 540, goals: 3, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M10, 0), m(M6, 90, ["79'"]), m(M4, 90), m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
+  { name: "Mateusz Gresiuk", matches: 6, minutes: 540, goals: 3, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M6, 90, ["79'"]), m(M4, 90), m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
   // 2 asysty w meczu z Legsadem II Kościelec (kolejka 3, M3) — dopisane
   // ręcznie od razu po meczu (laczynaspilka.pl nie pokazuje asyst).
   { name: "Maksym Hlibichuk", matches: 7, minutes: 630, goals: 0, assists: 3, yellowCards: 1, redCards: 0, matchLog: [m(M10, 90), m(M9, 90), m(M8, 90, [], ["60'"]), m(M6, 90), m(M4, 90, [], [], [], 1), m(M3, 90, [], [], [], 2), m(M2, 90)] },
@@ -210,7 +212,7 @@ export const PLAYER_STATS = [
   { name: "Jonatan Wyporkiewicz", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Hubert Zdziech", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Konrad Zębacki", matches: 5, minutes: 191, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M8, 83), m(M7, 0), m(M6, 0), m(M4, 18), m(M1, 90)] },
-  { name: "Yevhen Borblik", matches: 9, minutes: 410, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M10, 0), m(M9, 0), m(M8, 83), m(M7, 90), m(M6, 0), m(M4, 11), m(M3, 46), m(M1, 90), m(CUP1, 90)] },
+  { name: "Yevhen Borblik", matches: 8, minutes: 410, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M9, 0), m(M8, 83), m(M7, 90), m(M6, 0), m(M4, 11), m(M3, 46), m(M1, 90), m(CUP1, 90)] },
   { name: "Artur Borysenko", matches: 4, minutes: 179, goals: 1, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M10, 44, ["48'"]), m(M2, 0), m(M1, 45, [], ["65'"]), m(CUP1, 90)] },
   { name: "Dawid Bubień", matches: 10, minutes: 750, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M10, 90), m(M9, 90, [], ["10'"]), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 90), m(M3, 90), m(M2, 90), m(M1, 30), m(CUP1, 0)] },
   // Poniżsi nie mieli jeszcze zgłoszonego profilu/występu w kadrze meczowej
