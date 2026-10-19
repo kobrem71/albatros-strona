@@ -22,7 +22,7 @@ import {
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
 } from "./league-data.js?v=71";
-import { initGabryssim } from "./gabryssim.js?v=59";
+import { initGabryssim } from "./gabryssim.js?v=72";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
 // (konta testowe / gracze grający rzadko) — nie znikają, tylko nie zaśmiecają
@@ -891,7 +891,7 @@ function renderStats() {
 // ---------------------------------------------------------------------------
 // 4. Tło: mozaika małych "okienek" wideo wypełniająca cały ekran
 // ---------------------------------------------------------------------------
-const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => `assets/gifs/gif${n}.mp4`);
+const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((n) => `assets/gifs/gif${n}.mp4`);
 const BG_CELL_TARGET_W = 300; // px, orientacyjna szerokość jednego "okienka"
 const BG_CELL_ASPECT = 4 / 3; // proporcje okienka (szerokość / wysokość)
 const BG_MAX_COLUMNS = 7;
