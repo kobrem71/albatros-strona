@@ -8,7 +8,7 @@
 // (nie da się tu użyć zmiennej/template stringa), więc numer trzeba wpisać
 // ręcznie w każdej linijce poniżej — podbijaj razem z ?v= w index.html.
 import { PLAYERS, slugify } from "./players.js?v=67";
-import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=66";
+import { RECURRING_RULES, EXTRA_EVENTS, CANCELLED_RECURRING, TYPE_META } from "./schedule.js?v=67";
 import { isFirebaseConfigured, isPushConfigured, FIREBASE_VAPID_KEY } from "./firebase-config.js?v=59";
 import { getStore } from "./store.js?v=59";
 import {
@@ -21,7 +21,7 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=71";
+} from "./league-data.js?v=74";
 import { initGabryssim } from "./gabryssim.js?v=72";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
@@ -1787,7 +1787,7 @@ function openPlayerCard(player) {
         <div class="league-fixture">
           <span class="league-fixture-date">${formatDateHuman(dateObj)}</span>
           <span class="league-fixture-match">${escapeHtml(label)} <span class="league-fixture-score">${match.score}</span>${competitionTag}</span>
-          <span class="league-fixture-round">${match.minutes}'${events ? " · " + events : ""}</span>
+          <span class="league-fixture-round">${match.minutes == null ? "– min" : match.minutes + "'"}${events ? " · " + events : ""}</span>
         </div>`;
     }).join("");
   } else {

@@ -2,7 +2,7 @@
 //
 // 1) REGULARNE ZAJĘCIA (co tydzień, automatycznie):
 //    weekday: 0 = niedziela, 1 = poniedziałek, ... 6 = sobota
-//    Treningi (śr/czw) powtarzają się same, co tydzień, bez potrzeby edycji.
+//    Treningi (czwartki) powtarzają się same, co tydzień, bez potrzeby edycji.
 //
 // 2) WYDARZENIA JEDNORAZOWE (mecze wg terminarza, trening bramkarski itp.):
 //    dopisz obiekt do EXTRA_EVENTS z konkretną datą (RRRR-MM-DD).
@@ -41,6 +41,9 @@ export const TYPE_META = {
 // Domyślny adres domowych treningów i meczów klubu.
 export const HOME_ADDRESS = "Jaśkowice Legnickie 45A";
 
+// Hala w Spalonej (gm. Kunice) — czwartkowe treningi od 29.10.2026.
+export const SPALONA_HALL = "Hala w Spalonej";
+
 // Regularne, powtarzające się co tydzień treningi.
 //
 // Reguły można ograniczyć zakresem dat polami `from` / `until` (RRRR-MM-DD,
@@ -52,10 +55,13 @@ export const RECURRING_RULES = [
   { type: "trening", weekday: 3, time: "18:00", location: HOME_ADDRESS, until: "2026-09-20" }, // środa (do meczu z Raszówką)
   { type: "trening", weekday: 4, time: "17:25", location: HOME_ADDRESS, until: "2026-09-20" }, // czwartek (do meczu z Raszówką)
 
-  // Od tygodnia po meczu z Raszówką do końca rundy jesiennej (ostatni mecz:
-  // kolejka 13, 2026-11-15) treningi przenoszą się na wt/czw 17:15.
-  { type: "trening", weekday: 2, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-11-15" }, // wtorek
-  { type: "trening", weekday: 4, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-11-15" }, // czwartek
+  // Od tygodnia po meczu z Raszówką: czwartek 17:15 w Jaśkowicach (do meczu
+  // z Kaczawą II, 2026-10-25). Wtorkowe treningi usunięte z kalendarza całkiem.
+  { type: "trening", weekday: 4, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-10-25" }, // czwartek
+
+  // Od 26.10 do końca rundy jesiennej (kolejka 13, 2026-11-15): czwartek 19:00
+  // na hali w Spalonej (adres można doprecyzować przyciskiem „Ustaw adres”).
+  { type: "trening", weekday: 4, time: "19:00", location: SPALONA_HALL, from: "2026-10-26", until: "2026-11-15" }, // czwartek
 ];
 
 // Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
@@ -74,6 +80,14 @@ export const CANCELLED_RECURRING = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  // Sobota 31.10 — gierka wewnętrzna w Jaśkowicach.
+  {
+    type: "sparing-wewnetrzny",
+    date: "2026-10-31", // sobota
+    time: "11:00",
+    location: HOME_ADDRESS,
+    label: "Gierka wewnętrzna",
+  },
   // Czwartek 08.10 — zamiast regularnego treningu sparing z Iskra Kochlice U16,
   // ta sama godzina (17:15). `id` przypięte do "trening-2026-10-08", żeby
   // zachować dotychczasowe odpowiedzi.
