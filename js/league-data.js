@@ -173,7 +173,7 @@ const M10 = { date: "2026-10-18", opponent: "Konfeks II Legnica", home: false, s
 // Kolejka 11 — u siebie z Kaczawą II Bieniowice, wygrana 6:2 (do przerwy 3:1).
 // Gole Albatrosa: Bartosz Gresiuk 3 (hat-trick), Maksym Hlibichuk, Michał Papaj,
 // Krzysztof Obremski. Asysty (ręcznie, wg klubu): Bartosz Gresiuk, Michał Papaj,
-// Maksym Hlibichuk, Konrad Zębacki, Bartłomiej Taczyński — po jednej.
+// Maksym Hlibichuk, Konrad Zębacki, Bartłomiej Taczyński, Bartosz Fudali — po jednej.
 // Żółta: Maksym Hlibichuk. Minuty goli i kartki nieznane ("?").
 // Skład i minuty wg klubu: Bubień (46' Tkacz) – Zębacki, Świtoń, Gdaniec (70'
 // Dubaniewicz), Didenko (68' Obremski), Hlibichuk, B. Taczyński, Papaj (63'
@@ -195,7 +195,7 @@ export const PLAYER_STATS = [
   { name: "Vladyslav Didenko", matches: 10, minutes: 679, goals: 0, assists: 2, yellowCards: 3, redCards: 1, matchLog: [m(M11, 68), m(M10, 73, [], [], [], 2), m(M9, 90, [], ["42'"]), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 72), m(M3, 0), m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
   { name: "Dominik Duchnicki", matches: 6, minutes: 290, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M10, 59), m(M7, 73), m(M6, 0), m(M3, 46), m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
   { name: "Remigiusz Dubaniewicz", matches: 7, minutes: 84, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M11, 20), m(M9, 18), m(M8, 7), m(M7, 19), m(M4, 20), m(M3, 0), m(M1, 0)] },
-  { name: "Bartosz Fudali", matches: 11, minutes: 197, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M11, 27), m(M10, 1), m(M9, 46), m(M8, 7), m(M7, 9), m(M6, 1), m(M4, 0), m(M3, 46), m(M2, 13), m(M1, 24), m(CUP1, 23)] },
+  { name: "Bartosz Fudali", matches: 11, minutes: 197, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M11, 27, [], [], [], 1), m(M10, 1), m(M9, 46), m(M8, 7), m(M7, 9), m(M6, 1), m(M4, 0), m(M3, 46), m(M2, 13), m(M1, 24), m(CUP1, 23)] },
   { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Maciej Gdaniec", matches: 10, minutes: 812, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M11, 70), m(M10, 90), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 90, [], ["85'"]), m(M3, 90), m(M2, 90), m(M1, 40), m(CUP1, 72)] },
   { name: "Bartosz Gresiuk", matches: 8, minutes: 665, goals: 8, assists: 3, yellowCards: 0, redCards: 0, matchLog: [m(M11, 79, ["?", "?", "?"], [], [], 1), m(M10, 90, ["5'", "41'", "60'"], [], [], 1), m(M9, 90, [], [], [], 1), m(M8, 90, ["34'"]), m(M7, 81), m(M6, 90, ["65'"]), m(M1, 66), m(CUP1, 79)] },
