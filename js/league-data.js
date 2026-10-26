@@ -174,7 +174,8 @@ const M10 = { date: "2026-10-18", opponent: "Konfeks II Legnica", home: false, s
 // Taczyński, Bartosz Fudali — po jednej. Żółta: Maksym Hlibichuk 74'.
 // Zmiany: 46' Bubień -> Tkacz, 63' Papaj -> Fudali, 63' Rozpędowski -> Wątroba,
 // 68' Gdaniec -> Dubaniewicz, 68' Didenko -> Obremski, 78' B. Gresiuk ->
-// Malinowski. Niewykorzystani rezerwowi: Mateusz Gresiuk, Maksym Dobryvoda.
+// Malinowski. Mateusz Gresiuk i Maksym Dobryvoda byli w protokole jako
+// rezerwowi, ale nie przyjechali na mecz, więc nie liczymy im występu (wg klubu).
 // Składy, minuty, gole i kartki wg match center laczynaspilka.pl.
 const M11 = { date: "2026-10-25", opponent: "Kaczawa II Bieniowice", home: true, score: "6:2" };
 const CUP1 = {
@@ -189,7 +190,7 @@ function m(matchInfo, minutes, goalMinutes = [], yellowMinutes = [], redMinutes 
 }
 
 export const PLAYER_STATS = [
-  { name: "Maksym Dobryvoda", matches: 9, minutes: 578, goals: 4, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M11, 0), m(M9, 80), m(M7, 90), m(M6, 90), m(M4, 79, ["40'"]), m(M3, 44), m(M2, 74, ["30'", "35'", "55'"], [], [], 1), m(M1, 60), m(CUP1, 61)] },
+  { name: "Maksym Dobryvoda", matches: 8, minutes: 578, goals: 4, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M9, 80), m(M7, 90), m(M6, 90), m(M4, 79, ["40'"]), m(M3, 44), m(M2, 74, ["30'", "35'", "55'"], [], [], 1), m(M1, 60), m(CUP1, 61)] },
   { name: "Vladyslav Didenko", matches: 10, minutes: 679, goals: 0, assists: 2, yellowCards: 3, redCards: 1, matchLog: [m(M11, 68), m(M10, 73, [], [], [], 2), m(M9, 90, [], ["42'"]), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 72), m(M3, 0), m(M1, 50), m(CUP1, 56, [], ["15'", "56'"], ["56'"])] },
   { name: "Dominik Duchnicki", matches: 6, minutes: 290, goals: 0, assists: 1, yellowCards: 0, redCards: 0, matchLog: [m(M10, 59), m(M7, 73), m(M6, 0), m(M3, 46), m(M2, 83, [], [], [], 1), m(CUP1, 29)] },
   { name: "Remigiusz Dubaniewicz", matches: 7, minutes: 86, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M11, 22), m(M9, 18), m(M8, 7), m(M7, 19), m(M4, 20), m(M3, 0), m(M1, 0)] },
@@ -197,7 +198,7 @@ export const PLAYER_STATS = [
   { name: "Kamil Felsztyński", matches: 0, minutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchLog: [] },
   { name: "Maciej Gdaniec", matches: 10, minutes: 810, goals: 0, assists: 0, yellowCards: 1, redCards: 0, matchLog: [m(M11, 68), m(M10, 90), m(M8, 90), m(M7, 90), m(M6, 90), m(M4, 90, [], ["85'"]), m(M3, 90), m(M2, 90), m(M1, 40), m(CUP1, 72)] },
   { name: "Bartosz Gresiuk", matches: 8, minutes: 664, goals: 8, assists: 3, yellowCards: 0, redCards: 0, matchLog: [m(M11, 78, ["19'", "21'", "72'"], [], [], 1), m(M10, 90, ["5'", "41'", "60'"], [], [], 1), m(M9, 90, [], [], [], 1), m(M8, 90, ["34'"]), m(M7, 81), m(M6, 90, ["65'"]), m(M1, 66), m(CUP1, 79)] },
-  { name: "Mateusz Gresiuk", matches: 7, minutes: 540, goals: 3, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M11, 0), m(M6, 90, ["79'"]), m(M4, 90), m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
+  { name: "Mateusz Gresiuk", matches: 6, minutes: 540, goals: 3, assists: 0, yellowCards: 0, redCards: 0, matchLog: [m(M6, 90, ["79'"]), m(M4, 90), m(M3, 90, ["28'"]), m(M2, 90), m(M1, 90), m(CUP1, 90, ["50'"])] },
   // 2 asysty w meczu z Legsadem II Kościelec (kolejka 3, M3) — dopisane
   // ręcznie od razu po meczu (laczynaspilka.pl nie pokazuje asyst).
   { name: "Maksym Hlibichuk", matches: 8, minutes: 720, goals: 1, assists: 4, yellowCards: 2, redCards: 0, matchLog: [m(M11, 90, ["55'"], ["74'"], [], 1), m(M10, 90), m(M9, 90), m(M8, 90, [], ["60'"]), m(M6, 90), m(M4, 90, [], [], [], 1), m(M3, 90, [], [], [], 2), m(M2, 90)] },

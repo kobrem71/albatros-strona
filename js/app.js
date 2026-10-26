@@ -21,7 +21,7 @@ import {
   PLAYER_STATS,
   PLAYER_STATS_UPDATED,
   MATCH_MVPS,
-} from "./league-data.js?v=76";
+} from "./league-data.js?v=77";
 import { initGabryssim } from "./gabryssim.js?v=72";
 
 // Gracze domyślnie zwinięci pod "Pokaż więcej" na liście zapisów i w statystykach
