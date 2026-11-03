@@ -1603,6 +1603,7 @@ main {
 
 .hof-card {
   width: min(960px, 100%);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1630,11 +1631,14 @@ main {
 .hof-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr) — kolumny NIE rozpychają się do długości nazwisk
+     (zwykłe 1fr robiło tablicę szerszą niż ekran telefonu). */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
 .hof-quadrant {
+  min-width: 0;
   background: rgba(17, 26, 51, 0.82);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
@@ -1721,6 +1725,14 @@ main {
   border-radius: 50%;
   display: block;
 }
+.hof-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hof-nm-short { display: none; }
 .hof-nm {
   flex: 1 1 auto;
   min-width: 0;
@@ -1787,19 +1799,23 @@ main {
 /* Na telefonie zostawiamy układ 2x2 (nie 1 kolumnę), ale wszystko zmniejszamy
    tak, żeby cała tablica zmieściła się na jednym ekranie bez przewijania. */
 @media (max-width: 560px) {
-  .hof-content { padding: 10px; align-items: flex-start; }
-  .hof-card { gap: 10px; justify-content: center; min-height: 100%; }
-  .hof-title { letter-spacing: 0.5px; }
-  .hof-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .hof-quadrant { padding: 8px 8px 10px; border-radius: 12px; }
-  .hof-q-title { margin: 0 0 7px; font-size: 0.72rem; letter-spacing: 0.5px; }
-  .hof-podium { gap: 5px; }
-  .hof-row { gap: 6px; padding: 4px 6px; border-radius: 9px; }
-  .hof-rank { width: 14px; font-size: 0.75rem; }
-  .hof-photo-wrap { width: 28px; height: 28px; padding: 1.5px; }
-  .hof-nm { font-size: 0.72rem; }
-  .hof-val { font-size: 0.8rem; }
-  .hof-caption { letter-spacing: 2.5px; margin-top: 2px; }
+  .hof-content { padding: 56px 12px 16px; align-items: flex-start; }
+  .hof-card { gap: 12px; justify-content: center; min-height: 100%; }
+  .hof-title { letter-spacing: 0.5px; white-space: normal; text-align: center; font-size: 1.5rem; }
+  .hof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hof-quadrant { padding: 9px 7px 10px; border-radius: 12px; }
+  .hof-q-title { margin: 0 0 8px; font-size: 0.68rem; letter-spacing: 0.3px; line-height: 1.25; min-height: 2.5em; display: flex; align-items: center; justify-content: center; }
+  .hof-podium { gap: 6px; }
+  .hof-row { gap: 6px; padding: 5px 6px; border-radius: 10px; }
+  .hof-rank { display: none; } /* miejsce i tak widać po kolorze złoto/srebro/brąz */
+  .hof-photo-wrap { width: 30px; height: 30px; padding: 1.5px; }
+  /* Nazwisko nad wartością — dwie linie zamiast jednej długiej */
+  .hof-txt { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .hof-nm { width: 100%; font-size: 0.72rem; line-height: 1.15; }
+  .hof-nm-full { display: none; }
+  .hof-nm-short { display: inline; }
+  .hof-val { font-size: 0.82rem; line-height: 1.1; }
+  .hof-caption { letter-spacing: 2.5px; margin-top: 2px; text-align: center; }
 }
 
 /* Bardzo niskie ekrany (telefon w poziomie / małe telefony) — jeszcze ciaśniej. */

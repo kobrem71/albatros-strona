@@ -1222,6 +1222,13 @@ function topScoringRate(n) {
     .slice(0, n);
 }
 
+// Skrócone nazwisko na wąskie ekrany: "Bartosz Gresiuk" -> "B. Gresiuk".
+function hofShortName(name) {
+  const parts = String(name).trim().split(/\s+/);
+  if (parts.length < 2) return name;
+  return `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
+}
+
 // Buduje HTML jednej ćwiartki (podium 1-2-3) Hall of Fame.
 function buildHofQuadrant(icon, title, unit, entries) {
   const medals = ["gold", "silver", "bronze"];
@@ -1238,8 +1245,13 @@ function buildHofQuadrant(icon, title, unit, entries) {
           <img class="hof-photo" src="${photo}" alt=""
                onerror="this.onerror=null;this.src='${PLAYER_PLACEHOLDER_SRC}'" />
         </span>
-        <span class="hof-nm">${escapeHtml(e.name)}</span>
-        <span class="hof-val">${valueLabel}</span>
+        <span class="hof-txt">
+          <span class="hof-nm">
+            <span class="hof-nm-full">${escapeHtml(e.name)}</span>
+            <span class="hof-nm-short">${escapeHtml(hofShortName(e.name))}</span>
+          </span>
+          <span class="hof-val">${valueLabel}</span>
+        </span>
       </li>`;
     })
     .join("");
