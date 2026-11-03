@@ -1176,8 +1176,8 @@ function runPotmSequence(container, onDone) {
 // ---------------------------------------------------------------------------
 // 4b-ter. "HALL OF FAME" — wariant "Losowego gifa" wyświetlany jako PIERWSZY
 // (za pierwszym kliknięciem od wejścia na stronę). Okno podzielone na cztery
-// ćwiartki: TOP3 bramki, TOP3 asysty, TOP3 minuty, TOP3 obecności na
-// treningach. W każdej ćwiartce pierwsze miejsce jest złote, drugie srebrne,
+// ćwiartki: TOP3 bramki, TOP3 asysty, TOP3 minuty, TOP3 "gol co X minut"
+// (najskuteczniejsi strzelcy — najmniej minut na jednego gola). W każdej ćwiartce pierwsze miejsce jest złote, drugie srebrne,
 // trzecie brązowe, przy każdym malutkie zdjęcie zawodnika. Na dole podpis:
 // ORŁY ALBATROSA. Ćwiartki zapalają się kolejno (efekt "rozświetlenia").
 // ---------------------------------------------------------------------------
@@ -1191,6 +1191,23 @@ function topN(entries, n, dropZero) {
   if (dropZero) list = list.filter((e) => e.value > 0);
   list.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, "pl"));
   return list.slice(0, n);
+}
+
+// "Gol co X minut" = suma rozegranych minut / liczba goli (zaokrąglone).
+// Zwraca null, gdy zawodnik nie strzelił gola (statystyka nie istnieje).
+function minutesPerGoal(p) {
+  if (!p || !p.goals || p.goals <= 0) return null;
+  return Math.round((p.minutes || 0) / p.goals);
+}
+
+// TOP-N najskuteczniejszych strzelców: rosnąco wg "gol co X minut"
+// (im mniej minut na gola, tym lepiej). Przy remisie wyżej ten z większą
+// liczbą goli, potem alfabetycznie.
+function topScoringRate(n) {
+  return PLAYER_STATS.filter((p) => p.goals > 0)
+    .map((p) => ({ name: p.name, value: minutesPerGoal(p), goals: p.goals }))
+    .sort((a, b) => a.value - b.value || b.goals - a.goals || a.name.localeCompare(b.name, "pl"))
+    .slice(0, n);
 }
 
 // Buduje HTML jednej ćwiartki (podium 1-2-3) Hall of Fame.
@@ -1229,18 +1246,11 @@ function runHofSequence(container, onDone) {
   const assists = PLAYER_STATS.map((p) => ({ name: p.name, value: p.assists || 0 }));
   const minutes = PLAYER_STATS.map((p) => ({ name: p.name, value: p.minutes || 0 }));
 
-  const att = computeAttendanceStats(); // pełna historia zapisów
-  const nameBySlug = new Map(PLAYERS.map((p) => [p.slug, p.name]));
-  const training = Object.entries(att).map(([slug, s]) => ({
-    name: nameBySlug.get(slug) || slug,
-    value: s.trening ? s.trening.tak : 0,
-  }));
-
   const quadrants = [
     buildHofQuadrant("⚽", "Bramki", "", topN(goals, 3, true)),
     buildHofQuadrant("🅰️", "Asysty", "", topN(assists, 3, true)),
     buildHofQuadrant("⏱️", "Minuty", "'", topN(minutes, 3, true)),
-    buildHofQuadrant("🏃", "Treningi", "", topN(training, 3, true)),
+    buildHofQuadrant("🎯", "Gol co X minut", "'", topScoringRate(3)),
   ].join("");
 
   container.hidden = false;
@@ -1758,7 +1768,7 @@ function openPlayerCard(player) {
   summary.className = "player-card-summary";
   summary.innerHTML =
     stats && stats.matches > 0
-      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli · <strong>${stats.assists}</strong> asyst · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
+      ? `Sezon 2026/2027: <strong>${stats.matches}</strong> mecze · <strong>${stats.minutes}'</strong> minut · <strong>${stats.goals}</strong> goli${minutesPerGoal(stats) != null ? ` (gol co <strong>${minutesPerGoal(stats)}'</strong>)` : ""} · <strong>${stats.assists}</strong> asyst · <strong>${stats.yellowCards}</strong> żółtych · <strong>${stats.redCards}</strong> czerwonych`
       : `Brak jeszcze występu w tym sezonie (wg laczynaspilka.pl).`;
   head.appendChild(summary);
 
