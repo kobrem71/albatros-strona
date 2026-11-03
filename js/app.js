@@ -34,6 +34,15 @@ const HIDDEN_NAMES = [
   "Krzysztof Taczyński",
   "Damian Pachołek",
   "Rafał Kanasiuk",
+  "Alan Lichman",
+  "Jonatan Wyporkiewicz",
+  "Marek Taczyński",
+  "Gabriel Świerbutowicz",
+  "Mykyta Hubin",
+  "Brajan Kwiatkowski",
+  "Yevhenii Matiiv",
+  "Jakub Cofór",
+  "Oleksandr Kolvakh",
 ];
 const HIDDEN_SLUGS = new Set(HIDDEN_NAMES.map(slugify));
 
@@ -816,9 +825,12 @@ export function getOrderedPlayerGroups(pool = PLAYERS, eventPlayersData = null, 
     return sortScore(frozenStats, b.slug) - sortScore(frozenStats, a.slug);
   });
 
+  // Na zawężonej liście (np. sami bramkarze na treningu bramkarskim) nikogo
+  // nie zwijamy — jest krótka, a ukrycie części bramkarzy nie miałoby sensu.
+  const isHidden = (p) => pool === PLAYERS && HIDDEN_SLUGS.has(p.slug) && p.slug !== identitySlug;
   return {
-    visible: sorted.filter((p) => !HIDDEN_SLUGS.has(p.slug) || p.slug === identitySlug),
-    hidden: sorted.filter((p) => HIDDEN_SLUGS.has(p.slug) && p.slug !== identitySlug),
+    visible: sorted.filter((p) => !isHidden(p)),
+    hidden: sorted.filter(isHidden),
   };
 }
 
