@@ -80,6 +80,15 @@ export const CANCELLED_RECURRING = [
 // wpisana jest nazwa miejscowości. Popraw przyciskiem "Ustaw adres" na stronie,
 // jeśli znasz dokładniejszy adres.
 export const EXTRA_EVENTS = [
+  // Środa 11.11 (Święto Niepodległości, dzień wolny) — dodatkowy trening
+  // u siebie w Jaśkowicach.
+  {
+    type: "trening",
+    date: "2026-11-11", // środa
+    time: "11:00",
+    location: HOME_ADDRESS,
+    label: "Trening w Święto Niepodległości",
+  },
   // Sobota 31.10 — gierka wewnętrzna w Jaśkowicach.
   {
     type: "sparing-wewnetrzny",
