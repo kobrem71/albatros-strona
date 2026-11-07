@@ -903,7 +903,7 @@ function renderStats() {
 // ---------------------------------------------------------------------------
 // 4. Tło: mozaika małych "okienek" wideo wypełniająca cały ekran
 // ---------------------------------------------------------------------------
-const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((n) => `assets/gifs/gif${n}.mp4`);
+const BG_VIDEOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((n) => `assets/gifs/gif${n}.mp4`);
 const BG_CELL_TARGET_W = 300; // px, orientacyjna szerokość jednego "okienka"
 const BG_CELL_ASPECT = 4 / 3; // proporcje okienka (szerokość / wysokość)
 const BG_MAX_COLUMNS = 7;
@@ -973,6 +973,37 @@ function initBackground() {
     resizeTimer = setTimeout(build, 400);
   });
   setInterval(shuffleSome, 9000);
+}
+
+// ---------------------------------------------------------------------------
+// 4a. Urodzinowy popup — 07.11.2026 każdy, kto wejdzie, na start dostaje
+// gif16 z napisem "STO LAT JANUSZ". Innego dnia nic się nie dzieje.
+// ---------------------------------------------------------------------------
+const BIRTHDAY_DATE = "2026-11-07"; // rrrr-mm-dd, czas lokalny przeglądarki
+const BIRTHDAY_VIDEO = "assets/gifs/gif16.mp4";
+
+function initBirthdayPopup() {
+  const overlay = document.getElementById("bday-overlay");
+  const video = document.getElementById("bday-overlay-video");
+  const closeBtn = document.getElementById("bday-overlay-close");
+  if (!overlay || !video || !closeBtn) return;
+
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  if (today !== BIRTHDAY_DATE) return;
+
+  function close() {
+    overlay.hidden = true;
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  }
+
+  video.src = BIRTHDAY_VIDEO;
+  overlay.hidden = false;
+  video.play().catch(() => {});
+  closeBtn.addEventListener("click", close);
+  wireOverlayDismiss(overlay, close);
 }
 
 // ---------------------------------------------------------------------------
@@ -2824,6 +2855,7 @@ async function init() {
   document.getElementById("logo-img").src = "assets/img/logo.png";
   initBackground();
   initRandomGifButton();
+  initBirthdayPopup();
   initLeagueButton();
   initPlayerOverlay();
   initTacticButton();

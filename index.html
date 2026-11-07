@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icons/icon-192.png" />
 
-<link rel="stylesheet" href="css/style.css?v=63" />
+<link rel="stylesheet" href="css/style.css?v=64" />
 </head>
 <body>
 
@@ -67,6 +67,14 @@
   <div id="gif-overlay-potm" class="potm-content" hidden></div>
   <div id="gif-overlay-hof" class="hof-content" hidden></div>
   <button id="gif-overlay-close" class="gif-overlay-close" type="button" aria-label="Zamknij">✕</button>
+</div>
+
+<div id="bday-overlay" class="gif-overlay bday-overlay" hidden>
+  <div class="bday-content">
+    <video id="bday-overlay-video" class="bday-video" autoplay loop muted playsinline></video>
+    <div class="bday-caption">🎉 STO LAT JANUSZ 🎉</div>
+  </div>
+  <button id="bday-overlay-close" class="gif-overlay-close" type="button" aria-label="Zamknij">✕</button>
 </div>
 
 <div id="league-overlay" class="league-overlay" hidden>
@@ -294,7 +302,7 @@
 <!-- ?v=N na końcu linków do css/js: GitHub Pages cache'uje te pliki na 10 min,
      więc po każdej zmianie w style.css / app.js podbij tu numer wersji (w obu
      miejscach), inaczej część odwiedzających dostanie starą wersję z cache. -->
-<script type="module" src="js/app.js?v=82"></script>
+<script type="module" src="js/app.js?v=83"></script>
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

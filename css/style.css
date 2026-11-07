@@ -162,6 +162,35 @@ body {
 }
 .gif-overlay-close:hover { background: rgba(255, 255, 255, 0.2); }
 
+/* ---------- Urodzinowy popup (STO LAT) ---------- */
+.bday-overlay { z-index: 1100; }
+.bday-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 16px;
+}
+.bday-video {
+  width: min(80vw, 60vh);
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 0 40px rgba(224, 178, 58, 0.45);
+}
+.bday-caption {
+  font-size: clamp(2rem, 9vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(224, 178, 58, 0.6), 0 4px 0 #000;
+  animation: bday-pulse 1.2s ease-in-out infinite;
+}
+@keyframes bday-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
 /* ---------- "Gracz meczu": wariant przycisku "Losowy gif" ---------- */
 .potm-content {
   display: flex;
