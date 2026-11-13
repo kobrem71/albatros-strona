@@ -41,7 +41,7 @@ export const TYPE_META = {
 // Domyślny adres domowych treningów i meczów klubu.
 export const HOME_ADDRESS = "Jaśkowice Legnickie 45A";
 
-// Hala w Spalonej (gm. Kunice) — czwartkowe treningi od 29.10.2026.
+// Hala w Spalonej (gm. Kunice) — czwartkowe treningi od 29.10.2026, także przez przerwę zimową.
 export const SPALONA_HALL = "Hala w Spalonej";
 
 // Regularne, powtarzające się co tydzień treningi.
@@ -59,9 +59,11 @@ export const RECURRING_RULES = [
   // z Kaczawą II, 2026-10-25). Wtorkowe treningi usunięte z kalendarza całkiem.
   { type: "trening", weekday: 4, time: "17:15", location: HOME_ADDRESS, from: "2026-09-21", until: "2026-10-25" }, // czwartek
 
-  // Od 26.10 do końca rundy jesiennej (kolejka 13, 2026-11-15): czwartek 19:00
-  // na hali w Spalonej (adres można doprecyzować przyciskiem „Ustaw adres”).
-  { type: "trening", weekday: 4, time: "19:00", location: SPALONA_HALL, from: "2026-10-26", until: "2026-11-15" }, // czwartek
+  // Od 26.10, przez koniec rundy jesiennej i CAŁĄ PRZERWĘ MIĘDZY SEZONAMI:
+  // czwartek 19:00 na hali w Spalonej (adres można doprecyzować przyciskiem
+  // „Ustaw adres”). Bez `until` — gdy znany będzie start rundy wiosennej,
+  // dopisz tu `until: "RRRR-MM-DD"`.
+  { type: "trening", weekday: 4, time: "19:00", location: SPALONA_HALL, from: "2026-10-26" }, // czwartek
 ];
 
 // Odwołane pojedyncze wystąpienia cotygodniowych treningów (RRRR-MM-DD).
